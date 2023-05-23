@@ -1,6 +1,6 @@
 
-from ..firebase import db   
-from ..schemas.users import UsersSchema
+from core.firebase import db   
+from schemas.users import UsersSchema
 
 async def create_user(user: UsersSchema):
     user_doc_ref = db.collection("users").document(user.id)
