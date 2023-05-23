@@ -25,7 +25,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 def decode_access_token(token:str):
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=settings.ALGORITHM)
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
     
