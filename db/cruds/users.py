@@ -1,11 +1,20 @@
-from sqlalchemy.orm import Session
-from ..models.users import User
 
-def get_user(db: Session, user_id: int):
-    return db.query(User).filter(User.id == user_id).first()
+from ..firebase import db   
+from ..schemas.users import UsersSchema
 
-def get_user_by_email(db: Session, email: str):
-    return db.query(User).filter(User.email == email).first()
+async def create_user(user: UsersSchema):
+    user_doc_ref = db.collection("users").document(user.id)
+    user_doc_ref.set({
+        "username" : user.username,
+        "email" : user.email
+    })
+    return {"message": "User created successfully"}
 
-def get_users(db: Session, skip: int = 0, limit: int = 20):
-    return db.query(User).offset(skip).limit(limit).all()
+async def get_user(id: str):
+    user_doc_ref = db.collection("users").document(id)
+    user_doc = user_doc_ref.get()
+    if user_doc.exists:
+        user_data = user_doc.to_dict()
+        return user_data
+    else:
+        return {"message": "User not found"}
