@@ -15,9 +15,6 @@ class DummyProvider(BaseProvider):
     def get_messages(self, access_token: str, from_when: str, option: any):
         print("[%s]: get_messages: %s %s" % (self.plugin_name, access_token, from_when), file=sys.stdout)
      
-    def send_message(self, access_token: str, to: str, msg: str, option: any) -> None:
-        print("[%s]: %s | %s : %s" % (self.plugin_name, access_token, to, msg), file=sys.stdout)
-
     def disconnect(self, access_token: str, option: any):
         print("[%s]: disconnect: %s" % (self.plugin_name, access_token), file=sys.stdout)
 

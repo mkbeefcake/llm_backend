@@ -47,14 +47,6 @@ class Bridge:
 
         return provider.get_messages(access_token, from_when, option)
 
-    # send message to provider
-    def send_message(self, provider_name: str, access_token: str, to: str, msg: str, option: str):
-        provider = self.provider_list[provider_name.lower()]
-        if not provider:
-            raise NotImplementedError
-
-        return provider.send_message(access_token, to, msg, option)
-
     # disconnect
     def disconnect(self, provider_name:str, access_token: str, option: str):
         provider = self.provider_list[provider_name.lower()]

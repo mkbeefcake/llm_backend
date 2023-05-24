@@ -26,10 +26,6 @@ class BaseProvider(metaclass=BaseProviderMeta):
         raise NotImplementedError
      
     @abstractmethod
-    def send_message(self, access_token: str, to: str, msg: str, option: any):
-        raise NotImplementedError
-
-    @abstractmethod
     def disconnect(self, access_token: str, option: any):
         raise NotImplementedError
 
