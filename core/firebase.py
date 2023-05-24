@@ -22,7 +22,7 @@ db = firestore.client()
 
 def authenticate_user(email: str, password: str):
     try:
-        auth_user = pb.auth().sign_in_with_email_and_password(email, password)
+        auth_user = pb.auth().sign_in_with_email_and_password(email, password)        
         return auth_user['idToken']
     except:
         return None
