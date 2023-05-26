@@ -18,7 +18,20 @@ async def google_auth(request: Request):
     result = await bridge.get_access_token("gmailprovider", request)
     return {"message": result}
 
-@router.get("get_last_message")
-async def get_last_message(provider_name: str = "gmailprovider", access_token: str = "", curr_user: User = Depends(get_current_user)):
-    result = bridge.get_last_message(provider_name, access_token, option="")
+@router.get("/get_last_message")
+async def get_last_message(provider_name: str = "gmailprovider", 
+                           access_token: str = "",                            
+                           option: str = "",
+                           curr_user: User = Depends(get_current_user)):
+    result = bridge.get_last_message(provider_name, access_token, option=option)
     return {"message": result}
+
+@router.get("/get_messages")
+async def get_messages(provider_name: str = "gmailprovider", 
+                       access_token: str = "", 
+                       from_what: str = "is:unread",
+                       count: int = 1,
+                       option: str = "",
+                       curr_user: User = Depends(get_current_user)):
+    results = bridge.get_messages(provider_name, access_token, from_what, count, option)
+    return {"message": results}

@@ -67,6 +67,7 @@ class GMailProvider(BaseProvider):
         gmail_service = build('gmail', 'v1', credentials=creds)
         message_list = gmail_service.users().messages().list(userId='me', maxResults=MAX_MESSAGES_COUNT).execute()
         messages = message_list.get('messages', [])
+        next_page_token = message_list.get('nextPageToken')
         message_id = messages[0]['id']
         message = gmail_service.users().messages().get(userId='me', id=message_id).execute()
 
@@ -80,11 +81,40 @@ class GMailProvider(BaseProvider):
             content = base64.urlsafe_b64decode(message['payload']['body']['data']).decode()
 
 
-        return {'messageId': message_id, 'snippet': snippet, "content": content}
+        return {'messageId': message_id, "option": {"nextPageToken": next_page_token}, 'snippet': snippet, "content": content }
 
-    def get_messages(self, access_token: str, from_when: str, option: any):
-        print("[%s]: get_messages: %s %s, %s" % (self.plugin_name, access_token, from_when, option), file=sys.stdout)
-     
+    def get_messages(self, access_token: str, from_what: str, count: int, option: any):
+        creds = Credentials(token=access_token, 
+                            client_id=oauth2_credentials["web"]["client_id"],
+                            client_secret=oauth2_credentials["web"]["client_secret"],
+                            token_uri=oauth2_credentials["web"]["token_uri"],
+                            scopes=SCOPES
+                            )
+        gmail_service = build('gmail', 'v1', credentials=creds)
+        message_list = gmail_service.users().messages().list(userId='me', maxResults=count, q=f"{from_what}").execute()
+
+        messages = message_list.get('messages', [])
+        next_page_token = message_list.get('nextPageToken')
+
+        results = []
+        for m in messages:
+            message_id = m['id']
+            message = gmail_service.users().messages().get(userId='me', id=message_id).execute()
+
+            snippet = message['snippet']
+            if 'parts' in message['payload']:
+                for part in message['payload']['parts']:
+                    if part['body'] and part['mimeType'] == 'text/plain':
+                        content = base64.urlsafe_b64decode(part['body']['data']).decode()
+                        break
+            else:
+                content = base64.urlsafe_b64decode(message['payload']['body']['data']).decode()
+
+
+            results.append({'messageId': message_id, 'snippet': snippet, "content": content })
+
+        return {"option": {"nextPageToken": next_page_token}, "messages": results, }
+
     def disconnect(self, request:Request):
         pass
 
