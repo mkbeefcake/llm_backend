@@ -34,18 +34,14 @@ oauth.register(
 class GMailProvider(BaseProvider):
 
     async def link_provider(self, request: Request):
+        request.session.clear()
         redirect_uri = request.url_for("google_auth")
         return await oauth.google.authorize_redirect(request, str(redirect_uri))
 
     async def get_access_token(self, request:Request) -> str:
         token = await oauth.google.authorize_access_token(request)
-        if 'id_token' in token and 'userinfo' in token: 
-            userinfo = token['userinfo']
-
-        # save the user
-        request.session[SESSION_NAME] = dict(userinfo)
+        userinfo = token['userinfo']
         return userinfo
-
 
     def get_profile(self, access_token: str, option: any):
         print("[%s]: get_profile: %s, %s" % (self.plugin_name, access_token, option), file=sys.stdout)
@@ -57,6 +53,6 @@ class GMailProvider(BaseProvider):
         print("[%s]: get_messages: %s %s, %s" % (self.plugin_name, access_token, from_when, option), file=sys.stdout)
      
     def disconnect(self, request:Request):
-        request.session.pop(SESSION_NAME, None)
+        pass
 
     pass
