@@ -9,6 +9,6 @@ class BasicAuthenticationForm:
         scope: str = Form(default=""),
     ):
         self.grant_type = grant_type
-        self.username = email
+        self.email = email
         self.password = password
         self.scopes = scope.split()

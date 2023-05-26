@@ -1,7 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException, APIRouter
+from fastapi import FastAPI, Depends, HTTPException, Security, APIRouter
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, SecretStr
 from core.firebase import authenticate_user, decode_access_token, create_user
 from helpers.forms import BasicAuthenticationForm
 
@@ -29,5 +28,5 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 @router.post("/signup")
 async def signup(form_data: BasicAuthenticationForm = Depends()):
-    user = create_user(form_data.username, form_data.password)
+    user = create_user(form_data.email, form_data.password)
     return {"message": "User created successfully"}

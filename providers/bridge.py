@@ -1,10 +1,12 @@
 import os
 from providers.loader.loader import Loader
 from providers.base import BaseProvider
+from starlette.requests import Request
 
 PROVIDERS_PATH = os.path.join(os.path.dirname(__file__), "plugins")
 
 class Bridge:
+
     def __init__(self):
         self.loader = Loader()
         self.providers = self.loader.load_plugins(PROVIDERS_PATH, BaseProvider, recursive=True)
@@ -15,13 +17,21 @@ class Bridge:
             Provider = self.providers[key]
             self.provider_list[key] = Provider()
 
-    # get access token
-    def get_access_token(self, provider_name: str, email: str, password: str, option: str) -> str:
+    # link provider
+    async def link_provider(self, provider_name: str, request:Request):
         provider = self.provider_list[provider_name.lower()]
         if not provider:
             raise NotImplementedError
 
-        return provider.get_access_token(email, password, option)
+        return await provider.link_provider(request)
+
+    # get access token
+    async def get_access_token(self, provider_name: str, request:Request):
+        provider = self.provider_list[provider_name.lower()]
+        if not provider:
+            raise NotImplementedError
+
+        return await provider.get_access_token(request)
     
     # get profile
     def get_profile(self, provider_name: str, access_token: str, option: str):
@@ -48,12 +58,12 @@ class Bridge:
         return provider.get_messages(access_token, from_when, option)
 
     # disconnect
-    def disconnect(self, provider_name:str, access_token: str, option: str):
+    def disconnect(self, provider_name:str, request: Request):
         provider = self.provider_list[provider_name.lower()]
         if not provider:
             raise NotImplementedError
 
-        return provider.disconnect(access_token, option)
+        return provider.disconnect(request)
 
 
 bridge = Bridge()
