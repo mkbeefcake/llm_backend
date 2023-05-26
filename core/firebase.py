@@ -1,11 +1,13 @@
 import firebase_admin
 import pyrebase
 import json
+import requests
 
 from firebase_admin import credentials
 from firebase_admin import firestore
 from firebase_admin import auth
 from pathlib import Path
+from core.error import Error
 
 service_account_path = Path(".") / "neo-chatbot-f0fff-service_account_keys.json"
 firebase_config_path = Path(".") / "neo-chatbot-firebase.json"
@@ -24,8 +26,15 @@ def authenticate_user(email: str, password: str):
     try:
         auth_user = pb.auth().sign_in_with_email_and_password(email, password)        
         return auth_user['idToken']
-    except:
-        return None
+    # except requests.exceptions.HTTPError as e:
+    #     if e.response.status_code == 400:
+    #         return Error(e, description="Invalid email or password")
+    #     elif e.response.status_code == 401:
+    #         return Error(e, description="Unauthorized access")
+    #     else:
+    #         return Error(code=-1, description=e.message)
+    except Exception as e:
+        return Error(e)
     
 def decode_access_token(token: str):
     try:
