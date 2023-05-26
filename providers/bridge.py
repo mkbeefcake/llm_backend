@@ -33,6 +33,14 @@ class Bridge:
 
         return await provider.get_access_token(request)
     
+    # get session info
+    async def get_session_info(self, provider_name: str, request:Request):
+        provider = self.provider_list[provider_name.lower()]
+        if not provider:
+            raise NotImplementedError
+        
+        return await provider.get_session_info(request)
+    
     # get profile
     def get_profile(self, provider_name: str, access_token: str, option: str):
         provider = self.provider_list[provider_name.lower()]
@@ -56,6 +64,14 @@ class Bridge:
             raise NotImplementedError
 
         return provider.get_messages(access_token, from_what, count, option)
+
+    # reply to message
+    def reply_to_message(self, provider_name: str, access_token: str, to: str, message: str, option: str):
+        provider = self.provider_list[provider_name.lower()]
+        if not provider:
+            raise NotImplementedError
+
+        return provider.reply_to_message(access_token, to, message, option)
 
     # disconnect
     def disconnect(self, provider_name:str, request: Request):

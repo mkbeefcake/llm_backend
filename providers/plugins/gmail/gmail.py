@@ -1,6 +1,7 @@
 import sys
 import json
 import base64
+from email.mime.text import MIMEText
 
 from providers.base import BaseProvider
 from pathlib import Path
@@ -51,13 +52,16 @@ class GMailProvider(BaseProvider):
 
     async def get_access_token(self, request:Request) -> str:
         token = await oauth.google.authorize_access_token(request)
-        userinfo = token['userinfo']
+        request.session[SESSION_NAME] = token
         return token
+    
+    async def get_session_info(self, request:Request) -> str:
+        return request.session[SESSION_NAME]
 
     def get_profile(self, access_token: str, option: any):
         print("[%s]: get_profile: %s, %s" % (self.plugin_name, access_token, option), file=sys.stdout)
     
-    def get_last_message(self, access_token: str, option: any):
+    def get_gmail_service(self, access_token:str):
         creds = Credentials(token=access_token, 
                             client_id=oauth2_credentials["web"]["client_id"],
                             client_secret=oauth2_credentials["web"]["client_secret"],
@@ -65,12 +69,21 @@ class GMailProvider(BaseProvider):
                             scopes=SCOPES
                             )
         gmail_service = build('gmail', 'v1', credentials=creds)
+        return gmail_service
+
+    def get_last_message(self, access_token: str, option: any):
+        gmail_service = self.get_gmail_service(access_token)
+
         message_list = gmail_service.users().messages().list(userId='me', maxResults=MAX_MESSAGES_COUNT).execute()
         messages = message_list.get('messages', [])
         next_page_token = message_list.get('nextPageToken')
+
+        # get last message
         message_id = messages[0]['id']
         message = gmail_service.users().messages().get(userId='me', id=message_id).execute()
 
+        sender = message['payload']['headers'][17]['value']
+        subject = message['payload']['headers'][19]['value']
         snippet = message['snippet']
         if 'parts' in message['payload']:
             for part in message['payload']['parts']:
@@ -80,17 +93,19 @@ class GMailProvider(BaseProvider):
         else:
             content = base64.urlsafe_b64decode(message['payload']['body']['data']).decode()
 
-
-        return {'messageId': message_id, "option": {"nextPageToken": next_page_token}, 'snippet': snippet, "content": content }
+        return {
+            'messageId': message_id, 
+            'sender': sender,
+            'subject': subject,
+            'option': { 
+                'nextPageToken': next_page_token
+            }, 
+            'snippet': snippet, 
+            'html': content 
+        }
 
     def get_messages(self, access_token: str, from_what: str, count: int, option: any):
-        creds = Credentials(token=access_token, 
-                            client_id=oauth2_credentials["web"]["client_id"],
-                            client_secret=oauth2_credentials["web"]["client_secret"],
-                            token_uri=oauth2_credentials["web"]["token_uri"],
-                            scopes=SCOPES
-                            )
-        gmail_service = build('gmail', 'v1', credentials=creds)
+        gmail_service = self.get_gmail_service(access_token)
         message_list = gmail_service.users().messages().list(userId='me', maxResults=count, q=f"{from_what}").execute()
 
         messages = message_list.get('messages', [])
@@ -101,7 +116,10 @@ class GMailProvider(BaseProvider):
             message_id = m['id']
             message = gmail_service.users().messages().get(userId='me', id=message_id).execute()
 
+            sender = message['payload']['headers'][17]['value']
+            subject = message['payload']['headers'][19]['value']
             snippet = message['snippet']
+
             if 'parts' in message['payload']:
                 for part in message['payload']['parts']:
                     if part['body'] and part['mimeType'] == 'text/plain':
@@ -111,9 +129,36 @@ class GMailProvider(BaseProvider):
                 content = base64.urlsafe_b64decode(message['payload']['body']['data']).decode()
 
 
-            results.append({'messageId': message_id, 'snippet': snippet, "content": content })
+            results.append({
+                'messageId': message_id, 
+                'sender': sender,
+                'subject': subject,
+                'snippet': snippet, 
+                "html": content 
+            })
 
         return {"option": {"nextPageToken": next_page_token}, "messages": results, }
+
+    def reply_to_message(self, access_token: str, to: str, message: str, option: any):
+        gmail_service = self.get_gmail_service(access_token)
+
+        message_id = to
+        gmail_message = gmail_service.users().messages().get(userId='me', id=message_id).execute()
+
+        sender = gmail_message['payload']['headers'][17]['value']
+        subject = gmail_message['payload']['headers'][19]['value']
+
+        reply_message = f"Replying to {sender}\n\n{message}"
+        new_message = MIMEText(reply_message)
+        new_message['to'] = sender
+        new_message['subject'] = f"Re: {subject}"
+        new_message['Reference'] = message_id
+        new_message['In-Reply-To'] = message_id
+        create_message = {"raw": base64.urlsafe_b64encode(new_message.as_bytes()).decode()}
+        send_message = (
+            gmail_service.users().messages().send(userId='me', body=create_message).execute()
+        )
+        return {"message": "Email sent!"}
 
     def disconnect(self, request:Request):
         pass

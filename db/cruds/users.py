@@ -1,14 +1,23 @@
 
+import json
+
 from core.firebase import db   
-from schemas.users import UsersSchema
+from db.schemas.users import UsersSchema
 
 def create_user(user: UsersSchema):
     user_doc_ref = db.collection("users").document(user.id)
     user_doc_ref.set({
-        "username" : user.username,
         "email" : user.email
     })
     return {"message": "User created successfully"}
+
+def update_user(user: UsersSchema, key: str, content: str):
+    user_doc_ref = db.collection("users").document(user.id)
+    user_doc_ref.set({
+        key : json.loads(content),
+    })
+    return {"message": "User updated successfully"}
+
 
 def get_user(id: str):
     user_doc_ref = db.collection("users").document(id)

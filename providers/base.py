@@ -19,6 +19,10 @@ class BaseProvider(metaclass=BaseProviderMeta):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_session_info(self, request:Request) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
     def get_profile(self, access_token: str, option: any):
         raise NotImplementedError
     
@@ -29,7 +33,11 @@ class BaseProvider(metaclass=BaseProviderMeta):
     @abstractmethod
     def get_messages(self, access_token: str, from_what: str, count: int, option: any):
         raise NotImplementedError
-     
+    
+    @abstractmethod
+    def reply_to_message(self, access_token: str, to: str, message: str, option: any):
+        raise NotImplementedError
+
     @abstractmethod
     def disconnect(self, request: Request):
         raise NotImplementedError

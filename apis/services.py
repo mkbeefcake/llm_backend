@@ -1,8 +1,6 @@
 import requests
 from fastapi import APIRouter
-from db.cruds.proxy import create_proxy, get_proxy
 from db.cruds.service import create_service, get_all_services
-from db.schemas.proxy import ProxySchema
 from db.schemas.service import ServiceSchema
 
 router = APIRouter()
@@ -39,10 +37,6 @@ async def test_ai_endpoint(message: str, option: str):
 #             return {"message": "Failed to get response"}
 #     except:
 #         return {"message": "Failed to get response"}
-
-# @router.post("/register_chatbot_proxy")
-# async def register_chatbot_proxy(proxy: str = "google", option: str = ""):  
-#     return create_proxy(proxy=ProxySchema(proxy, option))
 
 @router.post("/register_ai_service")
 async def register_ai_service(service: str = "langchain", endpoint: str = "http://localhost:8000/services/test_ai_endpoint", option: str = ""):  
