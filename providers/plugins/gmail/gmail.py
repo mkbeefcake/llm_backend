@@ -39,6 +39,7 @@ oauth.register(
     jwks_uri="https://www.googleapis.com/oauth2/v3/certs",
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
     client_kwargs={
+        'prompt': 'consent',
         'scope': 'openid email profile https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.compose'
     }
 )
@@ -48,7 +49,7 @@ class GMailProvider(BaseProvider):
     async def link_provider(self, request: Request):
         request.session.clear()
         redirect_uri = request.url_for("google_auth")
-        return await oauth.google.authorize_redirect(request, str(redirect_uri))
+        return await oauth.google.authorize_redirect(request, str(redirect_uri), access_type='offline')
 
     async def get_access_token(self, request:Request) -> str:
         token = await oauth.google.authorize_access_token(request)
@@ -82,8 +83,16 @@ class GMailProvider(BaseProvider):
         message_id = messages[0]['id']
         message = gmail_service.users().messages().get(userId='me', id=message_id).execute()
 
-        sender = message['payload']['headers'][17]['value']
-        subject = message['payload']['headers'][19]['value']
+        # get senders
+        senders = []
+        subject = ""
+        for header in message['payload']['headers'] :
+            if header['name'].lower() == 'from':
+                senders.append(header['value'])
+            if header['name'].lower() == 'subject':
+                subject = header['value']            
+
+        # get content
         snippet = message['snippet']
         if 'parts' in message['payload']:
             for part in message['payload']['parts']:
@@ -95,7 +104,7 @@ class GMailProvider(BaseProvider):
 
         return {
             'messageId': message_id, 
-            'sender': sender,
+            'sender': senders,
             'subject': subject,
             'option': { 
                 'nextPageToken': next_page_token
@@ -104,10 +113,10 @@ class GMailProvider(BaseProvider):
             'html': content 
         }
 
-    def get_messages(self, access_token: str, from_what: str, count: int, option: any):
+    # sample from_when='timestamp'
+    def get_messages(self, access_token: str, from_when: str, count: int, option: any):
         gmail_service = self.get_gmail_service(access_token)
-        message_list = gmail_service.users().messages().list(userId='me', maxResults=count, q=f"{from_what}").execute()
-
+        message_list = gmail_service.users().messages().list(userId='me', maxResults=count, q=f"after:{from_when} from:!me").execute()
         messages = message_list.get('messages', [])
         next_page_token = message_list.get('nextPageToken')
 
@@ -116,8 +125,16 @@ class GMailProvider(BaseProvider):
             message_id = m['id']
             message = gmail_service.users().messages().get(userId='me', id=message_id).execute()
 
-            sender = message['payload']['headers'][17]['value']
-            subject = message['payload']['headers'][19]['value']
+            # get senders
+            senders = []
+            subject = ""
+            for header in message['payload']['headers'] :
+                if header['name'].lower() == 'from':
+                    senders.append(header['value'])
+                if header['name'].lower() == 'subject':
+                    subject = header['value']
+
+            # get content
             snippet = message['snippet']
 
             if 'parts' in message['payload']:
@@ -131,7 +148,7 @@ class GMailProvider(BaseProvider):
 
             results.append({
                 'messageId': message_id, 
-                'sender': sender,
+                'sender': senders,
                 'subject': subject,
                 'snippet': snippet, 
                 "html": content 
@@ -143,14 +160,20 @@ class GMailProvider(BaseProvider):
         gmail_service = self.get_gmail_service(access_token)
 
         message_id = to
-        gmail_message = gmail_service.users().messages().get(userId='me', id=message_id).execute()
+        old_message = gmail_service.users().messages().get(userId='me', id=message_id).execute()
 
-        sender = gmail_message['payload']['headers'][17]['value']
-        subject = gmail_message['payload']['headers'][19]['value']
+        # get senders
+        senders = []
+        subject = ""
+        for header in old_message['payload']['headers'] :
+            if header['name'].lower() == 'from':
+                senders.append(header['value'])
+            if header['name'].lower() == 'subject':
+                subject = header['value']
 
-        reply_message = f"Replying to {sender}\n\n{message}"
+        reply_message = f"Replying to {senders}\n\n{message}"
         new_message = MIMEText(reply_message)
-        new_message['to'] = sender
+        new_message['to'] = senders[0]
         new_message['subject'] = f"Re: {subject}"
         new_message['Reference'] = message_id
         new_message['In-Reply-To'] = message_id

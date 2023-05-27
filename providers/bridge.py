@@ -58,12 +58,12 @@ class Bridge:
         return provider.get_last_message(access_token, option)
 
     # get messages
-    def get_messages(self, provider_name: str, access_token: str, from_what: str, count: int, option: str):
+    def get_messages(self, provider_name: str, access_token: str, from_when: str, count: int, option: str):
         provider = self.provider_list[provider_name.lower()]
         if not provider:
             raise NotImplementedError
 
-        return provider.get_messages(access_token, from_what, count, option)
+        return provider.get_messages(access_token, from_when, count, option)
 
     # reply to message
     def reply_to_message(self, provider_name: str, access_token: str, to: str, message: str, option: str):

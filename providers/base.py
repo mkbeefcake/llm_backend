@@ -31,7 +31,7 @@ class BaseProvider(metaclass=BaseProviderMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_messages(self, access_token: str, from_what: str, count: int, option: any):
+    def get_messages(self, access_token: str, from_when: str, count: int, option: any):
         raise NotImplementedError
     
     @abstractmethod

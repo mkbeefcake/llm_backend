@@ -12,21 +12,20 @@ async def get_ai_response(service_name: Union[str, None] = None,
                           message: str = "Hi there", 
                           option: str = "",
                           curr_user: User = Depends(get_current_user)):  
-    
-    if service_name:
-        first_service = get_service(service=service_name)
-    else:
-        services = get_all_services()
-        if not services:
-            return {"message": "Error: There is no any AI s"}
-    
-        first_service = services[0]
+    try:    
+        if service_name:
+            first_service = get_service(service=service_name)
+        else:
+            services = get_all_services()
+            if not services:
+                return {"message": "Error: There is no any AI s"}
+        
+            first_service = services[0]
 
-    if not first_service["endpoint"]:
-        return {"message": "Error: There is no endpoint for AI service"}
-    
-    headers = {"Content-Type": "application/json"}
-    try:
+        if not first_service["endpoint"]:
+            return {"message": "Error: There is no endpoint for AI service"}
+        
+        headers = {"Content-Type": "application/json"}
         response = requests.post(first_service["endpoint"], headers=headers, json={
             "message": message,
             "option": option
@@ -36,9 +35,13 @@ async def get_ai_response(service_name: Union[str, None] = None,
             return {"message": response.json().message}
         else:
             return {"message": "Failed to get response"}
-    except:
-        return {"message": "Failed to get response"}
+        
+    except Exception as e:
+        return {"error": str(e)}
 
 @router.post("/register_ai_service")
 async def register_ai_service(service: str = "langchain", endpoint: str = "https://jsonplaceholder.typicode.com/todos/1", option: str = ""):  
-    return create_service(service=ServiceSchema(service, endpoint, option))
+    try:
+        return create_service(service=ServiceSchema(service, endpoint, option))
+    except Exception as e:
+        return {"error": str(e)}
