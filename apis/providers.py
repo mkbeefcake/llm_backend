@@ -15,15 +15,15 @@ async def google_auth(request: Request):
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/link_social_provider")
-async def linkSocialProvider(provider_name: str = "gmailprovider", request: Request = None):
+@router.get("/link_provider")
+async def link_Provider(provider_name: str = "gmailprovider", request: Request = None):
     try:
         return await bridge.link_provider(provider_name, request)
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/unlink_social_provider")
-async def unlinkSocialProvider(provider_name: str = "gmailprovider", 
+@router.get("/unlink_provider")
+async def unlink_Provider(provider_name: str = "gmailprovider", 
                                request: Request = None, 
                                curr_user: User = Depends(get_current_user)):
     try:
@@ -32,8 +32,8 @@ async def unlinkSocialProvider(provider_name: str = "gmailprovider",
     except Exception as e:
         return {"error": str(e)}
 
-@router.post("/save_social_info_to_user")
-async def save_social_info_to_user(provider_name: str = "gmailprovider",
+@router.post("/update_provider_info")
+async def update_provider_info(provider_name: str = "gmailprovider",
                            social_info: str = "",
                            curr_user: User = Depends(get_current_user)):
     try:

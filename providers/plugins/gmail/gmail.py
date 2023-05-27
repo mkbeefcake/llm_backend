@@ -12,6 +12,7 @@ from starlette.requests import Request
 from authlib.integrations.starlette_client import OAuth
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from google_auth_httplib2 import AuthorizedHttp
 
 SESSION_NAME = "google_user"
 SCOPES = [
@@ -56,6 +57,15 @@ class GMailProvider(BaseProvider):
         request.session[SESSION_NAME] = token
         return token
     
+    async def get_access_token_from_refresh_token(self, refresh_token: str) -> str:
+        creds = Credentials.from_authorized_user_info(info={
+            'client_id': oauth2_credentials['web']['client_id'],
+            'client_secret': oauth2_credentials['web']['client_secret'],
+            'refresh_token': refresh_token
+        })
+        creds.refresh(AuthorizedHttp(credentials=creds))
+        return {'access_token': creds.token}
+
     async def get_session_info(self, request:Request) -> str:
         return request.session[SESSION_NAME]
 
@@ -75,7 +85,7 @@ class GMailProvider(BaseProvider):
     def get_last_message(self, access_token: str, option: any):
         gmail_service = self.get_gmail_service(access_token)
 
-        message_list = gmail_service.users().messages().list(userId='me', maxResults=MAX_MESSAGES_COUNT).execute()
+        message_list = gmail_service.users().messages().list(userId='me', maxResults=MAX_MESSAGES_COUNT, q=f"from:!me").execute()
         messages = message_list.get('messages', [])
         next_page_token = message_list.get('nextPageToken')
 

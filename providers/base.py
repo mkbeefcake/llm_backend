@@ -19,6 +19,10 @@ class BaseProvider(metaclass=BaseProviderMeta):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_access_token_from_refresh_token(self, refresh_token: str) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
     async def get_session_info(self, request:Request) -> str:
         raise NotImplementedError
 

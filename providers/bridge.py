@@ -32,7 +32,15 @@ class Bridge:
             raise NotImplementedError
 
         return await provider.get_access_token(request)
-    
+
+    # get access token from refresh_token
+    async def get_access_token_from_refresh_token(self, provider_name:str, refresh_token: str) -> str:
+        provider = self.provider_list[provider_name.lower()]
+        if not provider:
+            raise NotImplementedError
+        
+        return await provider.get_access_token_from_refresh_token(refresh_token)
+
     # get session info
     async def get_session_info(self, provider_name: str, request:Request):
         provider = self.provider_list[provider_name.lower()]
