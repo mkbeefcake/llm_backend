@@ -17,7 +17,9 @@ async def linkSocialProvider(provider_name: str = "gmailprovider", request: Requ
     return await bridge.link_provider(provider_name, request)
 
 @router.get("/unlink_social_provider")
-async def unlinkSocialProvider(provider_name: str = "gmailprovider", curr_user: User = Depends(get_current_user), request: Request = None):
+async def unlinkSocialProvider(provider_name: str = "gmailprovider", 
+                               request: Request = None, 
+                               curr_user: User = Depends(get_current_user)):
     bridge.disconnect(provider_name, request)
     return {"message": "Unlink user successfully"}
 
