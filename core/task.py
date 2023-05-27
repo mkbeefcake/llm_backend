@@ -14,9 +14,8 @@ class TaskManager:
 
         try:
             while True:
-                print("Running Task...")
-                
                 start_timestamp = get_current_timestamp()
+                print(f"Running Task...{start_timestamp}")
                 await autobot.start(user)
                 end_timestamp = get_current_timestamp()
 
