@@ -19,7 +19,7 @@ def update_user(user: UsersSchema, key: str, content: str):
     return {"message": "User updated successfully"}
 
 
-def get_user(id: str):
+def get_user_data(id: str):
     user_doc_ref = db.collection("users").document(id)
     user_doc = user_doc_ref.get()
     if user_doc.exists:

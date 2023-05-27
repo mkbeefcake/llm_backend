@@ -1,5 +1,5 @@
 import os
-from providers.loader.loader import Loader
+from core.loader.loader import Loader
 from providers.base import BaseProvider
 from starlette.requests import Request
 

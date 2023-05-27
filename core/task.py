@@ -1,4 +1,6 @@
 import asyncio
+from core.bot.autobot import autobot
+from core.timestamp import get_current_timestamp
 
 class TaskManager:
 
@@ -13,14 +15,22 @@ class TaskManager:
         try:
             while True:
                 print("Running Task...")
-                await asyncio.sleep(interval)
+                
+                start_timestamp = get_current_timestamp()
+                await autobot.start(user)
+                end_timestamp = get_current_timestamp()
+
+                new_interval = interval + start_timestamp - end_timestamp
+                if new_interval > 0:
+                    await asyncio.sleep(new_interval)
+
         except asyncio.CancelledError:
             print(f'task_func: Received a request to cancel')
 
         pass
 
     def start_auto_bot(self, user: any, interval: int):
-        if user is not None and not user['uid'] in self.task_list:
+        if self.status_auto_bot(user) == False:
             self.task_list[user['uid']] = asyncio.create_task(TaskManager.task_func(user, interval))
 
         pass
