@@ -43,7 +43,7 @@ def test_get_ai_response(client):
         headers={"accept": "application/json", "Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 200
-    assert "message1" in response.json()
+    assert "message" in response.json()
 
 
 # def test_signup_success(client):
