@@ -2,7 +2,10 @@ import requests
 from db.cruds.service import create_service, get_all_services, get_service
 from db.schemas.service import ServiceSchema
 
+LLM_SERVICE_ENDPOINT = 'http://195.60.167.43:10458/api/v1/predict'
+
 class Service:
+
 
     def __init__(self):
         pass
@@ -13,34 +16,41 @@ class Service:
                                                     option=option))
     
 
-    def get_response(self, service_name: str, message: str, option):
-        if service_name:
-            first_service = get_service(service=service_name)
-        else:
-            services = get_all_services()
-            if not services:
-                return {"message": "Error: There is no any AI s"}
-        
-            first_service = services[0]
+    def get_response(self, service_name: str, message: str, option):        
 
-        if not first_service["endpoint"]:
-            return {"message": "Error: There is no endpoint for AI service"}
-        
-        headers = {"Content-Type": "application/json"}
+        headers = {'Content-Type': 'application/json'}
+        response = requests.post(LLM_SERVICE_ENDPOINT, headers=headers, json={
+            'input_text': message
+        })
+        return {'message': response.json()['result']}
 
-        # Original code
-        # response = requests.post(first_service["endpoint"], headers=headers, json={
-        #     "message": message,
-        #     "option": option
-        # })
-
-        # if response.status_code == 200:
-        #     return {"message": response.json().message}
+        # if service_name:
+        #     first_service = get_service(service=service_name)
         # else:
-        #     return {"message": "Failed to get response"}
+        #     services = get_all_services()
+        #     if not services:
+        #         return {"message": "Error: There is no any AI s"}
+        
+        #     first_service = services[0]
 
-        # Mockup code
-        return {"message": "Mockup response from Mockup AI service"}
+        # if not first_service["endpoint"]:
+        #     return {"message": "Error: There is no endpoint for AI service"}
+        
+        # headers = {"Content-Type": "application/json"}
+
+        # # Original code
+        # # response = requests.post(first_service["endpoint"], headers=headers, json={
+        # #     "message": message,
+        # #     "option": option
+        # # })
+
+        # # if response.status_code == 200:
+        # #     return {"message": response.json().message}
+        # # else:
+        # #     return {"message": "Failed to get response"}
+
+        # # Mockup code
+        # return {"message": "Mockup response from Mockup AI service"}
 
 
 ai_service = Service()

@@ -9,6 +9,7 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_NO_INTERACTION=1 \
     PYSETUP_PATH="/opt/pysetup" \
     VENV_PATH="/opt/pysetup/.venv"
+ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
 # builder-base is used to build dependencies
 FROM python-base AS builder-base
@@ -61,8 +62,7 @@ CMD ["poetry", "run", "python", "main.py"]
 # 'lint' stage runs black and isort
 # running in check mode means build will fail if any linting errors occur
 FROM development AS lint
-RUN pip install git+https://github.com/psf/black
-RUN black --config ./pyproject.toml --check app tests
+RUN black --config ./pyproject.toml --check . tests
 RUN isort --settings-path ./pyproject.toml --recursive --check-only
 CMD ["tail", "-f", "/dev/null"]
 

@@ -11,7 +11,8 @@
             "module": "poetry",
             "args": [
                 "run",
-                "main",
+                "python",
+                "main.py"
             ],
             "jinja": true,
             "justMyCode": true,
