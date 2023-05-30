@@ -34,6 +34,7 @@ jobs:
             echo '${{secrets.OAUTH2_CREDENTIALS}}' > oauth20credentials.json
             echo '${{secrets.NEO_CHATBOT_FIREBASE}}' > neo-chatbot-firebase.json
             echo '${{secrets.NEO_CHATBOT_FIREBASE_SERVICE_ACCOUNT}}' > neo-chatbot-f0fff-service_account_keys.json
+            echo '${{secrets.OAUTH2_CREDENTIALS}}' > oauth2-credentials.json
 
         - name: Build Docker image
           run: docker build . -t neo_chatbot_backend
