@@ -10,13 +10,32 @@ RUN buildDeps="build-essential" \
     && apt-get install -y git \
     && apt-get install -y --no-install-recommends $buildDeps \
     && rm -rf /var/lib/apt/lists/*
+RUN pip install poetry
+
+# and install only runtime deps using poetry
+WORKDIR $PYSETUP_PATH
+COPY ./poetry.lock ./pyproject.toml ./
+RUN poetry install --only main  # respects
+
+# 'development' stage installs all dev deps and can be used to develop code.
+# For example using docker-compose to mount local volume under /app
+FROM python-base as development
+ENV FASTAPI_ENV=development
+
+# Copying poetry and venv into image
+COPY --from=builder-base $POETRY_HOME $POETRY_HOME
+COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
+
+# venv already has runtime deps installed we get a quicker install
+WORKDIR $PYSETUP_PATH
+RUN poetry install
 
 # Create App directory
 RUN mkdir /app
 WORKDIR /app
 COPY . .
+COPY ./docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
-RUN pip install poetry
 RUN poetry config virtualenvs.create false
 RUN poetry install
 
