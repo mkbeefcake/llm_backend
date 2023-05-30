@@ -20,7 +20,12 @@ RUN buildDeps="build-essential" \
     && apt-get install -y git \
     && apt-get install -y --no-install-recommends $buildDeps \
     && rm -rf /var/lib/apt/lists/*
-RUN pip install poetry
+
+# Install Poetry - respects $POETRY_VERSION & $POETRY_HOME
+ENV POETRY_VERSION=1.5.0
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=${POETRY_HOME} python3 - --version ${POETRY_VERSION} && \
+    chmod a+x /opt/poetry/bin/poetry
 
 # and install only runtime deps using poetry
 WORKDIR $PYSETUP_PATH
