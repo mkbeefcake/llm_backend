@@ -28,6 +28,12 @@ jobs:
 
         - name: Checkout repository
           uses: actions/checkout@v2
+          
+        - name: create credential files
+          run: |
+            echo "${{secrets.OAUTH2_CREDENTIALS}}" > oauth20credentials.json
+            echo "${{secrets.NEO_CHATBOT_FIREBASE}} > neo-chatbot-firebase.json
+            echo "${{secrets.NEO_CHATBOT_FIREBASE_SERVICEACCOUNT}} > neo-chatbot-f0ff-service_account_keys.json
 
         - name: Build Docker image
           run: docker build . -t neo_chatbot_backend
