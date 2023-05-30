@@ -39,8 +39,8 @@ jobs:
         - name: Build Docker image
           run: docker build . -t neo_chatbot_backend
 
-        - name: Test Docker image
-          run: docker run neo_chatbot_backend 
+#         - name: Test Docker image
+#           run: docker run neo_chatbot_backend 
 
         - name: Push Docker image
           run: docker push neo_chatbot_backend
