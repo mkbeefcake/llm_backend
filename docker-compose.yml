@@ -1,0 +1,6 @@
+services:
+  neo-chat-backend:
+    container_name: neo_chat_backend
+    build: .
+    ports:
+      - "8000:8000"

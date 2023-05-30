@@ -4,19 +4,14 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [                
-               
         {
             "name": "Neo-Chatbot",
             "type": "python",
             "request": "launch",
-            "module": "uvicorn",
+            "module": "poetry",
             "args": [
-                "main:app",
-                "--host",
-                "0.0.0.0",
-                "--port",
-                "8000",
-                "--reload"
+                "run",
+                "main",
             ],
             "jinja": true,
             "justMyCode": true,
