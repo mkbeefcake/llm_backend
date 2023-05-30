@@ -1,7 +1,9 @@
 import os
+
+from starlette.requests import Request
+
 from core.loader.loader import Loader
 from providers.base import BaseProvider
-from starlette.requests import Request
 
 PROVIDERS_PATH = os.path.join(os.path.dirname(__file__), "plugins")
 

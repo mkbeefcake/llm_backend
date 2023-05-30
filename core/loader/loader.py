@@ -2,15 +2,15 @@
 This module can load Python modules by path.
 """
 
-from importlib.machinery import ModuleSpec
-from importlib.util import module_from_spec, spec_from_file_location
 import inspect
-from logging import Logger
 import logging
 import os
 import sys
+from importlib.machinery import ModuleSpec
+from importlib.util import module_from_spec, spec_from_file_location
+from logging import Logger
 from types import ModuleType
-from typing import List, Dict, Tuple, Optional
+from typing import Dict, List, Optional, Tuple
 
 from providers.base import BaseProvider
 

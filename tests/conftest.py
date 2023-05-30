@@ -1,16 +1,15 @@
-from typing import Any
-from typing import Generator
+import os
+import sys
+from typing import Any, Generator
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-import sys
-import os
+from apis.route import api_router
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from apis.route import api_router
 
 
 def start_application():

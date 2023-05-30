@@ -1,10 +1,11 @@
 import uvicorn
 from fastapi import FastAPI
-from pydantic import BaseModel
-from core.config import settings
-from apis.route import api_router
-from starlette.middleware.sessions import SessionMiddleware
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from starlette.middleware.sessions import SessionMiddleware
+
+from apis.route import api_router
+from core.config import settings
 
 
 def include_router(app):

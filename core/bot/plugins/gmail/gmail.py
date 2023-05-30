@@ -1,7 +1,8 @@
+from google.auth.exceptions import RefreshError
+
 from core.bot.base import BaseProviderBot
 from core.timestamp import get_current_timestamp
 from providers.bridge import bridge
-from google.auth.exceptions import RefreshError
 from services.service import ai_service
 
 PROVIDER_NAME = "GMailProvider"

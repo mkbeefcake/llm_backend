@@ -1,12 +1,10 @@
+import json
+from pathlib import Path
+
 import firebase_admin
 import pyrebase
-import json
 import requests
-
-from firebase_admin import credentials
-from firebase_admin import firestore
-from firebase_admin import auth
-from pathlib import Path
+from firebase_admin import auth, credentials, firestore
 
 service_account_path = Path(".") / "neo-chatbot-f0fff-service_account_keys.json"
 firebase_config_path = Path(".") / "neo-chatbot-firebase.json"

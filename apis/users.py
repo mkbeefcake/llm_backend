@@ -1,9 +1,10 @@
-from fastapi import FastAPI, Depends, HTTPException, Security, APIRouter
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Security
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, SecretStr
-from core.firebase import authenticate_user, decode_access_token, create_user
-from helpers.forms import BasicAuthenticationForm
+
+from core.firebase import authenticate_user, create_user, decode_access_token
 from core.task import task_manager
+from helpers.forms import BasicAuthenticationForm
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/token")

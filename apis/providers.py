@@ -1,9 +1,11 @@
-from fastapi import FastAPI, Request, APIRouter, Depends
+from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
-from providers.bridge import bridge
-from .users import get_current_user, User
+
 from db.cruds.users import update_user
 from db.schemas.users import UsersSchema
+from providers.bridge import bridge
+
+from .users import User, get_current_user
 
 router = APIRouter()
 

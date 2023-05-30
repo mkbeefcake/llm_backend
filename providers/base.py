@@ -1,8 +1,8 @@
-from abc import ABCMeta, abstractmethod
 import sys
-from starlette.requests import Request
+from abc import ABCMeta, abstractmethod
 
 from simple_classproperty import ClasspropertyMeta, classproperty
+from starlette.requests import Request
 
 
 class BaseProviderMeta(ABCMeta, ClasspropertyMeta):

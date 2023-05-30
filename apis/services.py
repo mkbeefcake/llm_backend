@@ -1,7 +1,10 @@
 from typing import Union
+
 from fastapi import APIRouter, Depends
-from .users import get_current_user, User
+
 from services.service import ai_service
+
+from .users import User, get_current_user
 
 router = APIRouter()
 

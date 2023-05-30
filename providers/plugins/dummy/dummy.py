@@ -1,6 +1,8 @@
 import sys
-from providers.base import BaseProvider
+
 from starlette.requests import Request
+
+from providers.base import BaseProvider
 
 
 class DummyProvider(BaseProvider):

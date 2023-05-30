@@ -1,18 +1,17 @@
-import sys
-import json
 import base64
+import json
+import sys
 from email.mime.text import MIMEText
-
-from providers.base import BaseProvider
 from pathlib import Path
-
-from starlette.config import Config
-from starlette.requests import Request
 
 from authlib.integrations.starlette_client import OAuth
 from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
 from google_auth_httplib2 import AuthorizedHttp
+from googleapiclient.discovery import build
+from starlette.config import Config
+from starlette.requests import Request
+
+from providers.base import BaseProvider
 
 SESSION_NAME = "google_user"
 SCOPES = [
