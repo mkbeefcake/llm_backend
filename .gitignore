@@ -6,3 +6,4 @@ neo-chatbot-firebase.json
 oauth2-credentials.json
 .vscode/launch.json
 chat-automation-serviceaccount.json
+.coverage
