@@ -42,8 +42,8 @@ jobs:
 #         - name: Test Docker image
 #           run: docker run neo_chatbot_backend 
 
-        - name: Push Docker image
-          run: docker push neo_chatbot_backend
+#         - name: Push Docker image
+#           run: docker push neo_chatbot_backend
 
         - name: Deploy Docker image
           run: gcloud run deploy ${{ secrets.GCP_PROJECT_ID }} --image neo_chatbot_backend --region us-central1 --platform managed
