@@ -18,8 +18,8 @@ RUN buildDeps="build-essential" \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
         curl \
-        vim \
         netcat \
+    && apt-get install -y git \
     && apt-get install -y --no-install-recommends $buildDeps \
     && rm -rf /var/lib/apt/lists/*
 
@@ -57,7 +57,7 @@ COPY . .
 
 EXPOSE 8000
 ENTRYPOINT /docker-entrypoint.sh $0 $@
-CMD ["poetry", "run", "main"]
+CMD ["poetry", "run", "python", "main.py"]
 
 # 'lint' stage runs black and isort
 # running in check mode means build will fail if any linting errors occur
