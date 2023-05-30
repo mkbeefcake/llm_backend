@@ -2,6 +2,7 @@ import pytest
 
 from .conftest import client
 
+
 def test_login(client):
     response = client.post(
         "/users/token", data={"username": "test@gmail.com", "password": "testtest"}
@@ -17,20 +18,33 @@ def test_login_failure(client):
     assert response.status_code == 200
     assert "error" in response.json()
 
+
 def get_access_token(client):
     response = client.post(
         "/users/token", data={"username": "test@gmail.com", "password": "testtest"}
     )
     return response.json()["access_token"]
 
+
 def test_me(client):
     token = get_access_token(client=client)
-    print(token)
     response = client.get(
-        "/users/me", headers={'accept': 'application/json', 'Authorization': f'Bearer {token}'}
+        "/users/me",
+        headers={"accept": "application/json", "Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 200
     assert "email" in response.json()
+
+
+def test_get_ai_response(client):
+    token = get_access_token(client=client)
+    response = client.post(
+        "/services/get_ai_response?message=Hi%20there",
+        headers={"accept": "application/json", "Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    assert "message1" in response.json()
+
 
 # def test_signup_success(client):
 #     response = client.post(
