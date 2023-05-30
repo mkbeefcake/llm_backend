@@ -11,7 +11,6 @@ from apis.route import api_router
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-
 def start_application():
     app = FastAPI()
     app.include_router(api_router)
