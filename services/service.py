@@ -2,27 +2,26 @@ import requests
 from db.cruds.service import create_service, get_all_services, get_service
 from db.schemas.service import ServiceSchema
 
-LLM_SERVICE_ENDPOINT = 'http://195.60.167.43:10458/api/v1/predict'
+LLM_SERVICE_ENDPOINT = "http://195.60.167.43:10458/api/v1/predict"
+
 
 class Service:
-
-
     def __init__(self):
         pass
 
     def create_service(self, service_name: str, endpoint: str, option):
-        return create_service(service=ServiceSchema(service=service_name, 
-                                                    endpoint=endpoint, 
-                                                    option=option))
-    
+        return create_service(
+            service=ServiceSchema(
+                service=service_name, endpoint=endpoint, option=option
+            )
+        )
 
-    def get_response(self, service_name: str, message: str, option):        
-
-        headers = {'Content-Type': 'application/json'}
-        response = requests.post(LLM_SERVICE_ENDPOINT, headers=headers, json={
-            'input_text': message
-        })
-        return {'message': response.json()['result']}
+    def get_response(self, service_name: str, message: str, option):
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(
+            LLM_SERVICE_ENDPOINT, headers=headers, json={"input_text": message}
+        )
+        return {"message": response.json()["result"]}
 
         # if service_name:
         #     first_service = get_service(service=service_name)
@@ -30,12 +29,12 @@ class Service:
         #     services = get_all_services()
         #     if not services:
         #         return {"message": "Error: There is no any AI s"}
-        
+
         #     first_service = services[0]
 
         # if not first_service["endpoint"]:
         #     return {"message": "Error: There is no endpoint for AI service"}
-        
+
         # headers = {"Content-Type": "application/json"}
 
         # # Original code

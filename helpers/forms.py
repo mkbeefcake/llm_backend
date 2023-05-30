@@ -1,5 +1,6 @@
 from fastapi.param_functions import Form
 
+
 class BasicAuthenticationForm:
     def __init__(
         self,

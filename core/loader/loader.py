@@ -15,7 +15,7 @@ from typing import List, Dict, Tuple, Optional
 from providers.base import BaseProvider
 
 
-class Loader():
+class Loader:
     def __init__(self) -> None:
         self.__available_plugins: Dict[str, type] = {}
 
@@ -31,10 +31,13 @@ class Loader():
         """
         return self.__available_plugins
 
-    def load_plugins(self, path: str,
-                     plugin_base_class: type=BaseProvider,
-                     specific_plugins: List[str]=[],
-                     recursive: bool=False) -> Dict[str, type]:
+    def load_plugins(
+        self,
+        path: str,
+        plugin_base_class: type = BaseProvider,
+        specific_plugins: List[str] = [],
+        recursive: bool = False,
+    ) -> Dict[str, type]:
         """
         Load all classes in a directory specified by 'path' that match the 'plugin_base_class' class.
         Alternatively if the 'specific_plugins' list contains class names, only those will be loaded.
@@ -57,10 +60,9 @@ class Loader():
         self.__add_to_pythonpath(path)
 
         # do the actual import
-        plugins: Dict[str, type] = self.__load(path,
-                                               plugin_base_class,
-                                               specific_plugins,
-                                               recursive)
+        plugins: Dict[str, type] = self.__load(
+            path, plugin_base_class, specific_plugins, recursive
+        )
 
         # reset the modified path again
         self.__remove_from_pythonpath(path)
@@ -68,10 +70,13 @@ class Loader():
         self.__available_plugins.update(plugins)
         return plugins
 
-    def __load(self, path: str,
-               plugin_base_class: type=BaseProvider,
-               specific_plugins: List[str]=[],
-               recursive: bool=False) -> Dict[str, type]:
+    def __load(
+        self,
+        path: str,
+        plugin_base_class: type = BaseProvider,
+        specific_plugins: List[str] = [],
+        recursive: bool = False,
+    ) -> Dict[str, type]:
         """
         This method does the actual plugin loading.
         The arguments are the same as the of the load_plugins method.
@@ -106,10 +111,11 @@ class Loader():
                 # search in the package if recursive search is requested
                 # or if only packages are found in the path -> try to find plugin modules one level down
                 if recursive or only_packages:
-                    plugins.update(self.load_plugins(module_path,
-                                                     plugin_base_class,
-                                                     specific_plugins,
-                                                     recursive))
+                    plugins.update(
+                        self.load_plugins(
+                            module_path, plugin_base_class, specific_plugins, recursive
+                        )
+                    )
                     continue
                 else:
                     # do not try to import it, since it's not a module
@@ -129,7 +135,9 @@ class Loader():
                     if spec.loader:
                         spec.loader.exec_module(imported_module)
                     else:
-                        raise ModuleNotFoundError(f"No loader found for module '{name}'")
+                        raise ModuleNotFoundError(
+                            f"No loader found for module '{name}'"
+                        )
                 else:
                     raise ModuleNotFoundError(f"No spec found for module '{name}'")
             except ModuleNotFoundError as e:
@@ -143,16 +151,28 @@ class Loader():
                 attribute: type = getattr(imported_module, i)
 
                 # first check if it's a class
-                if (inspect.isclass(attribute) and
-                        # check if only specific plugins should be loaded
-                        ((specific_plugins and
+                if (
+                    inspect.isclass(attribute)
+                    and
+                    # check if only specific plugins should be loaded
+                    (
+                        (
+                            specific_plugins
+                            and
                             # they must match the name case sensitive
-                            attribute.__name__ in specific_plugins) or
-                         # otherwise check for plugin subclass
-                         (not specific_plugins and
-                            issubclass(attribute, plugin_base_class) and
+                            attribute.__name__ in specific_plugins
+                        )
+                        or
+                        # otherwise check for plugin subclass
+                        (
+                            not specific_plugins
+                            and issubclass(attribute, plugin_base_class)
+                            and
                             # but do not match the plugin class itself
-                            attribute != plugin_base_class))):
+                            attribute != plugin_base_class
+                        )
+                    )
+                ):
                     pn: str
                     # if the plugin is derived from 'BaseProvider' class,
                     if issubclass(attribute, BaseProvider):

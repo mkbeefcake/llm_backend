@@ -1,19 +1,22 @@
-
-from core.firebase import db   
+from core.firebase import db
 from db.schemas.service import ServiceSchema
+
 
 def create_service(service: ServiceSchema):
     _old = get_service(service=service.service)
     if _old:
-        return {"message": "Service registered successfully"}    
+        return {"message": "Service registered successfully"}
 
     service_doc_ref = db.collection("services").document(service.service)
-    service_doc_ref.set({
-        "service" : service.service,
-        "endpoint" : service.endpoint,
-        "option" : service.option
-    })
+    service_doc_ref.set(
+        {
+            "service": service.service,
+            "endpoint": service.endpoint,
+            "option": service.option,
+        }
+    )
     return {"message": "Service registered successfully"}
+
 
 def get_service(service: str):
     service_doc_ref = db.collection("services").document(service)
@@ -23,7 +26,8 @@ def get_service(service: str):
         return service_data
     else:
         return None
-    
+
+
 def get_all_services():
     service_doc_ref = db.collection("services")
     collections = [doc.to_dict() for doc in service_doc_ref.stream()]
