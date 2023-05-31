@@ -50,7 +50,7 @@ class GMailProvider(BaseProvider):
         request.session.clear()
         redirect_uri = request.url_for("google_auth")
         return await oauth.google.authorize_redirect(
-            request, str(redirect_uri).replace('http:', 'https:'), access_type="offline"
+            request, str(redirect_uri).replace("http:", "https:"), access_type="offline"
         )
 
     async def get_access_token(self, request: Request) -> str:
