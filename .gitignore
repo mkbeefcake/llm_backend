@@ -7,3 +7,4 @@ oauth2-credentials.json
 .vscode/launch.json
 chat-automation-serviceaccount.json
 .coverage
+oauth2-credentials-production.json
