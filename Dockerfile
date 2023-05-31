@@ -93,5 +93,5 @@ WORKDIR /app
 
 ENTRYPOINT /docker-entrypoint.sh $0 $@
 EXPOSE 8000
-CMD [ "uvicorn", "main:app", "--reload", "--port", "8000"]
+CMD [ "uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
 # CMD [ "gunicorn", "--worker-class uvicorn.workers.UvicornWorker", "--config /gunicorn_conf.py", "main"]
