@@ -28,3 +28,12 @@ def get_user_data(id: str):
         return user_data
     else:
         return None
+
+def get_user_providers(id: str):
+    user_doc_ref = db.collection("users").document(id)
+    user_doc = user_doc_ref.get()
+    if user_doc.exists:
+        user_data = user_doc.to_dict()
+        return list(user_data.keys())
+    else:
+        return None
