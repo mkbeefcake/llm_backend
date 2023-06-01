@@ -4,36 +4,43 @@ from fastapi.responses import RedirectResponse
 from db.cruds.users import update_user
 from db.schemas.users import UsersSchema
 from providers.bridge import bridge
+from providers.provider import provider
 
 from .users import User, get_current_user
-from providers.provider import provider
 
 router = APIRouter()
 
-@router.get('/get_providers')
-async def get_providers(curr_user: User = Depends(get_current_user)):
-    try:
-        return provider.get_all_providers()
-    except Exception as e:
-        return {"error": str(e)}
 
-@router.get('/get_my_providers')
+@router.get("/get_my_providers")
 async def get_my_providers(curr_user: User = Depends(get_current_user)):
     try:
         return provider.get_my_providers(user=curr_user)
     except Exception as e:
         return {"error": str(e)}
 
-@router.post('/register_provider')
-async def register_provider(provider_name: str = "gmailprovider", 
-    provider_description: str = 'Gmail Provider',
-    provider_icon_url: str = '',
-    curr_user: User = Depends(get_current_user)):
+
+@router.get("/get_providers")
+async def get_providers(curr_user: User = Depends(get_current_user)):
     try:
-        return provider.create_provider(provider_name, provider_description, provider_icon_url)
+        return provider.get_all_providers()
     except Exception as e:
         return {"error": str(e)}
-    
+
+
+@router.post("/register_provider")
+async def register_provider(
+    provider_name: str = "gmailprovider",
+    provider_description: str = "Gmail Provider",
+    provider_icon_url: str = "",
+    curr_user: User = Depends(get_current_user),
+):
+    try:
+        return provider.create_provider(
+            provider_name, provider_description, provider_icon_url
+        )
+    except Exception as e:
+        return {"error": str(e)}
+
 
 @router.get("/google_auth")
 async def google_auth(request: Request):

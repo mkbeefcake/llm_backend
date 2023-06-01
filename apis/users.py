@@ -47,28 +47,38 @@ async def signup(form_data: BasicAuthenticationForm = Depends()):
 
 @router.post("/start_auto_bot")
 async def start_auto_bot(
-    interval_seconds: int = 300, curr_user: User = Depends(get_current_user)
+    provider_name: str = "gmailprovider",
+    interval_seconds: int = 300,
+    curr_user: User = Depends(get_current_user),
 ):
     try:
-        task_manager.start_auto_bot(user=curr_user, interval=interval_seconds)
+        task_manager.start_auto_bot(
+            user=curr_user, provider_name=provider_name, interval=interval_seconds
+        )
         return {"message": "User started auto-bot successfully"}
     except Exception as e:
         return {"error": str(e)}
 
 
 @router.post("/stop_auto_bot")
-async def stop_auto_bot(curr_user: User = Depends(get_current_user)):
+async def stop_auto_bot(
+    provider_name: str = "gmailprovider", curr_user: User = Depends(get_current_user)
+):
     try:
-        task_manager.stop_auto_bot(user=curr_user)
+        task_manager.stop_auto_bot(user=curr_user, provider_name=provider_name)
         return {"message": "User stopped auto-bot successfully"}
     except Exception as e:
         return {"error": str(e)}
 
 
 @router.post("/status_auto_bot")
-async def status_auto_bot(curr_user: User = Depends(get_current_user)):
+async def status_auto_bot(
+    provider_name: str = "gmailprovider", curr_user: User = Depends(get_current_user)
+):
     try:
-        result = task_manager.status_auto_bot(user=curr_user)
+        result = task_manager.status_auto_bot(
+            user=curr_user, provider_name=provider_name
+        )
         return {"message": {"status": result}}
     except Exception as e:
         return {"error": str(e)}

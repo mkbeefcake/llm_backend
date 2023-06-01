@@ -29,6 +29,7 @@ def get_user_data(id: str):
     else:
         return None
 
+
 def get_user_providers(id: str):
     user_doc_ref = db.collection("users").document(id)
     user_doc = user_doc_ref.get()

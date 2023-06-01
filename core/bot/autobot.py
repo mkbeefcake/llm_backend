@@ -18,16 +18,16 @@ class AutoBot:
             Bot = self.bots[key]
             self.bot_list[key] = Bot()
 
-    async def start(self, user: any):
+    async def start(self, user: any, provider_name: str):
         user_id = user["uid"]
         user_data = get_user_data(user_id)
 
         for key in user_data:
-            bot_name = key + "bot"
-            bot = self.bot_list[bot_name.lower()]
-            if bot:
-                await bot.start(user_data[key])
-
+            if key == provider_name:
+                bot_name = key + "bot"
+                bot = self.bot_list[bot_name.lower()]
+                if bot:
+                    await bot.start(user_data[key])
         pass
 
 
