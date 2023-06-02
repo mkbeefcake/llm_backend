@@ -65,7 +65,9 @@ class GMailProvider(BaseProvider):
             "refresh_token": token["refresh_token"],
         }
         response = RedirectResponse(
-            url=request.session[REDIRECT_URL] + "?provider=gmailprovider&" + urlencode(response_tokens)
+            url=request.session[REDIRECT_URL]
+            + "?provider=gmailprovider&"
+            + urlencode(response_tokens)
         )
         return response
 
