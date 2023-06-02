@@ -61,8 +61,8 @@ class GMailProvider(BaseProvider):
     async def get_access_token(self, request: Request):
         token = await oauth.google.authorize_access_token(request)
         response_tokens = {
-            "access_token": token.access_token,
-            "refresh_token": token.refresh_token,
+            "access_token": token["access_token"],
+            "refresh_token": token["refresh_token"],
         }
         response = RedirectResponse(
             url=request.session[REDIRECT_URL] + "?token=" + urlencode(response_tokens)
