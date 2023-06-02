@@ -3,6 +3,7 @@ import json
 import sys
 from email.mime.text import MIMEText
 from pathlib import Path
+from urllib.parse import urlencode
 
 from authlib.integrations.starlette_client import OAuth
 from fastapi.responses import RedirectResponse
@@ -14,7 +15,6 @@ from starlette.requests import Request
 
 from providers.base import BaseProvider
 
-SESSION_NAME = "google_user"
 REDIRECT_URL = "redirect_url"
 
 SCOPES = [
@@ -60,10 +60,13 @@ class GMailProvider(BaseProvider):
 
     async def get_access_token(self, request: Request):
         token = await oauth.google.authorize_access_token(request)
-        request.session[SESSION_NAME] = token
-
-        response = RedirectResponse(url=request.session[REDIRECT_URL])
-        response.set_cookie("token", token)
+        response_tokens = {
+            "access_token": token.access_token,
+            "refresh_token": token.refresh_token,
+        }
+        response = RedirectResponse(
+            url=request.session[REDIRECT_URL] + "?token=" + urlencode(response_tokens)
+        )
         return response
 
     async def get_access_token_from_refresh_token(self, refresh_token: str) -> str:
