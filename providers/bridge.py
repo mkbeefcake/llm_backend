@@ -22,12 +22,14 @@ class Bridge:
             self.provider_list[key] = Provider()
 
     # link provider
-    async def link_provider(self, provider_name: str, request: Request):
+    async def link_provider(
+        self, provider_name: str, redirect_url: str, request: Request
+    ):
         provider = self.provider_list[provider_name.lower()]
         if not provider:
             raise NotImplementedError
 
-        return await provider.link_provider(request)
+        return await provider.link_provider(redirect_url, request)
 
     # get access token
     async def get_access_token(self, provider_name: str, request: Request):

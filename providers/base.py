@@ -11,7 +11,7 @@ class BaseProviderMeta(ABCMeta, ClasspropertyMeta):
 
 class BaseProvider(metaclass=BaseProviderMeta):
     @abstractmethod
-    async def link_provider(self, request: Request):
+    async def link_provider(self, redirect_url: str, request: Request):
         raise NotImplementedError
 
     @abstractmethod

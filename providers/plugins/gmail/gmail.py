@@ -5,6 +5,7 @@ from email.mime.text import MIMEText
 from pathlib import Path
 
 from authlib.integrations.starlette_client import OAuth
+from fastapi.responses import RedirectResponse
 from google.oauth2.credentials import Credentials
 from google_auth_httplib2 import AuthorizedHttp
 from googleapiclient.discovery import build
@@ -14,6 +15,8 @@ from starlette.requests import Request
 from providers.base import BaseProvider
 
 SESSION_NAME = "google_user"
+REDIRECT_URL = "redirect_url"
+
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.modify",
@@ -46,17 +49,22 @@ oauth.register(
 
 
 class GMailProvider(BaseProvider):
-    async def link_provider(self, request: Request):
+    async def link_provider(self, redirect_url: str, request: Request):
         request.session.clear()
+        request.session[REDIRECT_URL] = redirect_url
+
         redirect_uri = request.url_for("google_auth")
         return await oauth.google.authorize_redirect(
             request, str(redirect_uri).replace("http:", "https:"), access_type="offline"
         )
 
-    async def get_access_token(self, request: Request) -> str:
+    async def get_access_token(self, request: Request):
         token = await oauth.google.authorize_access_token(request)
         request.session[SESSION_NAME] = token
-        return token
+
+        response = RedirectResponse(url=request.session[REDIRECT_URL])
+        response.set_cookie("token", token)
+        return response
 
     async def get_access_token_from_refresh_token(self, refresh_token: str) -> str:
         creds = Credentials.from_authorized_user_info(

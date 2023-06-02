@@ -45,16 +45,19 @@ async def register_provider(
 @router.get("/google_auth")
 async def google_auth(request: Request):
     try:
-        result = await bridge.get_access_token("gmailprovider", request)
-        return {"message": "User logged successfully", "data": result}
+        return await bridge.get_access_token("gmailprovider", request)
     except Exception as e:
         return {"error": str(e)}
 
 
 @router.get("/link_provider")
-async def link_Provider(provider_name: str = "gmailprovider", request: Request = None):
+async def link_Provider(
+    provider_name: str = "gmailprovider",
+    redirect_url: str = "http://localhost:3000/callback/oauth",
+    request: Request = None,
+):
     try:
-        return await bridge.link_provider(provider_name, request)
+        return await bridge.link_provider(provider_name, redirect_url, request)
     except Exception as e:
         return {"error": str(e)}
 

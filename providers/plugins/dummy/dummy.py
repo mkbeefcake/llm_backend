@@ -6,9 +6,9 @@ from providers.base import BaseProvider
 
 
 class DummyProvider(BaseProvider):
-    async def link_provider(self, request: Request):
+    async def link_provider(self, redirect_url: str, request: Request):
         print(
-            "[%s]: link_provider: %s | %s" % (self.plugin_name, request),
+            "[%s]: link_provider: %s | %s" % (self.plugin_name, redirect_url, request),
             file=sys.stdout,
         )
 
