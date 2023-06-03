@@ -1,5 +1,6 @@
 FROM python:3.10-slim-bullseye AS python-base
 ARG env_file
+RUN cat ${env_file}
 ENV SECRET_KEY=$(grep SECRET_KEY ${env_file} | cut -d '=' -f 2) \
     OPENAI_API_KEY=$(grep OPENAI_API_KEY ${env_file} | cut -d '=' -f 2) \
     BANANA_MODEL_KEY=$(grep BANANA_MODEL_KEY ${env_file} | cut -d '=' -f 2) \
