@@ -72,6 +72,9 @@ class GMailProvider(BaseProvider):
         return response
 
     async def get_access_token_from_refresh_token(self, refresh_token: str) -> str:
+        print(oauth2_credentials["web"]["client_id"])
+        print(oauth2_credentials["web"]["client_secret"])
+        print(refresh_token)
         creds = Credentials.from_authorized_user_info(
             info={
                 "client_id": oauth2_credentials["web"]["client_id"],
