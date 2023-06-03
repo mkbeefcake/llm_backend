@@ -1,9 +1,10 @@
 FROM python:3.10-slim-bullseye AS python-base
-ARG env_file
-RUN cat ${env_file}
-ENV SECRET_KEY=$(grep SECRET_KEY ${env_file} | cut -d '=' -f 2) \
-    OPENAI_API_KEY=$(grep OPENAI_API_KEY ${env_file} | cut -d '=' -f 2) \
-    BANANA_MODEL_KEY=$(grep BANANA_MODEL_KEY ${env_file} | cut -d '=' -f 2) \
+ARG SECRET_KEY
+ARG OPENAI_API_KEY
+ARG BANANA_MODEL_KEY
+ENV SECRET_KEY=$SECRET_KEY \
+    OPENAI_API_KEY=$OPENAI_API_KEY \
+    BANANA_MODEL_KEY=$BANANA_MODEL_KEY
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=off \
