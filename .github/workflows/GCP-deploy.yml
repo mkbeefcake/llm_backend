@@ -38,7 +38,7 @@ jobs:
             echo '${{secrets.ENV}}' > .env
 
         - name: Build Docker image
-          run: docker build env_file=.env . -t $IMAGE_NAME
+          run: docker build --build-arg env_file=.env . -t $IMAGE_NAME
 
 #         - name: Test Docker image
 #           run: docker run $IMAGE_NAME 
