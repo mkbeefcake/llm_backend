@@ -1,5 +1,7 @@
 import json
 
+from firebase_admin import firestore
+
 from core.firebase import db
 from db.schemas.users import UsersSchema
 
@@ -12,11 +14,15 @@ def create_user(user: UsersSchema):
 
 def update_user(user: UsersSchema, key: str, content: str):
     user_doc_ref = db.collection("users").document(user.id)
-    user_doc_ref.set(
-        {
-            key: json.loads(content),
-        }
-    )
+
+    if content == "":
+        user_doc_ref.update({(key): firestore.DELETE_FIELD})
+    else:
+        user_doc_ref.set(
+            {
+                key: json.loads(content),
+            }
+        )
     return {"message": "User updated successfully"}
 
 

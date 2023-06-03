@@ -70,6 +70,11 @@ async def unlink_Provider(
 ):
     try:
         bridge.disconnect(provider_name, request)
+        return update_user(
+            user=UsersSchema(id=curr_user["uid"], email=curr_user["email"]),
+            key=provider_name,
+            content="",
+        )
         return {"message": "Unlink user successfully"}
     except Exception as e:
         return {"error": str(e)}
