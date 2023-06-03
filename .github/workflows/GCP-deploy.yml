@@ -35,9 +35,10 @@ jobs:
             echo '${{secrets.NEO_CHATBOT_FIREBASE}}' > neo-chatbot-firebase.json
             echo '${{secrets.NEO_CHATBOT_FIREBASE_SERVICE_ACCOUNT}}' > neo-chatbot-f0fff-service_account_keys.json
             echo '${{secrets.OAUTH2_CREDENTIALS}}' > oauth2-credentials.json
+            echo '${{secrets.ENV}}' > .env
 
         - name: Build Docker image
-          run: docker build . -t $IMAGE_NAME
+          run: docker build env_file=.env . -t $IMAGE_NAME
 
 #         - name: Test Docker image
 #           run: docker run $IMAGE_NAME 

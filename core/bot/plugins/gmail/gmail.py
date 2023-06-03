@@ -30,7 +30,9 @@ class GMailProviderBot(BaseProviderBot):
                     option="",
                 )
                 ai_response = ai_service.get_response(
-                    service_name="", message=last_message["snippet"], option=""
+                    service_name="openai_service",
+                    message=last_message["snippet"],
+                    option="",
                 )
                 bridge.reply_to_message(
                     provider_name=PROVIDER_NAME,

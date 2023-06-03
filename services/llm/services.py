@@ -1,12 +1,12 @@
 import os
 from abc import ABC, abstractmethod
 from getpass import getpass
+
 import requests
-
-
-from langchain.llms import Banana
+from langchain import LLMChain, PromptTemplate
 from langchain.chat_models import ChatOpenAI
-from langchain import PromptTemplate, LLMChain
+from langchain.llms import Banana
+
 
 # Define a base class for all services
 class BaseService(ABC):
@@ -17,7 +17,7 @@ class BaseService(ABC):
 
 class OpenAIService(BaseService):
     def __init__(self):
-        #os.environ["OPENAI_API_KEY"]
+        # os.environ["OPENAI_API_KEY"]
         template = """Question: {question}
         Answer: Let's think step by step."""
         self.prompt = PromptTemplate(template=template, input_variables=["question"])
@@ -30,15 +30,21 @@ class OpenAIService(BaseService):
 
 class BananaService(BaseService):
     def __init__(self):
-        #os.environ["BANANA_API_KEY"]
-        template = """Question: {question}
-        Answer: Let's think step by step."""
-        self.prompt = PromptTemplate(template=template, input_variables=["question"])
-        self.llm = Banana(model_key=os.environ["BANANA_MODEL_KEY"])
-        self.llm_chain = LLMChain(prompt=self.prompt, llm=self.llm)
+        # os.environ["BANANA_API_KEY"]
+        try:
+            template = """Question: {question}
+            Answer: Let's think step by step."""
+            self.prompt = PromptTemplate(
+                template=template, input_variables=["question"]
+            )
+            self.llm = Banana(model_key=os.environ["BANANA_MODEL_KEY"])
+            self.llm_chain = LLMChain(prompt=self.prompt, llm=self.llm)
+        except:
+            pass
 
     def get_response(self, message: str, option: str):
         return self.llm_chain.run(message)
+
 
 class HttpService(BaseService):
     def __init__(self, endpoint: str):
@@ -53,6 +59,7 @@ class HttpService(BaseService):
             return {"message": response.json()["result"]}
         else:
             return {"message": "Failed to get response"}
+
 
 class Service:
     def __init__(self, service: BaseService):

@@ -11,6 +11,7 @@ class Settings:
     PROJECT_NAME: str = "Neo ChatBot"
     PROJECT_VERSION: str = "0.1.0"
     SECRET_KEY: str = os.getenv("SECRET_KEY")
+    OPENAI_KEY: str = os.getenv("OPENAI_API_KEY")
 
 
 settings = Settings()
