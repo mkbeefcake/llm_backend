@@ -165,7 +165,7 @@ class GMailProvider(BaseProvider):
             threads = (
                 gmail_service.users()
                 .threads()
-                .get(userId="me", id=message["threadId"], format="full")
+                .get(userId="me", id=message["threadId"])
                 .execute()
             )
             history = []
