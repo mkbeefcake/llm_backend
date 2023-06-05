@@ -73,7 +73,7 @@ class GMailProviderBot(BaseProviderBot):
             print(f"[GMailProviderBot] Error: GMailProvider is Not implemented")
             pass
         except RefreshError as e:
-            self.access_token = bridge.get_access_token_from_refresh_token(
+            self.access_token = await bridge.get_access_token_from_refresh_token(
                 provider_name=PROVIDER_NAME, refresh_token=self.refresh_token
             )
             print(

@@ -7,8 +7,9 @@ from urllib.parse import urlencode
 
 from authlib.integrations.starlette_client import OAuth
 from fastapi.responses import RedirectResponse
+from google.auth.transport import requests
 from google.oauth2.credentials import Credentials
-from google_auth_httplib2 import AuthorizedHttp
+from google_auth_httplib2 import httplib2
 from googleapiclient.discovery import build
 from starlette.config import Config
 from starlette.requests import Request
@@ -72,9 +73,6 @@ class GMailProvider(BaseProvider):
         return response
 
     async def get_access_token_from_refresh_token(self, refresh_token: str) -> str:
-        print(oauth2_credentials["web"]["client_id"])
-        print(oauth2_credentials["web"]["client_secret"])
-        print(refresh_token)
         creds = Credentials.from_authorized_user_info(
             info={
                 "client_id": oauth2_credentials["web"]["client_id"],
@@ -82,8 +80,8 @@ class GMailProvider(BaseProvider):
                 "refresh_token": refresh_token,
             }
         )
-        creds.refresh(AuthorizedHttp(credentials=creds))
-        return {"access_token": creds.token}
+        creds.refresh(requests.Request())
+        return creds.token
 
     async def get_session_info(self, request: Request) -> str:
         return request.session[SESSION_NAME]
@@ -182,7 +180,13 @@ class GMailProvider(BaseProvider):
 
                 # get content
                 snippet = _message["snippet"]
-                history.append({"senders": senders, "snippet": snippet})
+                history.append(
+                    {
+                        "senders": senders,
+                        "snippet": snippet,
+                        "messageId": _message["id"],
+                    }
+                )
                 one_message = one_message + f"sender: {senders[0]} : {snippet}\n"
 
             return {
