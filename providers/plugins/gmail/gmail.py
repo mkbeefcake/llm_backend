@@ -84,7 +84,8 @@ class GMailProvider(BaseProvider):
         return creds.token
 
     async def get_session_info(self, request: Request) -> str:
-        return request.session[SESSION_NAME]
+        # return request.session[SESSION_NAME]
+        pass
 
     def get_profile(self, access_token: str, option: any):
         print(
