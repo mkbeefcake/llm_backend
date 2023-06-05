@@ -153,6 +153,48 @@ class GMailProvider(BaseProvider):
             "html": content,
         }
 
+    def get_full_messages(self, access_token: str, of_what: str, option: any):
+        gmail_service = self.get_gmail_service(access_token)
+        message = (
+            gmail_service.users()
+            .messages()
+            .get(userId="me", id=of_what, format="full")
+            .execute()
+        )
+
+        # Print the message history
+        if "threadId" in message:
+            threads = (
+                gmail_service.users()
+                .threads()
+                .get(userId="me", id=message["threadId"], format="full")
+                .execute()
+            )
+            history = []
+            one_message = ""
+
+            for _message in threads["messages"]:
+                senders = []
+
+                for header in _message["payload"]["headers"]:
+                    if header["name"].lower() == "from":
+                        senders.append(header["value"])
+
+                # get content
+                snippet = _message["snippet"]
+                history.append({"senders": senders, "snippet": snippet})
+                one_message = one_message + f"sender: {senders[0]} : {snippet}\n"
+
+            return {
+                "messageId": of_what,
+                "messages": history,
+                "one_message": one_message,
+            }
+
+        else:
+            print("No message history found.")
+            return {"messageId": of_what, "messages": []}
+
     # sample from_when='timestamp'
     def get_messages(self, access_token: str, from_when: str, count: int, option: any):
         gmail_service = self.get_gmail_service(access_token)

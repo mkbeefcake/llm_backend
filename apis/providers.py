@@ -110,6 +110,21 @@ async def get_last_message(
         return {"err": str(e)}
 
 
+@router.get("/get_full_messages")
+async def get_full_message(
+    provider_name: str = "gmailprovider",
+    access_token: str = "",
+    of_what: str = "message_id",
+    option: str = "",
+    curr_user: User = Depends(get_current_user),
+):
+    try:
+        result = bridge.get_full_messages(provider_name, access_token, of_what, option)
+        return {"message": result}
+    except Exception as e:
+        return {"err": str(e)}
+
+
 @router.get("/get_messages")
 async def get_messages(
     provider_name: str = "gmailprovider",

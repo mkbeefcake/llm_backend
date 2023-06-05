@@ -42,6 +42,13 @@ class DummyProvider(BaseProvider):
             file=sys.stdout,
         )
 
+    def get_full_messages(self, access_token: str, of_what: str, option: any):
+        print(
+            "[%s]: get_full_messages: %s %s"
+            % (self.plugin_name, access_token, of_what),
+            file=sys.stdout,
+        )
+
     def get_messages(self, access_token: str, from_when: str, count: int, option: any):
         print(
             "[%s]: get_messages: %s %s %d"

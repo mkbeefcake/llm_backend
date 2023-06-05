@@ -73,6 +73,15 @@ class Bridge:
 
         return provider.get_last_message(access_token, option)
 
+    def get_full_messages(
+        self, provider_name: str, access_token: str, of_what: str, option: str
+    ):
+        provider = self.provider_list[provider_name.lower()]
+        if not provider:
+            raise NotImplementedError
+
+        return provider.get_full_messages(access_token, of_what, option)
+
     # get messages
     def get_messages(
         self,
