@@ -8,6 +8,7 @@ from fastapi.responses import RedirectResponse
 from starlette.requests import Request
 
 import replica
+from products.products import ProductService
 from providers.base import BaseProvider
 
 runpod.api_key = "43G8Y6TUI5HBXEW4LFJRWOZE2R40GME2ZRIXR1H7"
@@ -21,7 +22,7 @@ def remove_brackets_and_braces(string):
     return string
 
 
-class ReplicateProvider(BaseProvider):
+class ReplicateProvider(BaseProvider, ProductService):
     def __init__(self) -> None:
         super().__init__()
         self.num_messages = 2
@@ -60,6 +61,23 @@ class ReplicateProvider(BaseProvider):
     def disconnect(self, request: Request):
         pass
 
+    async def get_bestseller_products(self):
+        best_sellers = [{"product": "t-shirt", "price": 12.9, "unit": "usd"}]
+        return best_sellers
+
+    async def get_product_list(self):
+        products = [
+            {"product": "t-shirt", "price": 12.9, "unit": "usd"},
+            {"product": "glasses", "price": 12.9, "unit": "usd"},
+        ]
+        return products
+
+    async def suggest_products(self, conversation: str):
+        # here use get_product_list, get_bestseller_products(), conversation
+        # to decide products for user
+
+        pass
+
     async def start_autobot(self, user_data: any):
         api = replica.select_api("replica")
         authed = await self.authenticate(api)
@@ -68,10 +86,17 @@ class ReplicateProvider(BaseProvider):
         for chat in chats:
             user = await authed.get_user(chat["withUser"]["id"])
             print(user.name)
+
             if not user.isPerformer:
                 messages = await self.fetch_messages(user, authed)
                 print(messages)
+
+                # get AI response
                 llm_response = await self.call_llm_server(messages, user_name=user.name)
+
+                # Suggest product based on conversation
+                # self.suggest_products(messages)
+
                 await self.post_message(user, authed, llm_response)
 
         await api.close_pools()

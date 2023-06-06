@@ -1,12 +1,14 @@
+from abc import abstractmethod
+
+
 class ProductService:
     def __init__(self) -> None:
         pass
 
-    def extract_product_keywords(self, conversation: str):
-        pass
+    @abstractmethod
+    async def get_bestseller_products(self):
+        raise NotImplementedError
 
-    def best_matched_product(self, keywords: str):
-        pass
-
-
-product_service = ProductService()
+    @abstractmethod
+    async def get_product_list(self):
+        raise NotImplementedError

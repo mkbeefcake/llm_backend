@@ -3,6 +3,7 @@ import os
 from starlette.requests import Request
 
 from core.loader.loader import Loader
+from products.products import ProductService
 from providers.base import BaseProvider
 
 PROVIDERS_PATH = os.path.join(os.path.dirname(__file__), "plugins")
@@ -132,6 +133,26 @@ class Bridge:
             raise NotImplementedError
 
         return provider.start_autobot(user_data)
+
+    async def get_product_list(self, provider_name: str):
+        provider = self.provider_list[provider_name.lower()]
+        if not provider:
+            raise NotImplementedError
+
+        if not issubclass(type(provider), ProductService):
+            raise NotImplementedError
+
+        return await provider.get_product_list()
+
+    async def get_bestseller_products(self, provider_name: str):
+        provider = self.provider_list[provider_name.lower()]
+        if not provider:
+            raise NotImplementedError
+
+        if not issubclass(type(provider), ProductService):
+            raise NotImplementedError
+
+        return await provider.get_bestseller_products()
 
 
 bridge = Bridge()
