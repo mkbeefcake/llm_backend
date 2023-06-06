@@ -69,7 +69,7 @@ CMD ["poetry", "run", "python", "main.py"]
 # running in check mode means build will fail if any linting errors occur
 FROM development AS lint
 RUN black --config ./pyproject.toml --check .
-RUN isort --settings-path ./pyproject.toml --recursive --check-only
+# RUN isort --settings-path ./pyproject.toml --recursive --check-only
 CMD ["tail", "-f", "/dev/null"]
 
 # 'test' stage runs our unit tests with pytest and

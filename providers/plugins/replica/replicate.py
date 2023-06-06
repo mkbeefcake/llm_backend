@@ -1,5 +1,3 @@
-import asyncio
-import json
 import random
 import time
 from urllib.parse import urlencode
