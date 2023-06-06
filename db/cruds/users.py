@@ -18,7 +18,7 @@ def update_user(user: UsersSchema, key: str, content: str):
     if content == "":
         user_doc_ref.update({(key): firestore.DELETE_FIELD})
     else:
-        user_doc_ref.set(
+        user_doc_ref.update(
             {
                 key: json.loads(content),
             }
