@@ -50,6 +50,10 @@ class BaseProvider(metaclass=BaseProviderMeta):
     def disconnect(self, request: Request):
         raise NotImplementedError
 
+    @abstractmethod
+    async def start_autobot(self, user_data: any):
+        raise NotImplementedError
+
     @classproperty
     def plugin_name(cls) -> str:
         return cls.__name__  # type: ignore

@@ -7,6 +7,7 @@ from urllib.parse import urlencode
 
 from authlib.integrations.starlette_client import OAuth
 from fastapi.responses import RedirectResponse
+from google.auth.exceptions import RefreshError
 from google.auth.transport import requests
 from google.oauth2.credentials import Credentials
 from google_auth_httplib2 import httplib2
@@ -14,10 +15,11 @@ from googleapiclient.discovery import build
 from starlette.config import Config
 from starlette.requests import Request
 
+from core.timestamp import get_current_timestamp
 from providers.base import BaseProvider
+from services.service import ai_service
 
 REDIRECT_URL = "redirect_url"
-
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.modify",
@@ -50,6 +52,11 @@ oauth.register(
 
 
 class GMailProvider(BaseProvider):
+    def __init__(self):
+        self.sync_time = -1
+        self.access_token = None
+        self.refresh_token = None
+
     async def link_provider(self, redirect_url: str, request: Request):
         request.session.clear()
         request.session[REDIRECT_URL] = redirect_url
@@ -296,6 +303,73 @@ class GMailProvider(BaseProvider):
         return {"message": "Email sent!"}
 
     def disconnect(self, request: Request):
+        pass
+
+    async def start_autobot(self, user_data: any):
+        try:
+            if self.access_token is None:
+                self.access_token = user_data["access_token"]
+
+            if self.refresh_token is None:
+                self.refresh_token = user_data["refresh_token"]
+
+            if self.sync_time == -1:
+                last_message = self.get_last_message(
+                    access_token=self.access_token,
+                    option="",
+                )
+                ai_response = ai_service.get_response(
+                    service_name="openai_service",
+                    message=last_message["snippet"],
+                    option="",
+                )
+                self.reply_to_message(
+                    access_token=self.access_token,
+                    to=last_message["messageId"],
+                    message=ai_response["message"],
+                    option="",
+                )
+                print(
+                    f"LastMessage: {last_message['snippet']}, response: {ai_response['message']}"
+                )
+            else:
+                last_messages = self.get_messages(
+                    access_token=self.access_token,
+                    from_when=self.sync_time,
+                    count=MAX_MESSAGES_COUNT,
+                    option="",
+                )
+
+                for message in last_messages["messages"]:
+                    ai_response = ai_service.get_response(
+                        service_name="", message=message["snippet"], option=""
+                    )
+                    self.reply_to_message(
+                        access_token=self.access_token,
+                        to=message["messageId"],
+                        message=ai_response["message"],
+                        option="",
+                    )
+                    print(
+                        f"Message: {message['snippet']}, response: {ai_response['message']}"
+                    )
+
+            self.sync_time = get_current_timestamp()
+        except NotImplementedError:
+            print(f"[GMailProviderBot] Error: GMailProvider is Not implemented")
+            pass
+        except RefreshError as e:
+            self.access_token = await self.get_access_token_from_refresh_token(
+                refresh_token=self.refresh_token
+            )
+            print(
+                f"[GMailProviderBot] Error: {str(e)}, rescheduled to next time after get access_token"
+            )
+            pass
+        except Exception as e:
+            print(f"[GMailProviderBot] Error: {str(e)}")
+            pass
+
         pass
 
     pass
