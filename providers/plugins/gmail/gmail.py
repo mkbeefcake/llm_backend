@@ -57,6 +57,13 @@ class GMailProvider(BaseProvider):
         self.access_token = None
         self.refresh_token = None
 
+    def get_provider_info(self):
+        return {
+            "provider": GMailProvider.__name__.lower(),
+            "provider_description": "GMail Provider",
+            "provider_icon_url": "",
+        }
+
     async def link_provider(self, redirect_url: str, request: Request):
         request.session.clear()
         request.session[REDIRECT_URL] = redirect_url

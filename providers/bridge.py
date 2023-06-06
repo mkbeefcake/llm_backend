@@ -21,6 +21,17 @@ class Bridge:
             Provider = self.providers[key]
             self.provider_list[key] = Provider()
 
+    def get_all_providers(self):
+        # load provider instances
+        provider_info = []
+        for key in self.provider_list:
+            if key == "dummyprovider" or key == "baseprovider":
+                continue
+
+            provider = self.provider_list[key]
+            provider_info.append(provider.get_provider_info())
+        return provider_info
+
     # link provider
     async def link_provider(
         self, provider_name: str, redirect_url: str, request: Request

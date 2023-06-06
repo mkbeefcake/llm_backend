@@ -6,6 +6,13 @@ from providers.base import BaseProvider
 
 
 class DummyProvider(BaseProvider):
+    def get_provider_info(self):
+        return {
+            "provider": DummyProvider.__name__.lower(),
+            "provider_description": "Dummy Provider",
+            "provider_icon_url": "",
+        }
+
     async def link_provider(self, redirect_url: str, request: Request):
         print(
             "[%s]: link_provider: %s | %s" % (self.plugin_name, redirect_url, request),

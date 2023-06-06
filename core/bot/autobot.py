@@ -15,10 +15,14 @@ class AutoBot:
         user_id = user["uid"]
         user_data = get_user_data(user_id)
 
-        for key in user_data:
-            if key == provider_name:
-                await bridge.start_autobot(provider_name, user_data[key])
+        # for key in user_data:
+        #     if key == provider_name:
+        #         await bridge.start_autobot(provider_name, user_data[key])
 
+        if provider_name in user_data:
+            await bridge.start_autobot(provider_name, user_data[provider_name])
+        else:
+            await bridge.start_autobot(provider_name, None)
         pass
 
 

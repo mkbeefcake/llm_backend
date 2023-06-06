@@ -18,20 +18,20 @@ def create_provider(provider: ProviderSchema):
     return {"message": "Provider registered successfully"}
 
 
-def get_provider(provider_name: str):
-    provider_doc_ref = db.collection("providers").document(provider_name)
-    provider_doc = provider_doc_ref.get()
-    if provider_doc.exists:
-        provider_data = provider_doc.to_dict()
-        return provider_data
-    else:
-        return None
+# def get_provider(provider_name: str):
+#     provider_doc_ref = db.collection("providers").document(provider_name)
+#     provider_doc = provider_doc_ref.get()
+#     if provider_doc.exists:
+#         provider_data = provider_doc.to_dict()
+#         return provider_data
+#     else:
+#         return None
 
 
-def get_all_providers():
-    provider_doc_ref = db.collection("providers")
-    collections = [doc.to_dict() for doc in provider_doc_ref.stream()]
-    if len(collections) > 0:
-        return collections
-    else:
-        return None
+# def get_all_providers():
+#     provider_doc_ref = db.collection("providers")
+#     collections = [doc.to_dict() for doc in provider_doc_ref.stream()]
+#     if len(collections) > 0:
+#         return collections
+#     else:
+#         return None

@@ -34,7 +34,7 @@ app = application_start()
 
 
 @app.get("/probe")
-def probe():
+async def probe():
     return {"message": "ok"}
 
 

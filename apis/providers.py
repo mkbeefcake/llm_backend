@@ -27,19 +27,19 @@ async def get_providers(curr_user: User = Depends(get_current_user)):
         return {"error": str(e)}
 
 
-@router.post("/register_provider")
-async def register_provider(
-    provider_name: str = "gmailprovider",
-    provider_description: str = "Gmail Provider",
-    provider_icon_url: str = "",
-    curr_user: User = Depends(get_current_user),
-):
-    try:
-        return provider.create_provider(
-            provider_name, provider_description, provider_icon_url
-        )
-    except Exception as e:
-        return {"error": str(e)}
+# @router.post("/register_provider")
+# async def register_provider(
+#     provider_name: str = "gmailprovider",
+#     provider_description: str = "Gmail Provider",
+#     provider_icon_url: str = "",
+#     curr_user: User = Depends(get_current_user),
+# ):
+#     try:
+#         return provider.create_provider(
+#             provider_name, provider_description, provider_icon_url
+#         )
+#     except Exception as e:
+#         return {"error": str(e)}
 
 
 @router.get("/google_auth")
