@@ -11,6 +11,9 @@ import replica
 from products.products import ProductService
 from providers.base import BaseProvider
 
+from services.service import ai_service
+
+
 runpod.api_key = "43G8Y6TUI5HBXEW4LFJRWOZE2R40GME2ZRIXR1H7"
 
 
@@ -87,17 +90,26 @@ class ReplicateProvider(BaseProvider, ProductService):
             user = await authed.get_user(chat["withUser"]["id"])
             print(user.name)
 
+            # get messages 
+            authed
+
             if not user.isPerformer:
                 messages = await self.fetch_messages(user, authed)
                 print(messages)
 
-                # get AI response
-                llm_response = await self.call_llm_server(messages, user_name=user.name)
+                # build payload
+                payload = await self.build_payload(messages, user_name=user.name)
 
+                # ai response
+                ai_response = ai_service.get_response(
+                    service_name="replica_service",
+                    payload=payload,
+                    option="",
+                )
                 # Suggest product based on conversation
                 # self.suggest_products(messages)
 
-                await self.post_message(user, authed, llm_response)
+                await self.post_message(user, authed, ai_response)
 
         await api.close_pools()
 
@@ -122,14 +134,7 @@ class ReplicateProvider(BaseProvider, ProductService):
 
         return messages
 
-    async def call_llm_server(self, messages, user_name):
-        url = "https://api.runpod.ai/v2/mugq8uc1sdkbyy/run"
-        headers = {
-            "Content-Type": "text/plain",
-            "Authorization": "Bearer 43G8Y6TUI5HBXEW4LFJRWOZE2R40GME2ZRIXR1H7",
-            "Cookie": "__cflb=02DiuEDmJ1gNRaog7BueRQnZrHB1BtXddnpJGyoZEckYk",
-        }
-
+    async def build_payload(self):
         data = {
             "input": {
                 "input_text": remove_brackets_and_braces(messages[0]),
@@ -139,21 +144,21 @@ class ReplicateProvider(BaseProvider, ProductService):
                 "your_name": user_name,
             }
         }
+        return data
 
-        response = requests.post(url, headers=headers, json=data)
-        response_data = response.json()
-        id_1, status_1 = response_data["id"], response_data["status"]
-        print(f"ID: {id_1}, Status: {status_1}")
+    """ 
+     async def get_products(self, user, authed, response):
 
-        time.sleep(10)
+        try:
+            products = await authed.get_product_categories(user_id=user.id, text=response, price=0)
+            return products
+        except Exception:
+            import traceback
+            print(traceback.format_exc())
+    """
 
-        status_url = f"https://api.runpod.ai/v2/mugq8uc1sdkbyy/status/{id_1}"
-        status_response = requests.get(status_url, headers=headers)
-        status_data = status_response.json()
-        output = status_data
-        print(output)
 
-        return output
+
 
     async def post_message(self, user, authed, response):
         # Get user input
