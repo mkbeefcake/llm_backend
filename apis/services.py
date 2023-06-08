@@ -2,6 +2,7 @@ from typing import Union
 
 from fastapi import APIRouter, Depends
 
+from core.message import MessageErr, MessageOK
 from services.service import ai_service
 
 from .users import User, get_current_user
@@ -17,9 +18,9 @@ async def get_ai_response(
     curr_user: User = Depends(get_current_user),
 ):
     try:
-        return ai_service.get_response(service_name, message, option)
+        return MessageOK(data=ai_service.get_response(service_name, message, option))
     except Exception as e:
-        return {"error": str(e)}
+        return MessageErr(reason=str(e))
 
 
 @router.post("/register_ai_service")
@@ -29,6 +30,6 @@ async def register_ai_service(
     option: str = "",
 ):
     try:
-        return ai_service.create_service(service_name, endpoint, option)
+        return MessageOK(data=ai_service.create_service(service_name, endpoint, option))
     except Exception as e:
-        return {"error": str(e)}
+        return MessageErr(reason=str(e))

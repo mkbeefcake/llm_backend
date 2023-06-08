@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
 
+from core.message import MessageErr, MessageOK
 from core.task import task_manager
 from db.cruds.users import get_user_providers, update_user
 from db.schemas.users import UsersSchema
@@ -18,21 +19,23 @@ async def get_my_providers(curr_user: User = Depends(get_current_user)):
         my_providers = get_user_providers(id=user_id)
         all_providers = bridge.get_all_providers()
         status_autobot = task_manager.status_my_auto_bot(curr_user)
-        return {
-            "my_providers": my_providers,
-            "providers": all_providers,
-            "status_autobot": status_autobot,
-        }
+        return MessageOK(
+            data={
+                "my_providers": my_providers,
+                "providers": all_providers,
+                "status_autobot": status_autobot,
+            }
+        )
     except Exception as e:
-        return {"error": str(e)}
+        return MessageErr(reason=str(e))
 
 
 @router.get("/get_providers")
 async def get_providers(curr_user: User = Depends(get_current_user)):
     try:
-        return bridge.get_all_providers()
+        return MessageOK(data=bridge.get_all_providers())
     except Exception as e:
-        return {"error": str(e)}
+        return MessageErr(reason=str(e))
 
 
 @router.get("/google_auth")
@@ -40,7 +43,7 @@ async def google_auth(request: Request):
     try:
         return await bridge.get_access_token("gmailprovider", request)
     except Exception as e:
-        return {"error": str(e)}
+        return MessageErr(reason=str(e))
 
 
 @router.get("/link_provider")
@@ -52,7 +55,7 @@ async def link_Provider(
     try:
         return await bridge.link_provider(provider_name, redirect_url, request)
     except Exception as e:
-        return {"error": str(e)}
+        return MessageErr(reason=str(e))
 
 
 @router.get("/unlink_provider")
@@ -63,14 +66,15 @@ async def unlink_Provider(
 ):
     try:
         bridge.disconnect(provider_name, request)
-        return update_user(
-            user=UsersSchema(id=curr_user["uid"], email=curr_user["email"]),
-            key=provider_name,
-            content="",
+        return MessageOK(
+            data=update_user(
+                user=UsersSchema(id=curr_user["uid"], email=curr_user["email"]),
+                key=provider_name,
+                content="",
+            )
         )
-        return {"message": "Unlink user successfully"}
     except Exception as e:
-        return {"error": str(e)}
+        return MessageErr(reason=str(e))
 
 
 @router.post("/update_provider_info")
@@ -80,13 +84,15 @@ async def update_provider_info(
     curr_user: User = Depends(get_current_user),
 ):
     try:
-        return update_user(
-            user=UsersSchema(id=curr_user["uid"], email=curr_user["email"]),
-            key=provider_name,
-            content=social_info,
+        return MessageOK(
+            data=update_user(
+                user=UsersSchema(id=curr_user["uid"], email=curr_user["email"]),
+                key=provider_name,
+                content=social_info,
+            )
         )
     except Exception as e:
-        return {"error": str(e)}
+        return MessageErr(reason=str(e))
 
 
 @router.get("/get_last_message")
@@ -98,9 +104,9 @@ async def get_last_message(
 ):
     try:
         result = bridge.get_last_message(provider_name, access_token, option=option)
-        return {"message": result}
+        return MessageOK(data={"message": result})
     except Exception as e:
-        return {"err": str(e)}
+        return MessageErr(reason=str(e))
 
 
 @router.get("/get_full_messages")
@@ -113,9 +119,9 @@ async def get_full_message(
 ):
     try:
         result = bridge.get_full_messages(provider_name, access_token, of_what, option)
-        return {"message": result}
+        return MessageOK(data={"message": result})
     except Exception as e:
-        return {"err": str(e)}
+        return MessageErr(reason=str(e))
 
 
 @router.get("/get_messages")
@@ -131,9 +137,9 @@ async def get_messages(
         result = bridge.get_messages(
             provider_name, access_token, from_when, count, option
         )
-        return {"message": result}
+        return MessageOK(data={"message": result})
     except Exception as e:
-        return {"err": str(e)}
+        return MessageErr(reason=str(e))
 
 
 @router.post("/reply_to_message")
@@ -149,6 +155,6 @@ async def reply_to_message(
         result = bridge.reply_to_message(
             provider_name, access_token, to, message, option
         )
-        return {"message": result}
+        return MessageOK(data={"message": result})
     except Exception as e:
-        return {"err": str(e)}
+        return MessageErr(reason=str(e))

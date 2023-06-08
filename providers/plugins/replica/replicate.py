@@ -10,9 +10,7 @@ from starlette.requests import Request
 import replica
 from products.products import ProductService
 from providers.base import BaseProvider
-
 from services.service import ai_service
-
 
 runpod.api_key = "43G8Y6TUI5HBXEW4LFJRWOZE2R40GME2ZRIXR1H7"
 
@@ -90,22 +88,22 @@ class ReplicateProvider(BaseProvider, ProductService):
             user = await authed.get_user(chat["withUser"]["id"])
             print(user.name)
 
-            # get messages 
-            authed
+            # get messages
+            # authed
 
             if not user.isPerformer:
                 messages = await self.fetch_messages(user, authed)
                 print(messages)
 
                 # build payload
-                payload = await self.build_payload(messages, user_name=user.name)
+                payload = self.build_payload(user_name=user.name, messages=messages)
 
                 # ai response
                 ai_response = ai_service.get_response(
                     service_name="replica_service",
-                    payload=payload,
-                    option="",
+                    option=payload,
                 )
+
                 # Suggest product based on conversation
                 # self.suggest_products(messages)
 
@@ -134,7 +132,7 @@ class ReplicateProvider(BaseProvider, ProductService):
 
         return messages
 
-    async def build_payload(self):
+    def build_payload(self, user_name: str, messages: any):
         data = {
             "input": {
                 "input_text": remove_brackets_and_braces(messages[0]),
@@ -156,9 +154,6 @@ class ReplicateProvider(BaseProvider, ProductService):
             import traceback
             print(traceback.format_exc())
     """
-
-
-
 
     async def post_message(self, user, authed, response):
         # Get user input

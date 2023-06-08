@@ -24,7 +24,7 @@ class OpenAIService(BaseService):
         self.llm = ChatOpenAI()
         self.llm_chain = LLMChain(prompt=self.prompt, llm=self.llm)
 
-    def get_response(self, message: str, option: str):
+    def get_response(self, message: str, option: any):
         return self.llm_chain.run(message)
 
 
@@ -42,51 +42,48 @@ class BananaService(BaseService):
         except:
             pass
 
-    def get_response(self, message: str, option: str):
+    def get_response(self, message: str, option: any):
         return self.llm_chain.run(message)
-    
 
 
 class ReplicaService(BaseService):
     def __init__(self):
         self.endpoint = "https://api.runpod.ai/v2/jycsr5gdh2lmqm/runsync"
 
-    def get_response(self, payload: dict):
+    def get_response(self, message: str, option: any):
         headers = {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer 43G8Y6TUI5HBXEW4LFJRWOZE2R40GME2ZRIXR1H7'            }
+            "Content-Type": "application/json",
+            "Authorization": "Bearer 43G8Y6TUI5HBXEW4LFJRWOZE2R40GME2ZRIXR1H7",
+        }
 
-        response = requests.request("POST", self.endpoint, headers=headers, data=payload)
+        response = requests.request("POST", self.endpoint, headers=headers, data=option)
 
         if response.status_code == 200:
-            return {"message": response.json()["output"]}
+            return response.json()["output"]
         else:
-            return {"message": "Failed to get response"}
-        
+            raise Exception("Failed to get response")
+
+
 class HttpService(BaseService):
     def __init__(self, endpoint: str):
         self.endpoint = endpoint
 
-    def get_response(self, message: str, option: str):
+    def get_response(self, message: str, option: any):
         headers = {"Content-Type": "application/json"}
         response = requests.post(
             self.endpoint, headers=headers, json={"input_text": message}
         )
         if response.status_code == 200:
-            return {"message": response.json()["result"]}
+            return response.json()["result"]
         else:
-            return {"message": "Failed to get response"}
-        
-
-
-       
+            raise Exception("Failed to get response")
 
 
 class Service:
     def __init__(self, service: BaseService):
         self.service = service
 
-    def get_response(self, message: str, option: str):
+    def get_response(self, message: str, option: any):
         return self.service.get_response(message, option)
 
 

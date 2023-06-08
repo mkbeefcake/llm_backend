@@ -1,9 +1,15 @@
 import requests
 
 from core.config import settings
+from core.message import MessageErr, MessageOK
 from db.cruds.service import create_service, get_all_services, get_service
 from db.schemas.service import ServiceSchema
-from services.llm.services import banana_service, http_service, openai_service
+from services.llm.services import (
+    banana_service,
+    http_service,
+    openai_service,
+    replica_service,
+)
 
 LLM_SERVICE_ENDPOINT = "http://195.60.167.43:10458/api/v1/predict"
 
@@ -19,11 +25,13 @@ class Service:
             )
         )
 
-    def get_response(self, service_name: str, message: str, option):
+    def get_response(self, service_name: str, message: str = None, option: any = None):
         if service_name == "openai_service":
             result = openai_service.get_response(message=message, option="")
         elif service_name == "banana_service":
             result = banana_service.get_response(message=message, option="")
+        elif service_name == "replica_service":
+            result = replica_service.get_response(message=message, option=option)
         else:
             result = http_service.get_response(message=message, option="")
 
