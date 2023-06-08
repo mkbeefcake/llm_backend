@@ -11,7 +11,7 @@ class AutoBot:
     def __init__(self):
         pass
 
-    async def start(self, user: any, provider_name: str):
+    async def start(self, user: any, provider_name: str, identifier_name: str):
         user_id = user["uid"]
         user_data = get_user_data(user_id)
 
@@ -19,10 +19,14 @@ class AutoBot:
         #     if key == provider_name:
         #         await bridge.start_autobot(provider_name, user_data[key])
 
-        if provider_name in user_data:
-            await bridge.start_autobot(provider_name, user_data[provider_name])
+        if provider_name in user_data and identifier_name in user_data[provider_name]:
+            await bridge.start_autobot(
+                provider_name,
+                identifier_name,
+                user_data[provider_name][identifier_name],
+            )
         else:
-            await bridge.start_autobot(provider_name, None)
+            await bridge.start_autobot(provider_name, identifier_name, None)
         pass
 
 

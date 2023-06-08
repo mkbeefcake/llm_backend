@@ -10,7 +10,9 @@ class TaskManager:
         self.task_status_list = {}
         pass
 
-    async def task_func(user: any, provider_name: str, interval: int):
+    async def task_func(
+        user: any, provider_name: str, identifier_name: str, interval: int
+    ):
         if interval < 0:
             return
 
@@ -18,7 +20,7 @@ class TaskManager:
             while True:
                 start_timestamp = get_current_timestamp()
                 print(f"Running Task...{start_timestamp}")
-                await autobot.start(user, provider_name)
+                await autobot.start(user, provider_name, identifier_name)
                 end_timestamp = get_current_timestamp()
 
                 new_interval = interval + start_timestamp - end_timestamp
@@ -30,42 +32,60 @@ class TaskManager:
 
         pass
 
-    def start_auto_bot(self, user: any, provider_name: str, interval: int):
-        if self.status_auto_bot(user, provider_name) == False:
-            if not user["uid"] in self.task_list:
-                self.task_list[user["uid"]] = {}
+    def start_auto_bot(
+        self, user: any, provider_name: str, identifier_name: str, interval: int
+    ):
+        if user is None:
+            return
 
-            if not user["uid"] in self.task_status_list:
-                self.task_status_list[user["uid"]] = {}
+        uid = user["uid"]
 
-            self.task_list[user["uid"]][provider_name] = asyncio.create_task(
-                TaskManager.task_func(user, provider_name, interval)
+        if self.status_auto_bot(user, provider_name, identifier_name) == False:
+            if not uid in self.task_list:
+                self.task_list[uid] = {}
+
+            if not uid in self.task_status_list:
+                self.task_status_list[uid] = {}
+
+            if not provider_name in self.task_list[uid]:
+                self.task_list[uid][provider_name] = {}
+
+            if not provider_name in self.task_status_list[uid]:
+                self.task_status_list[uid][provider_name] = {}
+
+            self.task_list[uid][provider_name][identifier_name] = asyncio.create_task(
+                TaskManager.task_func(user, provider_name, identifier_name, interval)
             )
-            self.task_status_list[user["uid"]][provider_name] = True
+            self.task_status_list[uid][provider_name][identifier_name] = True
 
         pass
 
-    def stop_auto_bot(self, user: any, provider_name: str):
+    def stop_auto_bot(self, user: any, provider_name: str, identifier_name: str):
+        uid = user["uid"]
+
         if (
             user is not None
-            and user["uid"] in self.task_list
-            and provider_name in self.task_list[user["uid"]]
+            and uid in self.task_list
+            and provider_name in self.task_list[uid]
+            and identifier_name in self.task_list[uid][provider_name]
         ):
-            was_cancelled = self.task_list[user["uid"]][provider_name].cancel()
-            self.task_status_list[user["uid"]][provider_name] = False
+            was_cancelled = self.task_list[uid][provider_name][identifier_name].cancel()
+            self.task_status_list[uid][provider_name][identifier_name] = False
             print(f"stop_auto_bot: {was_cancelled}")
         pass
 
     # issue happens
-    def status_auto_bot(self, user: any, provider_name: str):
+    def status_auto_bot(self, user: any, provider_name: str, identifier_name: str):
         if (
             user is None
             or not user["uid"] in self.task_list
             or not provider_name in self.task_list[user["uid"]]
+            or not identifier_name in self.task_list[user["uid"]][provider_name]
         ):
             return False
         else:
-            if self.task_list[user["uid"]][provider_name].done() == True:
+            uid = user["uid"]
+            if self.task_list[uid][provider_name][identifier_name].done() == True:
                 return False
 
             return True

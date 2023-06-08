@@ -127,7 +127,7 @@ class Bridge:
 
         return provider.disconnect(request)
 
-    def start_autobot(self, provider_name: str, user_data: any):
+    def start_autobot(self, provider_name: str, identifier_name: str, user_data: any):
         provider = self.provider_list[provider_name.lower()]
         if not provider:
             raise NotImplementedError
