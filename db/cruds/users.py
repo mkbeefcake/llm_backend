@@ -12,17 +12,30 @@ def create_user(user: UsersSchema):
     return {"message": "User created successfully"}
 
 
-def update_user(user: UsersSchema, key: str, content: str):
+def update_user(user: UsersSchema, provider_name: str, key: str, content: str):
     user_doc_ref = db.collection("users").document(user.id)
+    user_data = get_user_data(user.id)
+
+    if not user_data:
+        create_user(user=user)
+        user_data = {}
+    if not provider_name in user_data:
+        user_data[provider_name] = {}
+    if not key in user_data[provider_name]:
+        user_data[provider_name][key] = {}
 
     if content == "":
-        user_doc_ref.update({(key): firestore.DELETE_FIELD})
+        del user_data[provider_name][key]
     else:
-        user_doc_ref.update(
-            {
-                key: json.loads(content),
-            }
-        )
+        user_data[provider_name][key] = json.loads(content)
+
+    # if content == "":
+    #     user_doc_ref.update({(provider_name, key): firestore.DELETE_FIELD})
+    user_doc_ref.update(
+        {
+            provider_name: user_data[provider_name],
+        }
+    )
     return {"message": "User updated successfully"}
 
 

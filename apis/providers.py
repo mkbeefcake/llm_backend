@@ -61,6 +61,7 @@ async def link_Provider(
 @router.get("/unlink_provider")
 async def unlink_Provider(
     provider_name: str = "gmailprovider",
+    identifier_name: str = "john doe",
     request: Request = None,
     curr_user: User = Depends(get_current_user),
 ):
@@ -69,7 +70,8 @@ async def unlink_Provider(
         return MessageOK(
             data=update_user(
                 user=UsersSchema(id=curr_user["uid"], email=curr_user["email"]),
-                key=provider_name,
+                provider_name=provider_name,
+                key=identifier_name,
                 content="",
             )
         )
@@ -80,6 +82,7 @@ async def unlink_Provider(
 @router.post("/update_provider_info")
 async def update_provider_info(
     provider_name: str = "gmailprovider",
+    identifier_name: str = "john doe",
     social_info: str = "",
     curr_user: User = Depends(get_current_user),
 ):
@@ -87,7 +90,8 @@ async def update_provider_info(
         return MessageOK(
             data=update_user(
                 user=UsersSchema(id=curr_user["uid"], email=curr_user["email"]),
-                key=provider_name,
+                provider_name=provider_name,
+                key=identifier_name,
                 content=social_info,
             )
         )
