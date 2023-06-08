@@ -107,7 +107,7 @@ class ReplicateProvider(BaseProvider, ProductService):
                 # Suggest product based on conversation
                 # self.suggest_products(messages)
 
-                await self.post_message(user, authed, ai_response)
+                await self.post_message(user, authed, ai_response["message"])
 
         await api.close_pools()
 

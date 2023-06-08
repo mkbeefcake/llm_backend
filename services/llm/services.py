@@ -56,7 +56,7 @@ class ReplicaService(BaseService):
             "Authorization": "Bearer 43G8Y6TUI5HBXEW4LFJRWOZE2R40GME2ZRIXR1H7",
         }
 
-        response = requests.request("POST", self.endpoint, headers=headers, data=option)
+        response = requests.post(self.endpoint, headers=headers, json=option)
 
         if response.status_code == 200:
             return response.json()["output"]
