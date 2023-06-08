@@ -44,8 +44,25 @@ class BananaService(BaseService):
 
     def get_response(self, message: str, option: str):
         return self.llm_chain.run(message)
+    
 
 
+class ReplicaService(BaseService):
+    def __init__(self):
+        self.endpoint = "https://api.runpod.ai/v2/jycsr5gdh2lmqm/runsync"
+
+    def get_response(self, payload: dict):
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer 43G8Y6TUI5HBXEW4LFJRWOZE2R40GME2ZRIXR1H7'            }
+
+        response = requests.request("POST", self.endpoint, headers=headers, data=payload)
+
+        if response.status_code == 200:
+            return {"message": response.json()["output"]}
+        else:
+            return {"message": "Failed to get response"}
+        
 class HttpService(BaseService):
     def __init__(self, endpoint: str):
         self.endpoint = endpoint
@@ -59,6 +76,10 @@ class HttpService(BaseService):
             return {"message": response.json()["result"]}
         else:
             return {"message": "Failed to get response"}
+        
+
+
+       
 
 
 class Service:
@@ -73,3 +94,4 @@ class Service:
 openai_service = Service(OpenAIService())
 banana_service = Service(BananaService())
 http_service = Service(HttpService("http://195.60.167.43:10458/api/v1/predict"))
+replica_service = Service(ReplicaService())
