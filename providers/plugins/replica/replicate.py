@@ -42,6 +42,7 @@ class ReplicateProvider(BaseProvider, ProductService):
     def get_provider_info(self):
         return {
             "provider": ReplicateProvider.__name__.lower(),
+            "short_name": 'Replicate',
             "provider_description": "Replica Provider",
             "provider_icon_url": "",
         }
