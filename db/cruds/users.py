@@ -8,7 +8,7 @@ from db.schemas.users import UsersSchema
 
 def create_user(user: UsersSchema):
     user_doc_ref = db.collection("users").document(user.id)
-    user_doc_ref.set({"email": user.email})
+    user_doc_ref.set({})
     return {"message": "User created successfully"}
 
 
