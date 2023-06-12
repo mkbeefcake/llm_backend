@@ -8,3 +8,7 @@ oauth2-credentials.json
 chat-automation-serviceaccount.json
 .coverage
 oauth2-credentials-production.json
+
+env
+env.development
+env.production

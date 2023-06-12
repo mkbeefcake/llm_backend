@@ -77,7 +77,7 @@ class HttpService(BaseService):
             return response.json()["result"]
         else:
             raise Exception("Failed to get response")
-
+        
 
 class Service:
     def __init__(self, service: BaseService):
@@ -87,8 +87,12 @@ class Service:
         return self.service.get_response(message, option)
 
 
+
+PRICING_ENDPOINT = ""
+
 # Create instances of OpenAI and Banana services
 openai_service = Service(OpenAIService())
 banana_service = Service(BananaService())
 http_service = Service(HttpService("http://195.60.167.43:10458/api/v1/predict"))
+pricing_service = Service(HttpService(PRICING_ENDPOINT))
 replica_service = Service(ReplicaService())
