@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 import requests
 import runpod
 from fastapi.responses import RedirectResponse
+from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
 import replica
@@ -13,6 +14,8 @@ from providers.base import BaseProvider
 from services.service import ai_service
 
 runpod.api_key = "43G8Y6TUI5HBXEW4LFJRWOZE2R40GME2ZRIXR1H7"
+
+templates = Jinja2Templates(directory="templates/replicate")
 
 
 def remove_brackets_and_braces(string):
@@ -48,17 +51,20 @@ class ReplicateProvider(BaseProvider, ProductService):
         }
 
     async def link_provider(self, redirect_url: str, request: Request):
-        response = RedirectResponse(
-            url=redirect_url
-            + "?provider=replicateprovider&"
-            + urlencode(
-                {
-                    "access_token": "fake_access_token",
-                    "refresh_token": "fake_refresh_token",
-                }
-            )
+        return templates.TemplateResponse(
+            "login.html", {"request": request, "redirect_url": redirect_url}
         )
-        return response
+        # response = RedirectResponse(
+        #     url=redirect_url
+        #     + "?provider=replicateprovider&"
+        #     + urlencode(
+        #         {
+        #             "access_token": "fake_access_token",
+        #             "refresh_token": "fake_refresh_token",
+        #         }
+        #     )
+        # )
+        # return response
 
     def disconnect(self, request: Request):
         pass

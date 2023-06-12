@@ -1,0 +1,53 @@
+<html>
+<head>
+    <title>Replicate Login Screen</title>
+</head>
+<script lang="Javascript">
+
+    function onSubmit(e) {
+        debugger;
+        const redirect_url = document.getElementById('urlInput').value;
+        const option = document.getElementById('option').value;
+        const token = {
+            'access_token': 'fake_token',
+            'refresh_token': 'refresh_token'
+        };
+
+        const url = `${redirect_url}?provider=replicateprovider&
+            ${encodeURIComponent(JSON.stringify(token))}&option=${encodeURIComponent(option)}`;
+        window.location.href = url;
+    }
+</script>
+<body>
+    <div class="container">
+        <div class="row">
+          <h5 class="display-5">Please input the credentials via JSON format</h5>
+          <h5>{{redirect_url}}</h5>
+          <div class="text-danger font-weight-bold">
+              {% for error in errors %}
+                <li>{{error}}</li>
+              {% endfor %}
+          </div>
+    
+          <div class="text-success font-weight-bold">
+            {% if msg %}
+            <div class="badge bg-success text-wrap font-weight-bold" style="font-size: large;">
+              {{msg}}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+    
+    
+        <div class="row my-5">
+          <form method="POST">
+            <div class="mb-3">
+              <label>Credentials</label>
+              <input hidden value="{{redirect_url}}" id="urlInput"/>
+              <textarea style="width: 400px; height: 150px;" id="option"></textarea>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="onSubmit()">Submit</button>
+          </form>
+        </div>
+      </div></body>
+</html>
