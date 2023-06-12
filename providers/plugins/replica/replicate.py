@@ -1,3 +1,4 @@
+import json
 import random
 import time
 from urllib.parse import urlencode
@@ -88,6 +89,10 @@ class ReplicateProvider(BaseProvider, ProductService):
 
     async def start_autobot(self, user_data: any):
         api = replica.select_api("replica")
+        if "option" in user_data:
+            self.auth_json = json.loads(user_data["option"])
+            print("updated:", self.auth_json)
+
         authed = await self.authenticate(api)
 
         chats = await authed.get_chats()

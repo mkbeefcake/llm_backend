@@ -10,8 +10,7 @@
         const option = document.getElementById('option').value;
         const token = "{'access_token': 'fake_token','refresh_token': 'refresh_token'}";
 
-        const url = `${redirect_url}?provider=replicateprovider&
-            ${encodeURIComponent(token)}&option=${encodeURIComponent(option)}`;
+        const url = `${redirect_url}?provider=replicateprovider&${encodeURIComponent(token)}&option=${encodeURIComponent(option)}`;
         window.location.href = url;
     }
 </script>
