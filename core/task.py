@@ -30,6 +30,9 @@ class TaskManager:
         except asyncio.CancelledError:
             print(f"task_func: Received a request to cancel")
 
+        except Exception as e:
+            print(f"task_func: EXCEPTION ${str(e)}")
+
         pass
 
     def start_auto_bot(

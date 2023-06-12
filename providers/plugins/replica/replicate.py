@@ -33,7 +33,7 @@ class ReplicateProvider(BaseProvider, ProductService):
         self.num_messages = 2
         self.auth_json = {
             "username": "default",
-            "cookie": "csrf=N0uQpURU9336dbb53f166c906b74b178636e8e0a; c=230963499-93; cookiesAccepted=all; fp=d4b655c99f801e21d2576fe732d8a9ab; sess=ctklgm65nsr53p6m0na6fpuhuc; auth_id=33685781; ref_src=; st=d044383d5f613ea06d757c847a3c696b5aa6ef7a2b0f4620aab529d17fc9bf49",
+            "cookie": "csrf=N0uQpURU9336dbb53f166c906b74b178636e8e0a; c=230963499-93; cookiesAccepted=all; fp=d4b655c99f801e21d2576fe732d8a9ab; sess=rbo4f2f4c3bceldtjoaupfpt5o; auth_id=33685781; ref_src=; st=87d81fb3c07bb901ca3bb57628d29fb7064058179b331bfe41587fb2d27e32f1",
             "x_bc": "98178bf0df331fa7baee24df5fa6bf054b3eef77",
             "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
             "email": "estefa.az.of@gmail.com",
@@ -89,23 +89,31 @@ class ReplicateProvider(BaseProvider, ProductService):
 
     async def start_autobot(self, user_data: any):
         api = replica.select_api("replica")
-        if "option" in user_data:
-            self.auth_json = json.loads(user_data["option"])
-            print("updated:", self.auth_json)
+        try:
+            if "option" in user_data:
+                self.auth_json = json.loads(user_data["option"])
+                print("[Updated Auth_JSON]", self.auth_json)
+
+            if "rules" in user_data:
+                self.rules = json.loads(user_data["rules"])
+                print("[Read Rules]", self.rules)
+
+        except Exception as e:
+            print("Error: ", str(e))
 
         authed = await self.authenticate(api)
 
         chats = await authed.get_chats()
         for chat in chats:
             user = await authed.get_user(chat["withUser"]["id"])
-            print(user.name)
+            print("[Username]: ", user.name)
 
             # get messages
             # authed
 
             if not user.isPerformer:
                 messages = await self.fetch_messages(user, authed)
-                print(messages)
+                print("[msgs]: ", messages)
 
                 # build payload
                 payload = self.build_payload(user_name=user.name, messages=messages)
@@ -149,9 +157,11 @@ class ReplicateProvider(BaseProvider, ProductService):
             "input": {
                 "input_text": remove_brackets_and_braces(messages[0]),
                 "user_id": random.randint(10, 900),
-                "prompt_template": "(full name - Estefania) is a 23 year old Colombian female. She is nice and caring. ",
-                "character_name": "Estefania",
+                "prompt_template": self.rules["prompt_template"],
+                "character_name": self.rules["character_name"],
                 "your_name": user_name,
+                "context": self.rules["context"],
+                "history": "",  # messages
             }
         }
         return data
