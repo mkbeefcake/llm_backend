@@ -164,16 +164,28 @@ class ReplicateProvider(BaseProvider, PineconeService):
         return messages
 
     def build_payload(self, user_name: str, messages: any):
+        prompt_template = ""
+        if "prompt_template" in self.rules:
+            prompt_template = self.rules["prompt_template"]
+
+        character_name = ""
+        if "character_name" in self.rules:
+            character_name = self.rules["character_name"]
+
+        context = ""
+        if "context" in self.rules:
+            context = self.rules["context"]
+
         data = {
             "input": {
                 "input_text": remove_brackets_and_braces(
-                    messages[0]
+                    messages[0]["content"]
                 ),  # this is the last message
-                "prompt_template": self.rules["prompt_template"],
-                "character_name": self.rules["character_name"],
+                "prompt_template": prompt_template,
+                "character_name": character_name,
                 "your_name": user_name,
-                "context": self.rules["context"],
-                "history": "",  # messages
+                "context": context,
+                "history": messages,
             }
         }
         return data
