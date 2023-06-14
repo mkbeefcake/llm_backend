@@ -32,9 +32,9 @@ class PineconeService(ProductService):
 
             dimension = 1536
             index_name = "import-product"
-            if index_name not in pinecone.list_indexes():
-                print("Index is not existed")
-                return
+            # if index_name not in pinecone.list_indexes():
+            #     print("Index is not existed")
+            #     return
 
             # Get the vectorstore and add new products
             self.index = pinecone.Index(index_name)

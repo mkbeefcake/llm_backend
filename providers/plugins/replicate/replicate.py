@@ -132,8 +132,8 @@ class ReplicateProvider(BaseProvider, PineconeService):
 
                 print("[msg_str]: ", msg_str)
 
-                products = self.suggest_products(msg_str)
-                print("Products:", products)
+                products = self.match_product(msg_str)
+                print("[Products]:", products)
 
                 # await self.post_message(user, authed, ai_response["message"])
 
