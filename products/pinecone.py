@@ -26,7 +26,7 @@ class PineconeService(ProductService):
         if self.initialized == True:
             return
 
-        try: 
+        try:
             # Pinecone initialize index
             pinecone.init(api_key=PINECONE_API_KEY, environment="us-east1-gcp")
 
@@ -40,9 +40,9 @@ class PineconeService(ProductService):
             self.index = pinecone.Index(index_name)
             self.openai = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
             self.vectorstore = Pinecone(self.index, self.openai.embed_query, "text")
-            
+
         except Exception as e:
-            print (f"Exception in PineconeService: {str(e)}")
+            print(f"Exception in PineconeService: {str(e)}")
 
         self.initialized = True
         pass
