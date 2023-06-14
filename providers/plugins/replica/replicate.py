@@ -8,7 +8,7 @@ import runpod
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
- 
+
 import replica
 from products.products import ProductService
 from providers.base import BaseProvider
@@ -135,24 +135,17 @@ class ReplicateProvider(BaseProvider, ProductService):
         auth = api.add_auth(self.auth_json)
         return await auth.login()
 
-
     async def fetch_messages(self, user, authed):
         messages = []
-        last_message_id  = None
+        last_message_id = None
 
         while len(messages) < self.num_messages:
             fetched_messages = await user.get_message(last_message=last_message_id)
             for message in fetched_messages["list"]:
-                if message["fromUser"]["id"] == user.id: 
-                    value =  {
-                                "role": "user",
-                                "content": message["text"]
-                            }
-                else : 
-                    value =  {
-                                "role": "assistant",
-                                "content": message["text"]
-                            }
+                if message["fromUser"]["id"] == user.id:
+                    value = {"role": "user", "content": message["text"]}
+                else:
+                    value = {"role": "assistant", "content": message["text"]}
 
                 messages.append(value)
 
@@ -166,7 +159,9 @@ class ReplicateProvider(BaseProvider, ProductService):
     def build_payload(self, user_name: str, messages: any):
         data = {
             "input": {
-                "input_text": remove_brackets_and_braces(messages[0]), # this is the last message
+                "input_text": remove_brackets_and_braces(
+                    messages[0]
+                ),  # this is the last message
                 "prompt_template": self.rules["prompt_template"],
                 "character_name": self.rules["character_name"],
                 "your_name": user_name,

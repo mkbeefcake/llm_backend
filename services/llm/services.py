@@ -77,7 +77,7 @@ class HttpService(BaseService):
             return response.json()["result"]
         else:
             raise Exception("Failed to get response")
-        
+
 
 class Service:
     def __init__(self, service: BaseService):
@@ -85,7 +85,6 @@ class Service:
 
     def get_response(self, message: str, option: any):
         return self.service.get_response(message, option)
-
 
 
 PRICING_ENDPOINT = ""
