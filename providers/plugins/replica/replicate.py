@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
 import replica
-from products.products import ProductService
+from products.pinecone import PineconeService
 from providers.base import BaseProvider
 from services.service import ai_service
 
@@ -27,7 +27,7 @@ def remove_brackets_and_braces(string):
     return string
 
 
-class ReplicateProvider(BaseProvider, ProductService):
+class ReplicateProvider(BaseProvider, PineconeService):
     def __init__(self) -> None:
         super().__init__()
         self.num_messages = 2
@@ -113,7 +113,6 @@ class ReplicateProvider(BaseProvider, ProductService):
 
             if not user.isPerformer:
                 messages = await self.fetch_messages(user, authed)
-                print("[msgs]: ", messages)
 
                 # build payload
                 payload = self.build_payload(user_name=user.name, messages=messages)
@@ -123,11 +122,19 @@ class ReplicateProvider(BaseProvider, ProductService):
                     service_name="replica_service",
                     option=payload,
                 )
+                print("[aiRes]: ", ai_response)
 
                 # Suggest product based on conversation
-                # self.suggest_products(messages)
+                msg_str = ""
+                for msg in messages:
+                    msg_str += msg["role"] + ": " + msg["content"] + "\n"
 
-                await self.post_message(user, authed, ai_response["message"])
+                print("[msg_str]: ", msg_str)
+
+                products = self.suggest_products(msg_str)
+                print("Products:", products)
+
+                # await self.post_message(user, authed, ai_response["message"])
 
         await api.close_pools()
 

@@ -6,9 +6,13 @@ class ProductService:
         pass
 
     @abstractmethod
-    async def get_bestseller_products(self):
+    def get_bestseller_products(self):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_product_list(self):
+    def get_product_list(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def match_product(self, messages):
         raise NotImplementedError
