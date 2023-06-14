@@ -42,6 +42,7 @@ class ReplicateProvider(BaseProvider, PineconeService):
             "support_2fa": False,
             "active": True,
         }
+        self.rules = {}
 
     def get_provider_info(self):
         return {
