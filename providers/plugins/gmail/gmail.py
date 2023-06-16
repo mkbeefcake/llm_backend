@@ -15,6 +15,7 @@ from googleapiclient.discovery import build
 from starlette.config import Config
 from starlette.requests import Request
 
+from core.log import BackLog
 from core.timestamp import get_current_timestamp
 from providers.base import BaseProvider
 from services.service import ai_service
@@ -103,9 +104,8 @@ class GMailProvider(BaseProvider):
         pass
 
     def get_profile(self, access_token: str, option: any):
-        print(
-            "[%s]: get_profile: %s, %s" % (self.plugin_name, access_token, option),
-            file=sys.stdout,
+        BackLog.info(
+            instance=self, message="get_profile: %s, %s" % (access_token, option)
         )
 
     def get_gmail_service(self, access_token: str):
@@ -212,7 +212,7 @@ class GMailProvider(BaseProvider):
             }
 
         else:
-            print("No message history found.")
+            BackLog.info(instance=self, message="No message history found.")
             return {"messageId": of_what, "messages": []}
 
     # sample from_when='timestamp'
@@ -337,8 +337,9 @@ class GMailProvider(BaseProvider):
                     message=ai_response["message"],
                     option="",
                 )
-                print(
-                    f"LastMessage: {last_message['snippet']}, response: {ai_response['message']}"
+                BackLog.info(
+                    instance=self,
+                    message=f"LastMessage: {last_message['snippet']}, response: {ai_response['message']}",
                 )
             else:
                 last_messages = self.get_messages(
@@ -358,24 +359,28 @@ class GMailProvider(BaseProvider):
                         message=ai_response["message"],
                         option="",
                     )
-                    print(
-                        f"Message: {message['snippet']}, response: {ai_response['message']}"
+                    BackLog.info(
+                        instance=self,
+                        message=f"Message: {message['snippet']}, response: {ai_response['message']}",
                     )
 
             self.sync_time = get_current_timestamp()
         except NotImplementedError:
-            print(f"[GMailProviderBot] Error: GMailProvider is Not implemented")
+            BackLog.info(
+                instance=self, message=f"Error: GMailProvider is Not implemented"
+            )
             pass
         except RefreshError as e:
             self.access_token = await self.get_access_token_from_refresh_token(
                 refresh_token=self.refresh_token
             )
-            print(
-                f"[GMailProviderBot] Error: {str(e)}, rescheduled to next time after get access_token"
+            BackLog.info(
+                instance=self,
+                message=f"access_token is expired, rescheduled it next time after regenerate access_token",
             )
             pass
         except Exception as e:
-            print(f"[GMailProviderBot] Error: {str(e)}")
+            BackLog.exception(instance=self, message=f"Exception occurred")
             pass
 
         pass

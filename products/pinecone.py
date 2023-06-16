@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import Pinecone
 
+from core.log import BackLog
 from products.products import ProductService
 
 # Loading OPENAI, PINECONE API KEYS
@@ -15,6 +16,7 @@ load_dotenv(dotenv_path=env_path)
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+PINECONE_PRODUCT_INDEX = "import-product"
 
 
 class PineconeService(ProductService):
@@ -30,33 +32,23 @@ class PineconeService(ProductService):
             # Pinecone initialize index
             pinecone.init(api_key=PINECONE_API_KEY, environment="us-east1-gcp")
 
-            dimension = 1536
-            index_name = "import-product"
-            # if index_name not in pinecone.list_indexes():
-            #     print("Index is not existed")
-            #     return
-
             # Get the vectorstore and add new products
-            self.index = pinecone.Index(index_name)
+            dimension = 1536
+            self.index = pinecone.Index(PINECONE_PRODUCT_INDEX)
             self.openai = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
             self.vectorstore = Pinecone(self.index, self.openai.embed_query, "text")
 
         except Exception as e:
-            print(f"Exception in PineconeService: {str(e)}")
+            BackLog.exception(instance=self, message=f"Exception occurred")
 
         self.initialized = True
         pass
 
     def match_product(self, messages: str):
         self.initialize()
+
         if self.vectorstore is None:
-            return "Error happened to connect pinecone"
+            return "Couldn't connect to pinecone vector db"
 
         docs = self.vectorstore.similarity_search(messages, k=1)
         return docs[0].page_content
-
-    def get_bestseller_products(self):
-        pass
-
-    def get_product_list(self):
-        pass

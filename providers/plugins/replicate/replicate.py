@@ -1,28 +1,20 @@
 import json
-import random
-import time
-from urllib.parse import urlencode
 
-import requests
-import runpod
-from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
 import replica
+from core.log import BackLog
 from products.pinecone import PineconeService
 from providers.base import BaseProvider
 from services.service import ai_service
-
-runpod.api_key = "43G8Y6TUI5HBXEW4LFJRWOZE2R40GME2ZRIXR1H7"
 
 templates = Jinja2Templates(directory="templates/replicate")
 
 
 def remove_brackets_and_braces(string):
-    # Remove brackets []
+    # Remove brackets [] & braces {}
     string = string.replace("[", "").replace("]", "")
-    # Remove braces {}
     string = string.replace("{", "").replace("}", "")
     return string
 
@@ -31,17 +23,7 @@ class ReplicateProvider(BaseProvider, PineconeService):
     def __init__(self) -> None:
         super().__init__()
         self.num_messages = 2
-        self.auth_json = {
-            "username": "default",
-            "cookie": "csrf=N0uQpURU9336dbb53f166c906b74b178636e8e0a; c=230963499-93; cookiesAccepted=all; fp=d4b655c99f801e21d2576fe732d8a9ab; sess=rbo4f2f4c3bceldtjoaupfpt5o; auth_id=33685781; ref_src=; st=87d81fb3c07bb901ca3bb57628d29fb7064058179b331bfe41587fb2d27e32f1",
-            "x_bc": "98178bf0df331fa7baee24df5fa6bf054b3eef77",
-            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
-            "email": "estefa.az.of@gmail.com",
-            "password": "Teddy2010.",
-            "hashed": False,
-            "support_2fa": False,
-            "active": True,
-        }
+        self.auth_json = {}
         self.rules = {}
 
     def get_provider_info(self):
@@ -56,61 +38,34 @@ class ReplicateProvider(BaseProvider, PineconeService):
         return templates.TemplateResponse(
             "login.html", {"request": request, "redirect_url": redirect_url}
         )
-        # response = RedirectResponse(
-        #     url=redirect_url
-        #     + "?provider=replicateprovider&"
-        #     + urlencode(
-        #         {
-        #             "access_token": "fake_access_token",
-        #             "refresh_token": "fake_refresh_token",
-        #         }
-        #     )
-        # )
-        # return response
 
     def disconnect(self, request: Request):
         pass
 
-    async def get_bestseller_products(self):
-        best_sellers = [{"product": "t-shirt", "price": 12.9, "unit": "usd"}]
-        return best_sellers
-
-    async def get_product_list(self):
-        products = [
-            {"product": "t-shirt", "price": 12.9, "unit": "usd"},
-            {"product": "glasses", "price": 12.9, "unit": "usd"},
-        ]
-        return products
-
-    async def suggest_products(self, conversation: str):
-        # here use get_product_list, get_bestseller_products(), conversation
-        # to decide products for user
-
-        pass
-
     async def start_autobot(self, user_data: any):
         api = replica.select_api("replica")
+
+        # try to get auth_json and rules from firestore db
         try:
             if "option" in user_data:
                 self.auth_json = json.loads(user_data["option"])
-                print("[Updated Auth_JSON]", self.auth_json)
+                BackLog.info(instance=self, message=f"AUTH_JSON: {self.auth_json}")
 
             if "rules" in user_data:
                 self.rules = json.loads(user_data["rules"])
-                print("[Read Rules]", self.rules)
+                BackLog.info(instance=self, message=f"Rules: {self.rules}")
 
         except Exception as e:
-            print("Error: ", str(e))
+            BackLog.exception(instance=self, message="Exception occurred")
 
+        # authenticate
         authed = await self.authenticate(api)
 
+        # get chat history per each user
         chats = await authed.get_chats()
         for chat in chats:
             user = await authed.get_user(chat["withUser"]["id"])
-            print("[Username]: ", user.name)
-
-            # get messages
-            # authed
+            BackLog.info(instance=self, message=f"Username: {user.name}")
 
             if not user.isPerformer:
                 messages = await self.fetch_messages(user, authed)
@@ -118,23 +73,22 @@ class ReplicateProvider(BaseProvider, PineconeService):
                 # build payload
                 payload = self.build_payload(user_name=user.name, messages=messages)
 
-                # ai response
+                # response from ai model
                 ai_response = ai_service.get_response(
                     service_name="replica_service",
                     option=payload,
                 )
-                print("[aiRes]: ", ai_response)
+                BackLog.info(instance=self, message=f"Response from AI: {ai_response}")
 
-                # Suggest product based on conversation
+                # get matched product based on conversation
                 msg_str = ""
                 for msg in messages:
                     msg_str += msg["role"] + ": " + msg["content"] + "\n"
 
-                print("[msg_str]: ", msg_str)
-
                 products = self.match_product(msg_str)
-                print("[Products]:", products)
+                BackLog.info(instance=self, message=f"Matched Product: {products}")
 
+                # post ai message to user
                 # await self.post_message(user, authed, ai_response["message"])
 
         await api.close_pools()
@@ -158,7 +112,6 @@ class ReplicateProvider(BaseProvider, PineconeService):
                 messages.append(value)
 
             last_message_id = fetched_messages["list"][-1]["id"]
-
             if not fetched_messages["list"]:
                 break
 

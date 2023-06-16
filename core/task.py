@@ -1,6 +1,7 @@
 import asyncio
 
 from core.bot.autobot import autobot
+from core.log import BackLog
 from core.timestamp import get_current_timestamp
 
 
@@ -18,8 +19,9 @@ class TaskManager:
 
         try:
             while True:
+                BackLog.info(instance=task_manager, message=f"Running Task...")
+
                 start_timestamp = get_current_timestamp()
-                print(f"Running Task...{start_timestamp}")
                 await autobot.start(user, provider_name, identifier_name)
                 end_timestamp = get_current_timestamp()
 
@@ -28,10 +30,13 @@ class TaskManager:
                     await asyncio.sleep(new_interval)
 
         except asyncio.CancelledError:
-            print(f"task_func: Received a request to cancel")
+            BackLog.info(
+                instance=task_manager,
+                message=f"task_func: Received a request to cancel",
+            )
 
         except Exception as e:
-            print(f"task_func: EXCEPTION ${str(e)}")
+            BackLog.exception(instance=task_manager, message=f"Exception occurred")
 
         pass
 
@@ -74,7 +79,9 @@ class TaskManager:
         ):
             was_cancelled = self.task_list[uid][provider_name][identifier_name].cancel()
             self.task_status_list[uid][provider_name][identifier_name] = False
-            print(f"stop_auto_bot: {was_cancelled}")
+            BackLog.info(
+                instance=task_manager, message=f"stop_auto_bot: {was_cancelled}"
+            )
         pass
 
     # issue happens
