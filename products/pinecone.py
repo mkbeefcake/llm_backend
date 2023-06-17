@@ -51,7 +51,7 @@ class PineconeService(ProductBaseService):
             return "Couldn't connect to pinecone vector db"
 
         docs = self.vectorstore.similarity_search(messages, k=1)
-        if docs is not None:
+        if docs is not None and type(docs) == list and len(docs) > 0:
             return docs[0].page_content
         else:
             return "Nothing"
