@@ -1,4 +1,4 @@
-class ProductService:
+class ProductBaseService:
     def __init__(self) -> None:
         pass
 
@@ -8,5 +8,8 @@ class ProductService:
     def get_product_list(self):
         raise NotImplementedError
 
-    def match_product(self, messages):
+    def match_product(self, messages: any, option: any = None):
+        raise NotImplementedError
+
+    def suggest_product(self, messages: any, option: any = None):
         raise NotImplementedError

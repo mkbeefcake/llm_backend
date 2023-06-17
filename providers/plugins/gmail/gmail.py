@@ -18,7 +18,7 @@ from starlette.requests import Request
 from core.log import BackLog
 from core.timestamp import get_current_timestamp
 from providers.base import BaseProvider
-from services.service import ai_service
+from services.service import openai_service
 
 REDIRECT_URL = "redirect_url"
 SCOPES = [
@@ -326,7 +326,7 @@ class GMailProvider(BaseProvider):
                     access_token=self.access_token,
                     option="",
                 )
-                ai_response = ai_service.get_response(
+                ai_response = openai_service.get_response(
                     service_name="openai_service",
                     message=last_message["snippet"],
                     option="",
@@ -350,7 +350,7 @@ class GMailProvider(BaseProvider):
                 )
 
                 for message in last_messages["messages"]:
-                    ai_response = ai_service.get_response(
+                    ai_response = openai_service.get_response(
                         service_name="", message=message["snippet"], option=""
                     )
                     self.reply_to_message(

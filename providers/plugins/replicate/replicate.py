@@ -5,9 +5,9 @@ from starlette.requests import Request
 
 import replica
 from core.log import BackLog
-from products.pinecone import PineconeService
+from products.pinecone import pinecone_service
 from providers.base import BaseProvider
-from services.service import ai_service
+from services.service import replica_service
 
 templates = Jinja2Templates(directory="templates/replicate")
 
@@ -19,7 +19,7 @@ def remove_brackets_and_braces(string):
     return string
 
 
-class ReplicateProvider(BaseProvider, PineconeService):
+class ReplicateProvider(BaseProvider):
     def __init__(self) -> None:
         super().__init__()
         self.num_messages = 2
@@ -46,17 +46,7 @@ class ReplicateProvider(BaseProvider, PineconeService):
         api = replica.select_api("replica")
 
         # try to get auth_json and rules from firestore db
-        try:
-            if "option" in user_data:
-                self.auth_json = json.loads(user_data["option"])
-                BackLog.info(instance=self, message=f"AUTH_JSON: {self.auth_json}")
-
-            if "rules" in user_data:
-                self.rules = json.loads(user_data["rules"])
-                BackLog.info(instance=self, message=f"Rules: {self.rules}")
-
-        except Exception as e:
-            BackLog.exception(instance=self, message="Exception occurred")
+        self.load_credentials_from_userdata(user_data)
 
         # authenticate
         authed = await self.authenticate(api)
@@ -68,30 +58,54 @@ class ReplicateProvider(BaseProvider, PineconeService):
             BackLog.info(instance=self, message=f"Username: {user.name}")
 
             if not user.isPerformer:
+                # fetch user's messages
                 messages = await self.fetch_messages(user, authed)
 
-                # build payload
-                payload = self.build_payload(user_name=user.name, messages=messages)
-
-                # response from ai model
-                ai_response = ai_service.get_response(
+                # build payload & get ai response
+                payload_ai = self.build_payload_for_AI(
+                    user_name=user.name, messages=messages
+                )
+                ai_response = replica_service.get_response(
                     service_name="replica_service",
-                    option=payload,
+                    option=payload_ai,
                 )
                 BackLog.info(instance=self, message=f"Response from AI: {ai_response}")
+
+                # suggest product from ai
+                payload_product = self.build_payload_for_Product(messages=messages)
+                suggested_products = replica_service.suggest_product(
+                    messages=messages, option=payload_product
+                )
+                BackLog.info(
+                    instance=self,
+                    message=f"Suggested Product from AI: {suggested_products}",
+                )
 
                 # get matched product based on conversation
                 msg_str = ""
                 for msg in messages:
                     msg_str += msg["role"] + ": " + msg["content"] + "\n"
 
-                products = self.match_product(msg_str)
+                products = pinecone_service.match_product(msg_str)
                 BackLog.info(instance=self, message=f"Matched Product: {products}")
 
                 # post ai message to user
                 # await self.post_message(user, authed, ai_response["message"])
 
         await api.close_pools()
+
+    def load_credentials_from_userdata(self, user_data):
+        try:
+            if "option" in user_data:
+                self.auth_json = json.loads(user_data["option"])
+                BackLog.info(instance=self, message=f"AUTH_JSON: {self.auth_json}")
+
+            if "rules" in user_data:
+                self.rules = json.loads(user_data["rules"])
+                BackLog.info(instance=self, message=f"Rules: {self.rules}")
+
+        except Exception as e:
+            BackLog.exception(instance=self, message="Exception occurred")
 
     async def authenticate(self, api: replica.api_types):
         auth = api.add_auth(self.auth_json)
@@ -117,7 +131,11 @@ class ReplicateProvider(BaseProvider, PineconeService):
 
         return messages
 
-    def build_payload(self, user_name: str, messages: any):
+    def build_payload_for_Product(self, messages: any):
+        payload = {"input": {"search_prod_input": {"history": messages}}}
+        return payload
+
+    def build_payload_for_AI(self, user_name: str, messages: any):
         prompt_template = ""
         if "prompt_template" in self.rules:
             prompt_template = self.rules["prompt_template"]
@@ -130,19 +148,21 @@ class ReplicateProvider(BaseProvider, PineconeService):
         if "context" in self.rules:
             context = self.rules["context"]
 
-        data = {
+        payload = {
             "input": {
-                "input_text": remove_brackets_and_braces(
-                    messages[0]["content"]
-                ),  # this is the last message
-                "prompt_template": prompt_template,
-                "character_name": character_name,
-                "your_name": user_name,
-                "context": context,
-                "history": messages,
+                "conversation_input": {
+                    "input_text": remove_brackets_and_braces(
+                        messages[0]["content"]
+                    ),  # this is the last message
+                    "prompt_template": prompt_template,
+                    "character_name": character_name,
+                    "your_name": user_name,
+                    "context": context,
+                    "history": messages,
+                }
             }
         }
-        return data
+        return payload
 
     """ 
      async def get_products(self, user, authed, response):

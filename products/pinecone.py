@@ -8,7 +8,7 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import Pinecone
 
 from core.log import BackLog
-from products.products import ProductService
+from products.base import ProductBaseService
 
 # Loading OPENAI, PINECONE API KEYS
 env_path = Path(".") / ".env"
@@ -19,7 +19,7 @@ PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_PRODUCT_INDEX = "import-product"
 
 
-class PineconeService(ProductService):
+class PineconeService(ProductBaseService):
     def __init__(self) -> None:
         self.initialized = False
         pass
@@ -52,3 +52,6 @@ class PineconeService(ProductService):
 
         docs = self.vectorstore.similarity_search(messages, k=1)
         return docs[0].page_content
+
+
+pinecone_service = PineconeService()

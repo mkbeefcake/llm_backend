@@ -7,6 +7,8 @@ from langchain import LLMChain, PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import Banana
 
+from products.base import ProductBaseService
+
 
 # Define a base class for all services
 class BaseService(ABC):
@@ -46,18 +48,23 @@ class BananaService(BaseService):
         return self.llm_chain.run(message)
 
 
-class ReplicaService(BaseService):
+class ReplicaService(BaseService, ProductBaseService):
     def __init__(self):
         self.endpoint = "https://api.runpod.ai/v2/jycsr5gdh2lmqm/runsync"
-
-    def get_response(self, message: str, option: any):
-        headers = {
+        self.headers = {
             "Content-Type": "application/json",
             "Authorization": "Bearer 43G8Y6TUI5HBXEW4LFJRWOZE2R40GME2ZRIXR1H7",
         }
 
-        response = requests.post(self.endpoint, headers=headers, json=option)
+    def get_response(self, message: str, option: any):
+        response = requests.post(self.endpoint, headers=self.headers, json=option)
+        if response.status_code == 200:
+            return response.json()["output"]
+        else:
+            raise Exception("Failed to get response")
 
+    def suggest_product(self, messages: any, option: any = None):
+        response = requests.post(self.endpoint, headers=self.headers, json=option)
         if response.status_code == 200:
             return response.json()["output"]
         else:
@@ -90,8 +97,8 @@ class Service:
 PRICING_ENDPOINT = ""
 
 # Create instances of OpenAI and Banana services
-openai_service = Service(OpenAIService())
-banana_service = Service(BananaService())
-http_service = Service(HttpService("http://195.60.167.43:10458/api/v1/predict"))
-pricing_service = Service(HttpService(PRICING_ENDPOINT))
-replica_service = Service(ReplicaService())
+openai_service = OpenAIService()
+banana_service = BananaService()
+http_service = HttpService("http://195.60.167.43:10458/api/v1/predict")
+pricing_service = HttpService(PRICING_ENDPOINT)
+replica_service = ReplicaService()

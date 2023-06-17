@@ -3,7 +3,7 @@ import os
 from starlette.requests import Request
 
 from core.loader.loader import Loader
-from products.products import ProductService
+from products.base import ProductBaseService
 from providers.base import BaseProvider
 
 PROVIDERS_PATH = os.path.join(os.path.dirname(__file__), "plugins")
@@ -139,7 +139,7 @@ class Bridge:
         if not provider:
             raise NotImplementedError
 
-        if not issubclass(type(provider), ProductService):
+        if not issubclass(type(provider), ProductBaseService):
             raise NotImplementedError
 
         return await provider.get_product_list()
@@ -149,7 +149,7 @@ class Bridge:
         if not provider:
             raise NotImplementedError
 
-        if not issubclass(type(provider), ProductService):
+        if not issubclass(type(provider), ProductBaseService):
             raise NotImplementedError
 
         return await provider.get_bestseller_products()
