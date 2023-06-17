@@ -66,7 +66,7 @@ class ReplicateProvider(BaseProvider):
                     user_name=user.name, messages=messages
                 )
                 ai_response = replica_service.get_response(
-                    service_name="replica_service",
+                    message=messages[0]["content"],
                     option=payload_ai,
                 )
                 BackLog.info(instance=self, message=f"Response from AI: {ai_response}")
@@ -74,7 +74,8 @@ class ReplicateProvider(BaseProvider):
                 # suggest product from ai
                 payload_product = self.build_payload_for_Product(messages=messages)
                 suggested_products = replica_service.suggest_product(
-                    messages=messages, option=payload_product
+                    messages=messages, 
+                    option=payload_product
                 )
                 BackLog.info(
                     instance=self,
