@@ -1,9 +1,9 @@
 import json
 
+import replica
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
-import replica
 from core.log import BackLog
 from products.pinecone import pinecone_service
 from providers.base import BaseProvider
