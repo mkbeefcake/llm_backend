@@ -74,8 +74,7 @@ class ReplicateProvider(BaseProvider):
                 # suggest product from ai
                 payload_product = self.build_payload_for_Product(messages=messages)
                 suggested_products = replica_service.suggest_product(
-                    messages=messages, 
-                    option=payload_product
+                    messages=messages, option=payload_product
                 )
                 BackLog.info(
                     instance=self,
@@ -83,11 +82,11 @@ class ReplicateProvider(BaseProvider):
                 )
 
                 # get matched product based on conversation
-                msg_str = ""
-                for msg in messages:
-                    msg_str += msg["role"] + ": " + msg["content"] + "\n"
+                # msg_str = ""
+                # for msg in messages:
+                #     msg_str += msg["role"] + ": " + msg["content"] + "\n"
 
-                products = pinecone_service.match_product(msg_str)
+                products = pinecone_service.match_product(messages[0]["content"])
                 BackLog.info(instance=self, message=f"Matched Product: {products}")
 
                 # post ai message to user
