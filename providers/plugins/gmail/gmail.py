@@ -327,7 +327,6 @@ class GMailProvider(BaseProvider):
                     option="",
                 )
                 ai_response = openai_service.get_response(
-                    service_name="openai_service",
                     message=last_message["snippet"],
                     option="",
                 )
@@ -351,7 +350,7 @@ class GMailProvider(BaseProvider):
 
                 for message in last_messages["messages"]:
                     ai_response = openai_service.get_response(
-                        service_name="", message=message["snippet"], option=""
+                        message=message["snippet"], option=""
                     )
                     self.reply_to_message(
                         access_token=self.access_token,
