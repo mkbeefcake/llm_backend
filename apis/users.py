@@ -41,6 +41,15 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         return MessageErr(reason=str(e))
 
 
+@router.post("/loginWithToken")
+async def loginWithToken(token: str):
+    try:
+        result = decode_access_token(token)
+        return {"access_token": token, "token_type": "bearer"}
+    except Exception as e:
+        return MessageErr(reason=str(e))
+
+
 @router.post("/signup")
 async def signup(form_data: BasicAuthenticationForm = Depends()):
     try:
