@@ -61,7 +61,7 @@ class GMailProvider(BaseProvider):
     def get_provider_info(self):
         return {
             "provider": GMailProvider.__name__.lower(),
-            "short_name": "GMail",
+            "short_name": "Gmail",
             "provider_description": "GMail Provider",
             "provider_icon_url": "/gmail_icon.png",
         }
