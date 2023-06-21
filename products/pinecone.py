@@ -36,7 +36,12 @@ class PineconeService(ProductBaseService):
             dimension = 1536
             self.index = pinecone.Index(PINECONE_PRODUCT_INDEX)
             self.openai = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
-            self.vectorstore = Pinecone(index=self.index, embedding_function=self.openai.embed_query, text_key="text", namespace="replica")
+            self.vectorstore = Pinecone(
+                index=self.index,
+                embedding_function=self.openai.embed_query,
+                text_key="text",
+                namespace="replica",
+            )
 
         except Exception as e:
             BackLog.exception(instance=self, message=f"Exception occurred")
