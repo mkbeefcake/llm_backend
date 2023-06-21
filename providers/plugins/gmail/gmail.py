@@ -63,7 +63,7 @@ class GMailProvider(BaseProvider):
             "provider": GMailProvider.__name__.lower(),
             "short_name": "Gmail",
             "provider_description": "GMail Provider",
-            "provider_icon_url": "/gmail_icon.png",
+            "provider_icon_url": "/gmail.svg",
         }
 
     async def link_provider(self, redirect_url: str, request: Request):
