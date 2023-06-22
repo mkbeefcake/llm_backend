@@ -379,7 +379,7 @@ class GMailProvider(BaseProvider):
             )
             pass
         except Exception as e:
-            BackLog.exception(instance=self, message=f"Exception occurred")
+            BackLog.exception(instance=self, message=f"Exception occurred {str(e)}")
             pass
 
         pass
