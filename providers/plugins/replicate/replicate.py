@@ -53,7 +53,7 @@ class ReplicateProvider(BaseProvider):
         BackLog.info(instance=self, message=f"Passed authenticate() function....")
 
         # get chat history per each user
-        chats = await authed.get_chats(identifier="&list_id=1006771418"))
+        chats = await authed.get_chats(identifier="&list_id=1006771418")
         for chat in chats:
             user = await authed.get_user(chat["withUser"]["id"])
             BackLog.info(instance=self, message=f"Username: {user.name}")
