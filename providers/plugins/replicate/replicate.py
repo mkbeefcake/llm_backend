@@ -93,7 +93,7 @@ class ReplicateProvider(BaseProvider):
                 BackLog.info(instance=self, message=f"Response from AI: {ai_response}")
 
                 # post ai message to user
-                await self.post_message(user, authed, ai_response["message"], mediaFiles=product_id )
+                await self.post_message(user, authed, ai_response, mediaFiles=product_id )
 
         await api.close_pools()
 
