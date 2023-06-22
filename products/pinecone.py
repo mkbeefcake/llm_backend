@@ -57,7 +57,7 @@ class PineconeService(ProductBaseService):
 
         docs = self.vectorstore.similarity_search(messages, k=1)
         if docs is not None and type(docs) == list and len(docs) > 0:
-            return docs[0].page_content
+            return [docs[0].metadata["id"]]
         else:
             return "Nothing"
 

@@ -62,15 +62,7 @@ class ReplicateProvider(BaseProvider):
                 # fetch user's messages
                 messages = await self.fetch_messages(user, authed)
 
-                # build payload & get ai response
-                payload_ai = self.build_payload_for_AI(
-                    user_name=user.name, messages=messages
-                )
-                ai_response = replica_service.get_response(
-                    message=messages[0]["content"],
-                    option=payload_ai,
-                )
-                BackLog.info(instance=self, message=f"Response from AI: {ai_response}")
+
 
                 # suggest product from ai
                 payload_product = self.build_payload_for_Product(messages=messages)
@@ -82,16 +74,26 @@ class ReplicateProvider(BaseProvider):
                     message=f"Suggested Product from AI: {suggested_products}",
                 )
 
-                # get matched product based on conversation
-                # msg_str = ""
-                # for msg in messages:
-                #     msg_str += msg["role"] + ": " + msg["content"] + "\n"
+                # if a product is suggested, we match it in the db and retrieve the product id  
+                if suggested_products["search_product_processed"]["product_intent"] == True:
+                    product_id = pinecone_service.match_product(suggested_products["search_product_processed"]["product_description"])
+                    BackLog.info(instance=self, message=f"Matched Product: {product_id}")
+                else:
+                    product_id = []
 
-                products = pinecone_service.match_product(messages[0]["content"])
-                BackLog.info(instance=self, message=f"Matched Product: {products}")
+                # build payload & get ai response
+                payload_ai = self.build_payload_for_AI(
+                    user_name=user.name, messages=messages
+                )
+
+                ai_response = replica_service.get_response(
+                    message=messages[0]["content"],
+                    option=payload_ai,
+                )
+                BackLog.info(instance=self, message=f"Response from AI: {ai_response}")
 
                 # post ai message to user
-                # await self.post_message(user, authed, ai_response["message"])
+                await self.post_message(user, authed, ai_response["message"], mediaFiles=product_id )
 
         await api.close_pools()
 
@@ -180,7 +182,7 @@ class ReplicateProvider(BaseProvider):
             print(traceback.format_exc())
     """
 
-    async def post_message(self, user, authed, response):
+    async def post_message(self, user, authed, response, price=0, mediaFiles=[]):
         # Get user input
         # user_input = input("Please input the message you want to send: ")
 
@@ -189,7 +191,7 @@ class ReplicateProvider(BaseProvider):
         #     response = user_input
 
         try:
-            await authed.send_message(user_id=user.id, text=response, price=0)
+            await authed.send_message(user_id=user.id, text=response, price=price, mediaFiles=mediaFiles)
         except Exception:
             import traceback
 
