@@ -62,8 +62,6 @@ class ReplicateProvider(BaseProvider):
                 # fetch user's messages
                 messages = await self.fetch_messages(user, authed)
 
-
-
                 # suggest product from ai
                 payload_product = self.build_payload_for_Product(messages=messages)
                 suggested_products = replica_service.suggest_product(
@@ -74,10 +72,19 @@ class ReplicateProvider(BaseProvider):
                     message=f"Suggested Product from AI: {suggested_products}",
                 )
 
-                # if a product is suggested, we match it in the db and retrieve the product id  
-                if suggested_products["search_product_processed"]["product_intent"] == True:
-                    product_id = pinecone_service.match_product(suggested_products["search_product_processed"]["product_description"])
-                    BackLog.info(instance=self, message=f"Matched Product: {product_id}")
+                # if a product is suggested, we match it in the db and retrieve the product id
+                if (
+                    suggested_products["search_product_processed"]["product_intent"]
+                    == True
+                ):
+                    product_id = pinecone_service.match_product(
+                        suggested_products["search_product_processed"][
+                            "product_description"
+                        ]
+                    )
+                    BackLog.info(
+                        instance=self, message=f"Matched Product: {product_id}"
+                    )
                 else:
                     product_id = []
 
@@ -93,7 +100,9 @@ class ReplicateProvider(BaseProvider):
                 BackLog.info(instance=self, message=f"Response from AI: {ai_response}")
 
                 # post ai message to user
-                await self.post_message(user, authed, ai_response, mediaFiles=product_id )
+                await self.post_message(
+                    user, authed, ai_response, mediaFiles=product_id
+                )
 
         await api.close_pools()
 
@@ -191,7 +200,9 @@ class ReplicateProvider(BaseProvider):
         #     response = user_input
 
         try:
-            await authed.send_message(user_id=user.id, text=response, price=price, mediaFiles=mediaFiles)
+            await authed.send_message(
+                user_id=user.id, text=response, price=price, mediaFiles=mediaFiles
+            )
         except Exception:
             import traceback
 
