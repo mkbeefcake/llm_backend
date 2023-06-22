@@ -108,6 +108,10 @@ class ReplicateProvider(BaseProvider):
             BackLog.exception(instance=self, message="Exception occurred")
 
     async def authenticate(self, api: replica.api_types):
+        BackLog.info(
+            instance=self,
+            message=f"Type: {type(self.auth_json)}, Creds: {self.auth_json}",
+        )
         auth = api.add_auth(self.auth_json)
         return await auth.login()
 
