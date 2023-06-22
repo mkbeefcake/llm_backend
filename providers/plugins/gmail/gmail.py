@@ -333,12 +333,12 @@ class GMailProvider(BaseProvider):
                 self.reply_to_message(
                     access_token=self.access_token,
                     to=last_message["messageId"],
-                    message=ai_response["message"],
+                    message=ai_response,
                     option="",
                 )
                 BackLog.info(
                     instance=self,
-                    message=f"LastMessage: {last_message['snippet']}, response: {ai_response['message']}",
+                    message=f"LastMessage: {last_message['snippet']}, response: {ai_response}",
                 )
             else:
                 last_messages = self.get_messages(
@@ -355,12 +355,12 @@ class GMailProvider(BaseProvider):
                     self.reply_to_message(
                         access_token=self.access_token,
                         to=message["messageId"],
-                        message=ai_response["message"],
+                        message=ai_response,
                         option="",
                     )
                     BackLog.info(
                         instance=self,
-                        message=f"Message: {message['snippet']}, response: {ai_response['message']}",
+                        message=f"Message: {message['snippet']}, response: {ai_response}",
                     )
 
             self.sync_time = get_current_timestamp()
