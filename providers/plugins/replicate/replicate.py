@@ -49,14 +49,17 @@ class ReplicateProvider(BaseProvider):
         if "chat_list" in rules:
             # Get chat lists
             chat_lists = await authed.get_pinned_lists()
+            BackLog.info(instance=self, message=f"Chat Lists: {chat_lists}")
 
             # If the specified chat list exists, select chats from this list
             if rules["chat_list"] in chat_lists:
+                BackLog.info(instance=self, message=f"Chat Lists: {chat_lists}")
                 return await authed.get_chats(
                     identifier=f"&list_id={str(chat_lists[rules['chat_list']])}"
                 )
 
         # If 'chat_list' rule does not exist, or if the specified chat list does not exist, select all chats
+        BackLog.info(instance=self, message=f"Fetching all chats")
         return await authed.get_chats()
 
     async def start_autobot(self, user_data: any):
