@@ -58,51 +58,57 @@ class ReplicateProvider(BaseProvider):
             user = await authed.get_user(chat["withUser"]["id"])
             BackLog.info(instance=self, message=f"Username: {user.name}")
 
-            if not user.isPerformer:
-                # fetch user's messages
-                messages = await self.fetch_messages(user, authed)
+            try:
+                if not user.isPerformer:
+                    # fetch user's messages
+                    messages = await self.fetch_messages(user, authed)
 
-                # suggest product from ai
-                payload_product = self.build_payload_for_Product(messages=messages)
-                suggested_products = replica_service.suggest_product(
-                    messages=messages, option=payload_product
-                )
-                BackLog.info(
-                    instance=self,
-                    message=f"Suggested Product from AI: {suggested_products}",
-                )
-
-                # if a product is suggested, we match it in the db and retrieve the product id
-                if (
-                    suggested_products["search_product_processed"]["product_intent"]
-                    == True
-                ):
-                    product_id = pinecone_service.match_product(
-                        suggested_products["search_product_processed"][
-                            "product_description"
-                        ]
+                    # suggest product from ai
+                    payload_product = self.build_payload_for_Product(messages=messages)
+                    suggested_products = replica_service.suggest_product(
+                        messages=messages, option=payload_product
                     )
                     BackLog.info(
-                        instance=self, message=f"Matched Product: {product_id}"
+                        instance=self,
+                        message=f"Suggested Product from AI: {suggested_products}",
                     )
-                else:
-                    product_id = []
 
-                # build payload & get ai response
-                payload_ai = self.build_payload_for_AI(
-                    user_name=user.name, messages=messages
-                )
+                    # if a product is suggested, we match it in the db and retrieve the product id
+                    if (
+                        suggested_products["search_product_processed"]["product_intent"]
+                        == True
+                    ):
+                        product_id = pinecone_service.match_product(
+                            suggested_products["search_product_processed"][
+                                "product_description"
+                            ]
+                        )
+                        BackLog.info(
+                            instance=self, message=f"Matched Product: {product_id}"
+                        )
+                    else:
+                        product_id = []
 
-                ai_response = replica_service.get_response(
-                    message=messages[0]["content"],
-                    option=payload_ai,
-                )
-                BackLog.info(instance=self, message=f"Response from AI: {ai_response}")
+                    # build payload & get ai response
+                    payload_ai = self.build_payload_for_AI(
+                        user_name=user.name, messages=messages
+                    )
 
-                # post ai message to user
-                await self.post_message(
-                    user, authed, ai_response, mediaFiles=product_id
-                )
+                    ai_response = replica_service.get_response(
+                        message=messages[0]["content"],
+                        option=payload_ai,
+                    )
+                    BackLog.info(
+                        instance=self, message=f"Response from AI: {ai_response}"
+                    )
+
+                    # post ai message to user
+                    await self.post_message(
+                        user, authed, ai_response, mediaFiles=product_id
+                    )
+
+            except Exception as e:
+                BackLog.exception(instance=self, message=f"Exception occurred")
 
         await api.close_pools()
 
