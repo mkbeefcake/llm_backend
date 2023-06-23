@@ -23,8 +23,6 @@ class ReplicateProvider(BaseProvider):
     def __init__(self) -> None:
         super().__init__()
         self.num_messages = 2
-        self.auth_json = {}
-        self.rules = {}
 
     def get_provider_info(self):
         return {
@@ -42,20 +40,20 @@ class ReplicateProvider(BaseProvider):
     def disconnect(self, request: Request):
         pass
 
-    async def select_chats(self, authed):
+    async def select_chats(self, authed, rules):
         """
         Select chats based on the 'chat_list' rule from the frontend.
         - If 'chat_list' rule does not exist, or if the specified chat list does not exist, all chats are selected.
         - Else, we select only the pinned list
         """
-        if "chat_list" in self.rules:
+        if "chat_list" in rules:
             # Get chat lists
             chat_lists = await authed.get_pinned_lists()
 
             # If the specified chat list exists, select chats from this list
-            if self.rules["chat_list"] in chat_lists:
+            if rules["chat_list"] in chat_lists:
                 return await authed.get_chats(
-                    identifier=f"&list_id={str(chat_lists[self.rules['chat_list']])}"
+                    identifier=f"&list_id={str(chat_lists[rules['chat_list']])}"
                 )
 
         # If 'chat_list' rule does not exist, or if the specified chat list does not exist, select all chats
@@ -65,14 +63,14 @@ class ReplicateProvider(BaseProvider):
         api = replica.select_api("replica")
 
         # try to get auth_json and rules from firestore db
-        self.load_credentials_from_userdata(user_data)
+        auth_json, rules = self.load_credentials_from_userdata(user_data)
 
         # authenticate
-        authed = await self.authenticate(api)
+        authed = await self.authenticate(api, auth_json)
         BackLog.info(instance=self, message=f"Passed authenticate() function....")
 
         # Select relevant chats
-        chats = await self.select_chats(authed)
+        chats = await self.select_chats(authed, rules)
 
         for chat in chats:
             user = await authed.get_user(chat["withUser"]["id"])
@@ -111,7 +109,7 @@ class ReplicateProvider(BaseProvider):
 
                     # build payload & get ai response
                     payload_ai = self.build_payload_for_AI(
-                        user_name=user.name, messages=messages
+                        user_name=user.name, messages=messages, rules=rules
                     )
 
                     ai_response = replica_service.get_response(
@@ -133,24 +131,29 @@ class ReplicateProvider(BaseProvider):
         await api.close_pools()
 
     def load_credentials_from_userdata(self, user_data):
+        auth_json = {}
+        rules = {}
+
         try:
             if "option" in user_data:
-                self.auth_json = json.loads(user_data["option"])
-                BackLog.info(instance=self, message=f"AUTH_JSON: {self.auth_json}")
+                auth_json = json.loads(user_data["option"])
+                BackLog.info(instance=self, message=f"AUTH_JSON: {auth_json}")
 
             if "rules" in user_data:
-                self.rules = json.loads(user_data["rules"])
-                BackLog.info(instance=self, message=f"Rules: {self.rules}")
+                rules = json.loads(user_data["rules"])
+                BackLog.info(instance=self, message=f"Rules: {rules}")
 
         except Exception as e:
             BackLog.exception(instance=self, message="Exception occurred")
 
-    async def authenticate(self, api: replica.api_types):
+        return auth_json, rules
+
+    async def authenticate(self, api: replica.api_types, auth_json):
         BackLog.info(
             instance=self,
-            message=f"Type: {type(self.auth_json)}, Creds: {self.auth_json}",
+            message=f"Type: {type(auth_json)}, Creds: {auth_json}",
         )
-        auth = api.add_auth(self.auth_json)
+        auth = api.add_auth(auth_json)
         return await auth.login()
 
     async def fetch_messages(self, user, authed):
@@ -177,18 +180,18 @@ class ReplicateProvider(BaseProvider):
         payload = {"input": {"search_prod_input": {"history": messages}}}
         return payload
 
-    def build_payload_for_AI(self, user_name: str, messages: any):
+    def build_payload_for_AI(self, user_name: str, messages: any, rules):
         prompt_template = ""
-        if "prompt_template" in self.rules:
-            prompt_template = self.rules["prompt_template"]
+        if "prompt_template" in rules:
+            prompt_template = rules["prompt_template"]
 
         character_name = ""
-        if "character_name" in self.rules:
-            character_name = self.rules["character_name"]
+        if "character_name" in rules:
+            character_name = rules["character_name"]
 
         context = ""
-        if "context" in self.rules:
-            context = self.rules["context"]
+        if "context" in rules:
+            context = rules["context"]
 
         payload = {
             "input": {
