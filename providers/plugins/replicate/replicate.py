@@ -58,7 +58,7 @@ class ReplicateProvider(BaseProvider):
             chat_lists = await authed.get_lists()
             
             # Filter them 
-            chats = await authed.get_chats(identifier=chat_lists[self.rules["chat_list"]])
+            chats = await authed.get_chats(identifier=f"&list_id={chat_lists[self.rules['chat_list']]}")
         else:
             # get all chats 
             chats = await authed.get_chats()
