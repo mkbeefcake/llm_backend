@@ -19,9 +19,6 @@ def remove_brackets_and_braces(string):
     return string
 
 
-
-
-
 class ReplicateProvider(BaseProvider):
     def __init__(self) -> None:
         super().__init__()
@@ -47,18 +44,20 @@ class ReplicateProvider(BaseProvider):
 
     async def select_chats(self, authed):
         """
-        Select chats based on the 'chat_list' rule from the frontend. 
+        Select chats based on the 'chat_list' rule from the frontend.
         - If 'chat_list' rule does not exist, or if the specified chat list does not exist, all chats are selected.
-        - Else, we select only the pinned list 
+        - Else, we select only the pinned list
         """
         if "chat_list" in self.rules:
-            # Get chat lists 
+            # Get chat lists
             chat_lists = await authed.get_pinned_lists()
 
             # If the specified chat list exists, select chats from this list
-            if self.rules['chat_list'] in chat_lists:
-                return await authed.get_chats(identifier=f"&list_id={str(chat_lists[self.rules['chat_list']])}")
-        
+            if self.rules["chat_list"] in chat_lists:
+                return await authed.get_chats(
+                    identifier=f"&list_id={str(chat_lists[self.rules['chat_list']])}"
+                )
+
         # If 'chat_list' rule does not exist, or if the specified chat list does not exist, select all chats
         return await authed.get_chats()
 
@@ -72,7 +71,7 @@ class ReplicateProvider(BaseProvider):
         authed = await self.authenticate(api)
         BackLog.info(instance=self, message=f"Passed authenticate() function....")
 
-        # Select relevant chats 
+        # Select relevant chats
         chats = await self.select_chats(authed)
 
         for chat in chats:
