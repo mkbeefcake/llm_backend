@@ -52,8 +52,17 @@ class ReplicateProvider(BaseProvider):
         authed = await self.authenticate(api)
         BackLog.info(instance=self, message=f"Passed authenticate() function....")
 
-        # get chat history per each user
-        chats = await authed.get_chats(identifier="&list_id=1006771418")
+        # Get only specific chats 
+        if "chat_list" in self.rules:
+            # Get chat lists 
+            chat_lists = await authed.get_lists()
+            
+            # Filter them 
+            chats = await authed.get_chats(identifier=f"&list_id={chat_lists[self.rules['chat_list']]}")
+        else:
+            # get all chats 
+            chats = await authed.get_chats()
+
         for chat in chats:
             user = await authed.get_user(chat["withUser"]["id"])
             BackLog.info(instance=self, message=f"Username: {user.name}")
