@@ -2,7 +2,7 @@ from typing import Union
 
 from fastapi import APIRouter, Depends
 
-from core.message import MessageErr, MessageOK
+from core.utils.message import MessageErr, MessageOK
 from services.service import ai_service
 
 from .users import User, get_current_user

@@ -1,7 +1,7 @@
 import requests
 
 from core.config import settings
-from core.message import MessageErr, MessageOK
+from core.utils.message import MessageErr, MessageOK
 from db.cruds.service import create_service, get_all_services, get_service
 from db.schemas.service import ServiceSchema
 from services.llm.services import (

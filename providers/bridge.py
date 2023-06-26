@@ -134,25 +134,5 @@ class Bridge:
 
         return provider.start_autobot(user_data)
 
-    async def get_product_list(self, provider_name: str):
-        provider = self.provider_list[provider_name.lower()]
-        if not provider:
-            raise NotImplementedError
-
-        if not issubclass(type(provider), ProductBaseService):
-            raise NotImplementedError
-
-        return await provider.get_product_list()
-
-    async def get_bestseller_products(self, provider_name: str):
-        provider = self.provider_list[provider_name.lower()]
-        if not provider:
-            raise NotImplementedError
-
-        if not issubclass(type(provider), ProductBaseService):
-            raise NotImplementedError
-
-        return await provider.get_bestseller_products()
-
 
 bridge = Bridge()

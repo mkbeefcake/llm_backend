@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from core.message import MessageErr, MessageOK
+from core.utils.message import MessageErr, MessageOK
 from providers.bridge import bridge
 
 from .users import User, get_current_user

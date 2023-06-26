@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
 
-from core.message import MessageErr, MessageOK
-from core.task import task_manager
+from core.utils.message import MessageErr, MessageOK
+from core.task.task import task_manager
 
 from .users import User, get_current_user
 

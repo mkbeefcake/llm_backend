@@ -15,8 +15,8 @@ from googleapiclient.discovery import build
 from starlette.config import Config
 from starlette.requests import Request
 
-from core.log import BackLog
-from core.timestamp import get_current_timestamp
+from core.utils.log import BackLog
+from core.utils.timestamp import get_current_timestamp
 from providers.base import BaseProvider
 from services.service import openai_service
 

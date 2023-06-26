@@ -2,7 +2,7 @@ import json
 
 from firebase_admin import firestore
 
-from core.firebase import db
+from db.firebase import db
 from db.schemas.users import UsersSchema
 
 

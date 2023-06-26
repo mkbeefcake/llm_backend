@@ -1,4 +1,4 @@
-from core.firebase import db
+from db.firebase import db
 from db.schemas.provider import ProviderSchema
 
 # def create_provider(provider: ProviderSchema):

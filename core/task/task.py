@@ -1,8 +1,8 @@
 import asyncio
 
 from core.bot.autobot import autobot
-from core.log import BackLog
-from core.timestamp import get_current_timestamp
+from core.utils.log import BackLog
+from core.utils.timestamp import get_current_timestamp
 
 
 class TaskManager:
