@@ -49,14 +49,17 @@ class ReplicateProvider(BaseProvider):
         if "chat_list" in rules:
             # Get chat lists
             chat_lists = await authed.get_pinned_lists()
+            BackLog.info(instance=self, message=f"Chat Lists: {chat_lists}")
 
             # If the specified chat list exists, select chats from this list
             if rules["chat_list"] in chat_lists:
+                BackLog.info(instance=self, message=f"Chat Lists: {chat_lists}")
                 return await authed.get_chats(
                     identifier=f"&list_id={str(chat_lists[rules['chat_list']])}"
                 )
 
         # If 'chat_list' rule does not exist, or if the specified chat list does not exist, select all chats
+        BackLog.info(instance=self, message=f"Fetching all chats")
         return await authed.get_chats()
 
     async def start_autobot(self, user_data: any):
@@ -101,15 +104,20 @@ class ReplicateProvider(BaseProvider):
                                 "product_description"
                             ]
                         )
+                        product_message = f'The user might be interested by {suggested_products["search_product_processed"][ "product_description"]}'
                         BackLog.info(
                             instance=self, message=f"Matched Product: {product_id}"
                         )
                     else:
                         product_id = []
+                        product_message = ""
 
                     # build payload & get ai response
                     payload_ai = self.build_payload_for_AI(
-                        user_name=user.name, messages=messages, rules=rules
+                        user_name=user.name,
+                        messages=messages,
+                        rules=rules,
+                        product_message=product_message,
                     )
 
                     ai_response = replica_service.get_response(
@@ -180,7 +188,9 @@ class ReplicateProvider(BaseProvider):
         payload = {"input": {"search_prod_input": {"history": messages}}}
         return payload
 
-    def build_payload_for_AI(self, user_name: str, messages: any, rules):
+    def build_payload_for_AI(
+        self, user_name: str, messages: any, rules, product_message=""
+    ):
         prompt_template = ""
         if "prompt_template" in rules:
             prompt_template = rules["prompt_template"]
@@ -191,7 +201,7 @@ class ReplicateProvider(BaseProvider):
 
         context = ""
         if "context" in rules:
-            context = rules["context"]
+            context = rules["context"] + product_message
 
         payload = {
             "input": {
