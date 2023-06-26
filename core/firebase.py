@@ -6,8 +6,8 @@ import pyrebase
 import requests
 from firebase_admin import auth, credentials, firestore
 
-service_account_path = Path(".") / "neo-chatbot-f0fff-service_account_keys.json"
-firebase_config_path = Path(".") / "neo-chatbot-firebase.json"
+service_account_path = Path(".") / "chat-automation-serviceaccount.json"
+firebase_config_path = Path(".") / "chat-automation-firebase.json"
 
 # initialize Firestore credentials
 cred = credentials.Certificate(service_account_path)

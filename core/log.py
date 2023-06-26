@@ -4,7 +4,7 @@ DEBUG = True
 
 
 class BackLog:
-    logger = logging.getLogger("neo-chatbot-backend-logger")
+    logger = logging.getLogger("chat-automation-backend-logger")
     console_handler = logging.StreamHandler()
 
     if DEBUG is True:

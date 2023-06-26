@@ -11,8 +11,8 @@
 1.2 Configuration files
 - copy all JSON files on your root directory
 
-neo-chatbot-f0fff-service_account_keys.json
-neo-chatbot-firebase.json
+chat-automation-serviceaccount.json
+chat-automation-firebase.json
 oauth2-credentials.json
 
 1.3 Prepare test gmail account 

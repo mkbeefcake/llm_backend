@@ -12,3 +12,5 @@ oauth2-credentials-production.json
 env
 env.development
 env.production
+oauth2-credentials-debug.json
+chat-automation-firebase.json
