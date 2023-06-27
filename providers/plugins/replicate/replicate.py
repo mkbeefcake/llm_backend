@@ -297,6 +297,7 @@ class ReplicateProvider(BaseProvider):
                 statistics = await authed.get_subscriber_info(user_id)
                 purchases = await authed.get_subscriber_gallery(user_id)
             except Exception as e:
+                BackLog.exception(instance=self, message=f"{str(e)}")
                 pass
 
             user_info = []
