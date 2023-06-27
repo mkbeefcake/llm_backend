@@ -306,7 +306,7 @@ class ReplicateProvider(BaseProvider):
                         "medias": [item["id"] for item in item["media"]],
                         "media_count": item["mediaCount"],
                         "created": item["createdAt"],
-                        "purchased": item["isOpened"],
+                        # "purchased": item["isOpened"],
                         "timestamp": item["createdAt"],
                     }
                     user_info.append(parsed_item)
