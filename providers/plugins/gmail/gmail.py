@@ -385,3 +385,9 @@ class GMailProvider(BaseProvider):
         pass
 
     pass
+
+    async def get_purchased_products(self, user_data: any):
+        pass
+
+    async def get_all_products(self, user_data: any):
+        pass

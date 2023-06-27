@@ -50,6 +50,12 @@ class BaseProvider(metaclass=BaseProviderMeta):
     async def start_autobot(self, user_data: any):
         raise NotImplementedError
 
+    async def get_purchased_products(self, user_data: any):
+        raise NotImplementedError
+
+    async def get_all_products(self, user_data: any):
+        raise NotImplementedError
+
     @classproperty
     def plugin_name(cls) -> str:
         return cls.__name__  # type: ignore

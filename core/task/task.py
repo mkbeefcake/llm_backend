@@ -35,8 +35,17 @@ class TaskManager:
 
         pass
 
+    async def internal_onetime_func(self, task_func: any, **kwargs):
+        try:
+            await task_func(**kwargs)
+        except Exception as e:
+            BackLog.exception(instance=self, message=f"Exception ocurred")
+
     def create_task(self, task_func: any, interval: int, **kwargs):
         return asyncio.create_task(self.internal_func(task_func, interval, **kwargs))
+
+    def create_onetime_task(self, task_func: any, **kwargs):
+        return asyncio.create_task(self.internal_onetime_func(task_func, **kwargs))
 
     def stop_task(self, task: any):
         task.cancel()

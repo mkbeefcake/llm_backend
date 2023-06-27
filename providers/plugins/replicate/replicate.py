@@ -219,17 +219,6 @@ class ReplicateProvider(BaseProvider):
         }
         return payload
 
-    """ 
-     async def get_products(self, user, authed, response):
-
-        try:
-            products = await authed.get_product_categories(user_id=user.id, text=response, price=0)
-            return products
-        except Exception:
-            import traceback
-            print(traceback.format_exc())
-    """
-
     async def post_message(self, user, authed, response, price=0, mediaFiles=[]):
         # Get user input
         # user_input = input("Please input the message you want to send: ")
@@ -246,3 +235,61 @@ class ReplicateProvider(BaseProvider):
             import traceback
 
             print(traceback.format_exc())
+
+    async def get_purchased_products(self, user_data: any):
+        chat_list = "NEW FANS (Regular price)✨"
+
+        api = replica.select_api("replica")
+
+        # try to get auth_json and rules from firestore db
+        auth_json, rules = self.load_credentials_from_userdata(user_data)
+
+        # authenticate
+        authed = await self.authenticate(api, auth_json)
+        BackLog.info(instance=self, message=f"Passed authenticate() function....")
+
+        print("Starting product scraping...")
+
+        chat_lists = await authed.get_pinned_lists()
+        print(chat_lists)
+
+        # If the specified chat list exists, select chats from this list
+        if chat_list in chat_lists:
+            chats = await authed.get_chats(
+                # We only want to get fans in the last 2 months, hence the 60 delta.
+                identifier=f"&list_id={str(chat_lists[chat_list])}",
+                delta=60,
+            )
+        else:
+            # Filter them
+            chats = await authed.get_chats(
+                identifier=f"&list_id={chat_lists['Pinned']}"
+            )
+
+        user_id_list = [item["withUser"]["id"] for item in chats]
+
+        for user_id in user_id_list:
+            statistics = await authed.get_subscriber_info(user_id)
+            purchases = await authed.get_subscriber_gallery(user_id)
+
+            user_info = []
+
+            for item in purchases["list"]:
+                parsed_item = {
+                    "message_id": item["id"],
+                    "price": item["price"],
+                    "medias": [item["id"] for item in item["media"]],
+                    "media_count": item["mediaCount"],
+                    "created": item["createdAt"],
+                    "purchased": item["isOpened"],
+                    "timestamp": item["createdAt"],
+                }
+                user_info.append(parsed_item)
+            user_info.append(statistics)
+
+            # save the information in the user_database
+
+        await api.close_pools()
+
+    async def get_all_products(self, user_data: any):
+        pass

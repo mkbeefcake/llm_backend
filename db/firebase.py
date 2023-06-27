@@ -34,3 +34,9 @@ def create_user(email: str, password: str):
     user = pb.auth().create_user_with_email_and_password(email=email, password=password)
     result = pb.auth().send_email_verification(user["idToken"])
     return result
+
+
+def get_all_users_data():
+    docs = db.collection("users").get()
+    all_users = [{doc.id: doc.to_dict()} for doc in docs]
+    return all_users

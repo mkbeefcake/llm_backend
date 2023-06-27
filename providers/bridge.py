@@ -127,12 +127,32 @@ class Bridge:
 
         return provider.disconnect(request)
 
-    def start_autobot(self, provider_name: str, identifier_name: str, user_data: any):
+    async def start_autobot(
+        self, provider_name: str, identifier_name: str, user_data: any
+    ):
         provider = self.provider_list[provider_name.lower()]
         if not provider:
             raise NotImplementedError
 
-        return provider.start_autobot(user_data)
+        return await provider.start_autobot(user_data)
+
+    async def get_purchased_products(
+        self, provider_name: str, identifier_name: str, user_data: any
+    ):
+        provider = self.provider_list[provider_name.lower()]
+        if not provider:
+            raise NotImplementedError
+
+        return await provider.get_purchased_products(user_data)
+
+    async def get_all_products(
+        self, provider_name: str, identifier_name: str, user_data: any
+    ):
+        provider = self.provider_list[provider_name.lower()]
+        if not provider:
+            raise NotImplementedError
+
+        return await provider.get_all_products(user_data)
 
 
 bridge = Bridge()
