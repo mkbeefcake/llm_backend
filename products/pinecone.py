@@ -16,7 +16,7 @@ load_dotenv(dotenv_path=env_path)
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-PINECONE_PRODUCT_INDEX = "import-product"
+PINECONE_PRODUCT_INDEX = os.getenv("PINECONE_PRODUCT_INDEX")
 
 
 class PineconeService(ProductBaseService):
@@ -60,6 +60,21 @@ class PineconeService(ProductBaseService):
             return [docs[0].metadata["id"]]
         else:
             return "Nothing"
+
+    def update_products(self, products_info, namespace):
+        self.initialize()
+
+        if self.vectorstore is None:
+            return "Couldn't connect to pinecone vector db"
+
+        dataset = pd.DataFrame(products_info["products"])
+        meta = [{"id": x} for x in dataset["id"]]
+
+        self.vectorstore.add_texts(
+            namespace=namespace, texts=dataset["label"], metadatas=meta
+        )
+        BackLog.info(self, f"Import Done")
+        pass
 
 
 pinecone_service = PineconeService()

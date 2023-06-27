@@ -1,5 +1,8 @@
+import asyncio
 import json
+import os
 
+import requests
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
@@ -10,6 +13,7 @@ from providers.base import BaseProvider
 from services.service import replica_service
 
 templates = Jinja2Templates(directory="templates/replicate")
+PRODUCT_REPLICA_ENDPOINT = os.getenv("PRODUCT_REPLICA_ENDPOINT")
 
 
 def remove_brackets_and_braces(string):
@@ -17,6 +21,26 @@ def remove_brackets_and_braces(string):
     string = string.replace("[", "").replace("]", "")
     string = string.replace("{", "").replace("}", "")
     return string
+
+
+def aggregate_labels(response_json):
+    prediction = response_json["prediction"]
+    values = [str(value) for value in prediction.keys()]
+    result = ",".join(values)
+    return result
+
+
+async def label_content(type, url, k, id):
+    endpoint = PRODUCT_REPLICA_ENDPOINT
+    resource = requests.get(url)
+
+    payload = {
+        "k": k,
+        "type": type,
+    }
+    response = requests.post(endpoint, files={"file": resource.content}, data=payload)
+    response_json = response.json()
+    return {"id": id, "label": aggregate_labels(response_json)}
 
 
 class ReplicateProvider(BaseProvider):
@@ -269,8 +293,11 @@ class ReplicateProvider(BaseProvider):
         user_id_list = [item["withUser"]["id"] for item in chats]
 
         for user_id in user_id_list:
-            statistics = await authed.get_subscriber_info(user_id)
-            purchases = await authed.get_subscriber_gallery(user_id)
+            try:
+                statistics = await authed.get_subscriber_info(user_id)
+                purchases = await authed.get_subscriber_gallery(user_id)
+            except Exception as e:
+                pass
 
             user_info = []
 
@@ -290,6 +317,87 @@ class ReplicateProvider(BaseProvider):
             # save the information in the user_database
 
         await api.close_pools()
+        return user_info
 
     async def get_all_products(self, user_data: any):
-        pass
+        api = replica.select_api("replica")
+
+        # try to get auth_json and rules from firestore db
+        auth_json, rules = self.load_credentials_from_userdata(user_data)
+
+        # authenticate
+        authed = await self.authenticate(api, auth_json)
+        BackLog.info(instance=self, message=f"Passed authenticate() function....")
+
+        categories = await authed.get_content_categories()
+
+        full_content = []
+        label_tasks = []  # This list will store the tasks for labeling the content
+
+        print("Content List", len(full_content))
+        for category in categories:
+            offset = 0  # Create an offset variable
+            hasMore = True  # Initialize hasMore as True
+
+            while hasMore:  # While hasMore is true, continue fetching content
+                content = await authed.get_content(str(offset), category["id"])
+                print(category["id"], offset)
+
+                if "hasMore" in content:
+                    hasMore = content["hasMore"]
+
+                    if len(content["list"]) > 0:
+                        for item in content["list"]:
+                            parsed_item = {
+                                "category": category["name"],
+                                "id": item["id"],
+                                "type": item["type"],
+                                "created": item["createdAt"],
+                                "full": item["full"],
+                            }
+
+                            full_content.append(parsed_item)
+
+                            # Add a task to label this content
+                            try:
+                                print(parsed_item["full"])
+                                # print(parsed_item["full"], parsed_item["id"])
+                                # base64_content = download_and_encode_content(parsed_item["full"], authed)
+
+                                task = label_content(
+                                    type=parsed_item["type"],
+                                    url=parsed_item["full"],
+                                    k=15,
+                                    id=parsed_item["id"],
+                                )
+                                label_tasks.append(task)
+                            except:
+                                import traceback
+
+                                print(traceback.print_exc())
+
+                    offset += (
+                        24  # Increase the offset by 24 for the next batch of content
+                    )
+                else:
+                    break  # Break the loop if the content does not contain the "hasMore" key
+
+        print(full_content)
+
+        # Label all contents in parallel
+        try:
+            labels = await asyncio.gather(*label_tasks)
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            import traceback
+
+            print(traceback.print_exc())
+
+        for label in labels:
+            print(label)
+            # add_label_pinecone(label["label"], namespace=provider_id,  metadata)
+
+        await api.close_pools()
+
+        BackLog.info(self, f"Products: {len(full_content)}")
+        return {"products": labels}

@@ -1,7 +1,9 @@
 import json
 
 from core.task.task import TaskManager
+from db.cruds.purchased import update_purchased
 from db.firebase import get_all_users_data
+from products.pinecone import pinecone_service
 from providers.bridge import bridge
 
 
@@ -20,10 +22,16 @@ class ProductPipeline(TaskManager):
     ):
         try:
             user_content = json.loads(user_data)
-            await bridge.get_purchased_products(
+            purchased_info = await bridge.get_purchased_products(
                 provider_name=provider_name,
                 identifier_name=identifier_name,
                 user_data=user_content,
+            )
+            update_purchased(
+                user_id=user_id,
+                provider_name=provider_name,
+                key=identifier_name,
+                content=purchased_info,
             )
 
         except Exception as e:
@@ -31,6 +39,7 @@ class ProductPipeline(TaskManager):
         pass
 
     def fetch_purchased_products(self):
+        print(f"****** Fetch Purchased Products *******")
         all_user_info = get_all_users_data()
         for user_info in all_user_info:
             # get user id
@@ -97,17 +106,26 @@ class ProductPipeline(TaskManager):
     ):
         try:
             user_content = json.loads(user_data)
-            await bridge.get_all_products(
+            products_info = await bridge.get_all_products(
                 provider_name=provider_name,
                 identifier_name=identifier_name,
                 user_data=user_content,
             )
+
+            if provider_name == "replicateprovider":
+                pinecone_service.update_products(
+                    products_info=products_info,
+                    namespace=f"replica_{user_id}_{identifier_name}",
+                )
+            elif provider_name == "gmailprovider":
+                pass
 
         except Exception as e:
             print(f"Exception occurred : {str(e)}")
         pass
 
     def fetch_all_products(self):
+        print(f"****** Fetch All Products *******")
         all_user_info = get_all_users_data()
         for user_info in all_user_info:
             # get user id
