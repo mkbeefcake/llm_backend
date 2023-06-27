@@ -304,7 +304,7 @@ class ReplicateProvider(BaseProvider):
                         "message_id": item["message_id"],
                         "price": item["price"],
                         "medias": [item for item in item["media"]],
-                        "media_count": item["mediaCount"],
+                        # "media_count": item["mediaCount"],
                         "created": item["createdAt"],
                         # "purchased": item["isOpened"],
                         "timestamp": item["createdAt"],
