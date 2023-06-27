@@ -291,31 +291,29 @@ class ReplicateProvider(BaseProvider):
             )
 
         user_id_list = [item["withUser"]["id"] for item in chats]
+        user_info = []
 
         for user_id in user_id_list:
             try:
                 statistics = await authed.get_subscriber_info(user_id)
+                user_info.append(statistics)
+
                 purchases = await authed.get_subscriber_gallery(user_id)
+                for item in purchases["list"]:
+                    parsed_item = {
+                        "message_id": item["id"],
+                        "price": item["price"],
+                        "medias": [item["id"] for item in item["media"]],
+                        "media_count": item["mediaCount"],
+                        "created": item["createdAt"],
+                        "purchased": item["isOpened"],
+                        "timestamp": item["createdAt"],
+                    }
+                    user_info.append(parsed_item)
+
             except Exception as e:
                 BackLog.exception(instance=self, message=f"{str(e)}")
                 pass
-
-            user_info = []
-
-            for item in purchases["list"]:
-                parsed_item = {
-                    "message_id": item["id"],
-                    "price": item["price"],
-                    "medias": [item["id"] for item in item["media"]],
-                    "media_count": item["mediaCount"],
-                    "created": item["createdAt"],
-                    "purchased": item["isOpened"],
-                    "timestamp": item["createdAt"],
-                }
-                user_info.append(parsed_item)
-            user_info.append(statistics)
-
-            # save the information in the user_database
 
         await api.close_pools()
         return user_info
