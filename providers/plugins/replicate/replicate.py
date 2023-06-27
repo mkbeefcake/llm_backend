@@ -299,9 +299,9 @@ class ReplicateProvider(BaseProvider):
                 user_info.append(statistics)
 
                 purchases = await authed.get_subscriber_gallery(user_id)
-                for item in purchases["list"]:
+                for item in purchases:
                     parsed_item = {
-                        "message_id": item["id"],
+                        "message_id": item["message_id"],
                         "price": item["price"],
                         "medias": [item["id"] for item in item["media"]],
                         "media_count": item["mediaCount"],
