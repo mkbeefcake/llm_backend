@@ -32,17 +32,6 @@ class DummyProvider(BaseProvider):
             file=sys.stdout,
         )
 
-    async def get_session_info(self, request: Request) -> str:
-        print(
-            "[%s]: get_session_info: %s | %s" % (self.plugin_name, request),
-            file=sys.stdout,
-        )
-
-    def get_profile(self, access_token: str, option: any):
-        print(
-            "[%s]: get_profile: %s " % (self.plugin_name, access_token), file=sys.stdout
-        )
-
     def get_last_message(self, access_token: str, option: any):
         print(
             "[%s]: get_last_message: %s " % (self.plugin_name, access_token),

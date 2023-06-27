@@ -26,12 +26,6 @@ class BaseProvider(metaclass=BaseProviderMeta):
     async def get_access_token_from_refresh_token(self, refresh_token: str) -> str:
         raise NotImplementedError
 
-    async def get_session_info(self, request: Request) -> str:
-        raise NotImplementedError
-
-    def get_profile(self, access_token: str, option: any):
-        raise NotImplementedError
-
     def get_last_message(self, access_token: str, option: any):
         raise NotImplementedError
 

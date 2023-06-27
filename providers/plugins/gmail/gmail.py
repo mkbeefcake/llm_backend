@@ -99,15 +99,6 @@ class GMailProvider(BaseProvider):
         creds.refresh(requests.Request())
         return creds.token
 
-    async def get_session_info(self, request: Request) -> str:
-        # return request.session[SESSION_NAME]
-        pass
-
-    def get_profile(self, access_token: str, option: any):
-        BackLog.info(
-            instance=self, message="get_profile: %s, %s" % (access_token, option)
-        )
-
     def get_gmail_service(self, access_token: str):
         creds = Credentials(
             token=access_token,

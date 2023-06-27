@@ -2,11 +2,11 @@ import asyncio
 import json
 import os
 
+import replica
 import requests
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
-import replica
 from core.utils.log import BackLog
 from products.pinecone import pinecone_service
 from providers.base import BaseProvider

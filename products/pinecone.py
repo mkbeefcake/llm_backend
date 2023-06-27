@@ -1,4 +1,5 @@
 import os
+import uuid
 from pathlib import Path
 
 import pandas as pd
@@ -73,6 +74,17 @@ class PineconeService(ProductBaseService):
         self.vectorstore.add_texts(
             namespace=namespace, texts=dataset["label"], metadatas=meta
         )
+
+        # docs = []
+        # ids = ids or [str(uuid.uuid4()) for _ in dataset["label"]]
+        # for i, text in enumerate(dataset["label"]):
+        #     embedding = self.openai.embed_query(text)
+        #     metadata = meta[i] if meta else {}
+        #     docs.append((ids[i], embedding, metadata))
+
+        # # upsert to Pinecone
+        # self.index.upsert(vectors=docs, namespace=namespace, batch_size=32)
+
         BackLog.info(self, f"Import Done")
         pass
 

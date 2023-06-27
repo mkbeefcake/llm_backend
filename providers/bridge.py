@@ -15,21 +15,23 @@ class Bridge:
         self.providers = self.loader.load_plugins(
             PROVIDERS_PATH, BaseProvider, recursive=True
         )
-        self.provider_list = {}
+        self.shared_provider_list = {}
+        self.system_provider_list = {}
 
         # load provider instances
         for key in self.providers:
             Provider = self.providers[key]
-            self.provider_list[key] = Provider()
+            self.shared_provider_list[key] = Provider()
+            self.system_provider_list[key] = {}
 
     def get_all_providers(self):
         # load provider instances
         provider_info = []
-        for key in self.provider_list:
+        for key in self.shared_provider_list:
             if key == "dummyprovider" or key == "baseprovider":
                 continue
 
-            provider = self.provider_list[key]
+            provider = self.shared_provider_list[key]
             provider_info.append(provider.get_provider_info())
         return provider_info
 
@@ -37,7 +39,7 @@ class Bridge:
     async def link_provider(
         self, provider_name: str, redirect_url: str, request: Request
     ):
-        provider = self.provider_list[provider_name.lower()]
+        provider = self.shared_provider_list[provider_name.lower()]
         if not provider:
             raise NotImplementedError
 
@@ -45,7 +47,7 @@ class Bridge:
 
     # get access token
     async def get_access_token(self, provider_name: str, request: Request):
-        provider = self.provider_list[provider_name.lower()]
+        provider = self.shared_provider_list[provider_name.lower()]
         if not provider:
             raise NotImplementedError
 
@@ -55,104 +57,116 @@ class Bridge:
     async def get_access_token_from_refresh_token(
         self, provider_name: str, refresh_token: str
     ) -> str:
-        provider = self.provider_list[provider_name.lower()]
+        provider = self.shared_provider_list[provider_name.lower()]
         if not provider:
             raise NotImplementedError
 
         return await provider.get_access_token_from_refresh_token(refresh_token)
 
-    # get session info
-    async def get_session_info(self, provider_name: str, request: Request):
-        provider = self.provider_list[provider_name.lower()]
-        if not provider:
-            raise NotImplementedError
-
-        return await provider.get_session_info(request)
-
-    # get profile
-    def get_profile(self, provider_name: str, access_token: str, option: str):
-        provider = self.provider_list[provider_name.lower()]
-        if not provider:
-            raise NotImplementedError
-
-        return provider.get_profile(access_token, option)
-
     # get last message
-    def get_last_message(self, provider_name: str, access_token: str, option: str):
-        provider = self.provider_list[provider_name.lower()]
-        if not provider:
-            raise NotImplementedError
+    def get_last_message(
+        self, provider_name: str, identifier_name: str, access_token: str, option: str
+    ):
+        key = provider_name.lower()
+        if identifier_name not in self.system_provider_list[key]:
+            self.system_provider_list[key][identifier_name] = self.providers[key]()
 
-        return provider.get_last_message(access_token, option)
+        return self.system_provider_list[key][identifier_name].get_last_message(
+            access_token, option
+        )
 
     def get_full_messages(
-        self, provider_name: str, access_token: str, of_what: str, option: str
+        self,
+        provider_name: str,
+        identifier_name: str,
+        access_token: str,
+        of_what: str,
+        option: str,
     ):
-        provider = self.provider_list[provider_name.lower()]
-        if not provider:
-            raise NotImplementedError
+        key = provider_name.lower()
+        if identifier_name not in self.system_provider_list[key]:
+            self.system_provider_list[key][identifier_name] = self.providers[key]()
 
-        return provider.get_full_messages(access_token, of_what, option)
+        return self.system_provider_list[key][identifier_name].get_full_messages(
+            access_token, of_what, option
+        )
 
     # get messages
     def get_messages(
         self,
         provider_name: str,
+        identifier_name: str,
         access_token: str,
         from_when: str,
         count: int,
         option: str,
     ):
-        provider = self.provider_list[provider_name.lower()]
-        if not provider:
-            raise NotImplementedError
+        key = provider_name.lower()
+        if identifier_name not in self.system_provider_list[key]:
+            self.system_provider_list[key][identifier_name] = self.providers[key]()
 
-        return provider.get_messages(access_token, from_when, count, option)
+        return self.system_provider_list[key][identifier_name].get_messages(
+            access_token, from_when, count, option
+        )
 
     # reply to message
     def reply_to_message(
-        self, provider_name: str, access_token: str, to: str, message: str, option: str
+        self,
+        provider_name: str,
+        identifier_name: str,
+        access_token: str,
+        to: str,
+        message: str,
+        option: str,
     ):
-        provider = self.provider_list[provider_name.lower()]
-        if not provider:
-            raise NotImplementedError
+        key = provider_name.lower()
+        if identifier_name not in self.system_provider_list[key]:
+            self.system_provider_list[key][identifier_name] = self.providers[key]()
 
-        return provider.reply_to_message(access_token, to, message, option)
+        return self.system_provider_list[key][identifier_name].reply_to_message(
+            access_token, to, message, option
+        )
 
     # disconnect
-    def disconnect(self, provider_name: str, request: Request):
-        provider = self.provider_list[provider_name.lower()]
-        if not provider:
-            raise NotImplementedError
+    def disconnect(self, provider_name: str, identifier_name: str, request: Request):
+        key = provider_name.lower()
+        if identifier_name in self.system_provider_list[key]:
+            self.system_provider_list[key][identifier_name].disconnect(request)
 
-        return provider.disconnect(request)
+        return
 
     async def start_autobot(
         self, provider_name: str, identifier_name: str, user_data: any
     ):
-        provider = self.provider_list[provider_name.lower()]
-        if not provider:
-            raise NotImplementedError
+        key = provider_name.lower()
+        if identifier_name not in self.system_provider_list[key]:
+            self.system_provider_list[key][identifier_name] = self.providers[key]()
 
-        return await provider.start_autobot(user_data)
+        return await self.system_provider_list[key][identifier_name].start_autobot(
+            user_data
+        )
 
     async def get_purchased_products(
         self, provider_name: str, identifier_name: str, user_data: any
     ):
-        provider = self.provider_list[provider_name.lower()]
-        if not provider:
-            raise NotImplementedError
+        key = provider_name.lower()
+        if identifier_name not in self.system_provider_list[key]:
+            self.system_provider_list[key][identifier_name] = self.providers[key]()
 
-        return await provider.get_purchased_products(user_data)
+        return await self.system_provider_list[key][
+            identifier_name
+        ].get_purchased_products(user_data)
 
     async def get_all_products(
         self, provider_name: str, identifier_name: str, user_data: any
     ):
-        provider = self.provider_list[provider_name.lower()]
-        if not provider:
-            raise NotImplementedError
+        key = provider_name.lower()
+        if identifier_name not in self.system_provider_list[key]:
+            self.system_provider_list[key][identifier_name] = self.providers[key]()
 
-        return await provider.get_all_products(user_data)
+        return await self.system_provider_list[key][identifier_name].get_all_products(
+            user_data
+        )
 
 
 bridge = Bridge()
