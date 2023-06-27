@@ -39,9 +39,9 @@ class TaskManager:
 
     def create_task(
         self, task_func: any, interval: int, **kwargs
-    ):
+    ):        
         return asyncio.create_task(
-            self.internal_func(task_func, **kwargs)
+            self.internal_func(task_func, interval, **kwargs)
         )
     
     def stop_task(

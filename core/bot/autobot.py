@@ -1,3 +1,4 @@
+import json
 from db.cruds.users import get_user_data
 from providers.bridge import bridge
 from core.task.task import TaskManager
@@ -10,8 +11,7 @@ class AutoBot(TaskManager):
         self.task_status_list = {}
         pass
 
-    async def start(user: any, provider_name: str, identifier_name: str):
-        user_id = user["uid"]
+    async def start(user_id: str, provider_name: str, identifier_name: str):
         user_data = get_user_data(user_id)
 
         if provider_name in user_data and identifier_name in user_data[provider_name]:
@@ -46,7 +46,7 @@ class AutoBot(TaskManager):
                 self.task_status_list[uid][provider_name] = {}
 
             self.task_list[uid][provider_name][identifier_name] = self.create_task(
-                self.start, interval, user, provider_name, identifier_name
+                AutoBot.start, interval, user_id=user["uid"], provider_name=provider_name, identifier_name=identifier_name
             )
             self.task_status_list[uid][provider_name][identifier_name] = True
 
