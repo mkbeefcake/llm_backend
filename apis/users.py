@@ -4,7 +4,6 @@ from pydantic import BaseModel, SecretStr
 
 from db.firebase import authenticate_user, create_user, decode_access_token
 from core.utils.message import MessageErr, MessageOK
-from core.task.task import task_manager
 from helpers.forms import BasicAuthenticationForm
 
 router = APIRouter()
@@ -38,7 +37,8 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         result = authenticate_user(form_data.username, form_data.password)
         return {"access_token": result, "token_type": "bearer"}
     except Exception as e:
-        return MessageErr(reason=str(e))
+        raise HTTPException(status_code=401, detail="User unauthorized")
+        # return MessageErr(reason=str(e))
 
 
 @router.post("/loginWithToken")

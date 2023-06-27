@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
 
 from core.utils.message import MessageErr, MessageOK
-from core.task.task import task_manager
+from core.bot.autobot import autobot
 from db.cruds.users import get_user_data, update_user
 from db.schemas.users import UsersSchema
 from providers.bridge import bridge
@@ -18,7 +18,7 @@ async def get_my_providers(curr_user: User = Depends(get_current_user)):
         user_id = curr_user["uid"]
         my_providers = get_user_data(id=user_id)
         all_providers = bridge.get_all_providers()
-        status_autobot = task_manager.status_my_auto_bot(curr_user)
+        status_autobot = autobot.status_my_auto_bot(curr_user)
         return MessageOK(
             data={
                 "my_providers": my_providers,

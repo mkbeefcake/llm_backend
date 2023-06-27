@@ -1,17 +1,16 @@
-import os
-
-from core.loader.loader import Loader
 from db.cruds.users import get_user_data
 from providers.bridge import bridge
+from core.task.task import TaskManager
+from core.utils.log import BackLog
 
-BOTS_PATH = os.path.join(os.path.dirname(__file__), "plugins")
 
-
-class AutoBot:
+class AutoBot(TaskManager):
     def __init__(self):
+        self.task_list = {}
+        self.task_status_list = {}
         pass
 
-    async def start(self, user: any, provider_name: str, identifier_name: str):
+    async def start(user: any, provider_name: str, identifier_name: str):
         user_id = user["uid"]
         user_data = get_user_data(user_id)
 
@@ -25,5 +24,70 @@ class AutoBot:
             await bridge.start_autobot(provider_name, identifier_name, None)
         pass
 
+    def start_auto_bot(
+        self, user: any, provider_name: str, identifier_name: str, interval: int
+    ):
+        if user is None:
+            return
+
+        uid = user["uid"]
+
+        if self.status_auto_bot(user, provider_name, identifier_name) == False:
+            if not uid in self.task_list:
+                self.task_list[uid] = {}
+
+            if not uid in self.task_status_list:
+                self.task_status_list[uid] = {}
+
+            if not provider_name in self.task_list[uid]:
+                self.task_list[uid][provider_name] = {}
+
+            if not provider_name in self.task_status_list[uid]:
+                self.task_status_list[uid][provider_name] = {}
+
+            self.task_list[uid][provider_name][identifier_name] = self.create_task(
+                self.start, interval, user, provider_name, identifier_name
+            )
+            self.task_status_list[uid][provider_name][identifier_name] = True
+
+        pass
+
+    def stop_auto_bot(self, user: any, provider_name: str, identifier_name: str):
+        uid = user["uid"]
+
+        if (
+            user is not None
+            and uid in self.task_list
+            and provider_name in self.task_list[uid]
+            and identifier_name in self.task_list[uid][provider_name]
+        ):
+            was_cancelled = self.task_list[uid][provider_name][identifier_name].cancel()
+            self.task_status_list[uid][provider_name][identifier_name] = False
+            BackLog.info(
+                instance=self, message=f"stop_auto_bot: {was_cancelled}"
+            )
+        pass
+
+    # issue happens
+    def status_auto_bot(self, user: any, provider_name: str, identifier_name: str):
+        if (
+            user is None
+            or not user["uid"] in self.task_list
+            or not provider_name in self.task_list[user["uid"]]
+            or not identifier_name in self.task_list[user["uid"]][provider_name]
+        ):
+            return False
+        else:
+            uid = user["uid"]
+            if self.task_list[uid][provider_name][identifier_name].done() == True:
+                return False
+
+            return True
+
+    def status_my_auto_bot(self, user: any):
+        if user is None or not user["uid"] in self.task_status_list:
+            return {}
+        else:
+            return self.task_status_list[user["uid"]]
 
 autobot = AutoBot()

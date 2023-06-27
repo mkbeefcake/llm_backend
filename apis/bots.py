@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
 
 from core.utils.message import MessageErr, MessageOK
-from core.task.task import task_manager
+from core.bot.autobot import autobot
 
 from .users import User, get_current_user
 
@@ -17,7 +17,7 @@ async def start_auto_bot(
     curr_user: User = Depends(get_current_user),
 ):
     try:
-        task_manager.start_auto_bot(
+        autobot.start_auto_bot(
             user=curr_user,
             provider_name=provider_name,
             identifier_name=identifier_name,
@@ -35,7 +35,7 @@ async def stop_auto_bot(
     curr_user: User = Depends(get_current_user),
 ):
     try:
-        task_manager.stop_auto_bot(
+        autobot.stop_auto_bot(
             user=curr_user, provider_name=provider_name, identifier_name=identifier_name
         )
         return MessageOK(data={"message": "User stopped auto-bot successfully"})
@@ -50,7 +50,7 @@ async def status_auto_bot(
     curr_user: User = Depends(get_current_user),
 ):
     try:
-        result = task_manager.status_auto_bot(
+        result = autobot.status_auto_bot(
             user=curr_user, provider_name=provider_name, identifier_name=identifier_name
         )
         return MessageOK(data={"message": {"status": result}})
