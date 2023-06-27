@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
 
-from core.utils.message import MessageErr, MessageOK
 from core.bot.autobot import autobot
+from core.utils.message import MessageErr, MessageOK
 
 from .users import User, get_current_user
 

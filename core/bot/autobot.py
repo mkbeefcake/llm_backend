@@ -1,8 +1,7 @@
-import json
-from db.cruds.users import get_user_data
-from providers.bridge import bridge
 from core.task.task import TaskManager
 from core.utils.log import BackLog
+from db.cruds.users import get_user_data
+from providers.bridge import bridge
 
 
 class AutoBot(TaskManager):
@@ -46,7 +45,11 @@ class AutoBot(TaskManager):
                 self.task_status_list[uid][provider_name] = {}
 
             self.task_list[uid][provider_name][identifier_name] = self.create_task(
-                AutoBot.start, interval, user_id=user["uid"], provider_name=provider_name, identifier_name=identifier_name
+                AutoBot.start,
+                interval,
+                user_id=user["uid"],
+                provider_name=provider_name,
+                identifier_name=identifier_name,
             )
             self.task_status_list[uid][provider_name][identifier_name] = True
 
@@ -63,9 +66,7 @@ class AutoBot(TaskManager):
         ):
             was_cancelled = self.task_list[uid][provider_name][identifier_name].cancel()
             self.task_status_list[uid][provider_name][identifier_name] = False
-            BackLog.info(
-                instance=self, message=f"stop_auto_bot: {was_cancelled}"
-            )
+            BackLog.info(instance=self, message=f"stop_auto_bot: {was_cancelled}")
         pass
 
     # issue happens
@@ -89,5 +90,6 @@ class AutoBot(TaskManager):
             return {}
         else:
             return self.task_status_list[user["uid"]]
+
 
 autobot = AutoBot()

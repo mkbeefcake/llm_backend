@@ -8,9 +8,7 @@ class TaskManager:
     def __init__(self):
         pass
 
-    async def internal_func(
-        self, task_func: any, interval: int, **kwargs
-    ):
+    async def internal_func(self, task_func: any, interval: int, **kwargs):
         if interval < 0:
             return
 
@@ -37,14 +35,8 @@ class TaskManager:
 
         pass
 
-    def create_task(
-        self, task_func: any, interval: int, **kwargs
-    ):        
-        return asyncio.create_task(
-            self.internal_func(task_func, interval, **kwargs)
-        )
-    
-    def stop_task(
-        self, task: any
-    ):
+    def create_task(self, task_func: any, interval: int, **kwargs):
+        return asyncio.create_task(self.internal_func(task_func, interval, **kwargs))
+
+    def stop_task(self, task: any):
         task.cancel()

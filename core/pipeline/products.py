@@ -1,6 +1,7 @@
+from core.task.task import TaskManager
 
 
-class ProductPipeline:
+class ProductPipeline(TaskManager):
     def __init__(self) -> None:
         pass
 

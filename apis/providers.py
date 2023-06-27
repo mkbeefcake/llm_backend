@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
 
-from core.utils.message import MessageErr, MessageOK
 from core.bot.autobot import autobot
+from core.utils.message import MessageErr, MessageOK
 from db.cruds.users import get_user_data, update_user
 from db.schemas.users import UsersSchema
 from providers.bridge import bridge
