@@ -303,7 +303,7 @@ class ReplicateProvider(BaseProvider):
                     parsed_item = {
                         "message_id": item["message_id"],
                         "price": item["price"],
-                        "medias": [item["id"] for item in item["media"]],
+                        "medias": [item for item in item["media"]],
                         "media_count": item["mediaCount"],
                         "created": item["createdAt"],
                         # "purchased": item["isOpened"],
