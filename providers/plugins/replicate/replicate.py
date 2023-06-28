@@ -2,11 +2,11 @@ import asyncio
 import json
 import os
 
-import replica
 import requests
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
+import replica
 from core.utils.log import BackLog
 from products.pinecone import pinecone_service
 from providers.base import BaseProvider
@@ -244,13 +244,6 @@ class ReplicateProvider(BaseProvider):
         return payload
 
     async def post_message(self, user, authed, response, price=0, mediaFiles=[]):
-        # Get user input
-        # user_input = input("Please input the message you want to send: ")
-
-        # If user input is not empty, use it instead of the response
-        # if user_input:
-        #     response = user_input
-
         try:
             await authed.send_message(
                 user_id=user.id, text=response, price=price, mediaFiles=mediaFiles
