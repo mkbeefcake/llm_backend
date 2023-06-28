@@ -71,7 +71,7 @@ class PineconeService(ProductBaseService):
             return "Couldn't connect to pinecone vector db"
 
         for item in products_info["products"]:
-            id = item["id"]
+            id = str(item["id"])
             value = self.openai.embed_query(item["label"])
             metadata = {"id": item["id"], "label": item["label"]}
             self.index.update(
