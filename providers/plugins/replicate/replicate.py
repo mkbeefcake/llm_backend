@@ -294,14 +294,16 @@ class ReplicateProvider(BaseProvider):
             )
 
         user_id_list = [item["withUser"]["id"] for item in chats]
-        user_info = []
+        all_users_info = {}
 
         for user_id in user_id_list:
+            user_info = {}
             try:
                 statistics = await self.authed.get_subscriber_info(user_id)
-                user_info.append(statistics)
+                user_info["statistics"] = statistics
 
                 purchases = await self.authed.get_subscriber_gallery(user_id)
+                purchased_items = []
                 for item in purchases:
                     parsed_item = {
                         "message_id": item["message_id"],
@@ -312,14 +314,18 @@ class ReplicateProvider(BaseProvider):
                         # "purchased": item["isOpened"],
                         "timestamp": item["createdAt"],
                     }
-                    user_info.append(parsed_item)
+                    purchased_items.append(parsed_item)
+
+                user_info["purchased"] = purchased_items
 
             except Exception as e:
                 BackLog.exception(instance=self, message=f"{str(e)}")
                 pass
 
+            all_users_info[user_id] = user_info
+
         # await api.close_pools()
-        return user_info
+        return all_users_info
 
     async def get_all_products(self, user_data: any, option: any = None):
         await self.initialize(user_data=user_data)
