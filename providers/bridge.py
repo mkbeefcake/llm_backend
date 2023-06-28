@@ -136,14 +136,18 @@ class Bridge:
         return
 
     async def start_autobot(
-        self, provider_name: str, identifier_name: str, user_data: any
+        self,
+        provider_name: str,
+        identifier_name: str,
+        user_data: any,
+        option: any = None,
     ):
         key = provider_name.lower()
         if identifier_name not in self.system_provider_list[key]:
             self.system_provider_list[key][identifier_name] = self.providers[key]()
 
         return await self.system_provider_list[key][identifier_name].start_autobot(
-            user_data
+            user_data, option
         )
 
     async def get_purchased_products(

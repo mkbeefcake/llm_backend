@@ -304,7 +304,7 @@ class GMailProvider(BaseProvider):
     def disconnect(self, request: Request):
         pass
 
-    async def start_autobot(self, user_data: any):
+    async def start_autobot(self, user_data: any, option: any):
         try:
             if self.access_token is None:
                 self.access_token = user_data["access_token"]
@@ -377,8 +377,8 @@ class GMailProvider(BaseProvider):
 
     pass
 
-    async def get_purchased_products(self, user_data: any):
+    async def get_purchased_products(self, user_data: any, option: any = None):
         pass
 
-    async def get_all_products(self, user_data: any):
+    async def get_all_products(self, user_data: any, option: any = None):
         pass

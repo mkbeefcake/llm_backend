@@ -43,7 +43,6 @@ class PineconeService(ProductBaseService):
                 index=self.index,
                 embedding_function=self.openai.embed_query,
                 text_key="text",
-                namespace="replica",
             )
 
         except Exception as e:
@@ -52,19 +51,21 @@ class PineconeService(ProductBaseService):
         self.initialized = True
         pass
 
-    def match_product(self, messages: str):
+    def match_product(self, messages: str, option: any):
         self.initialize()
 
         if self.vectorstore is None:
             return "Couldn't connect to pinecone vector db"
 
-        docs = self.vectorstore.similarity_search(messages, k=1)
+        docs = self.vectorstore.similarity_search(
+            messages, k=1, namespace=option["namespace"]
+        )
         if docs is not None and type(docs) == list and len(docs) > 0:
             return [docs[0].metadata["id"]]
         else:
             return "Nothing"
 
-    def update_products(self, products_info, namespace):
+    def update_products(self, products_info, option):
         self.initialize()
 
         if self.vectorstore is None:
@@ -77,7 +78,7 @@ class PineconeService(ProductBaseService):
             metadata = {"id": item["id"], "label": item["label"]}
             batch.append({"id": id, "values": value, "metadata": metadata})
 
-        self.index.upsert(vectors=batch, namespace=namespace)
+        self.index.upsert(vectors=batch, namespace=option["namespace"])
         # dataset = pd.DataFrame(products_info["products"])
         # meta = [{"id": x} for x in dataset["id"]]
 

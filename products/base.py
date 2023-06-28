@@ -13,3 +13,6 @@ class ProductBaseService:
 
     def suggest_product(self, messages: any, option: any = None):
         raise NotImplementedError
+
+    def update_products(self, products_info, option: any = None):
+        raise NotImplementedError

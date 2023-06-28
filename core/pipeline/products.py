@@ -117,7 +117,9 @@ class ProductPipeline(TaskManager):
             if provider_name == "replicateprovider":
                 pinecone_service.update_products(
                     products_info=products_info,
-                    namespace=f"replica_{user_id}_{identifier_name}",
+                    option={
+                        "namespace": f"{provider_name}_{user_id}_{identifier_name}"
+                    },
                 )
             elif provider_name == "gmailprovider":
                 pass

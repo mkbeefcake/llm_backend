@@ -18,9 +18,15 @@ class AutoBot(TaskManager):
                 provider_name,
                 identifier_name,
                 user_data[provider_name][identifier_name],
+                {"namespace": f"{provider_name}_{user_id}_{identifier_name}"},
             )
         else:
-            await bridge.start_autobot(provider_name, identifier_name, None)
+            await bridge.start_autobot(
+                provider_name,
+                identifier_name,
+                None,
+                {"namespace": f"{provider_name}_{user_id}_{identifier_name}"},
+            )
         pass
 
     def start_auto_bot(

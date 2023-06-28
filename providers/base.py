@@ -41,13 +41,13 @@ class BaseProvider(metaclass=BaseProviderMeta):
     def disconnect(self, request: Request):
         raise NotImplementedError
 
-    async def start_autobot(self, user_data: any):
+    async def start_autobot(self, user_data: any, option: any = None):
         raise NotImplementedError
 
-    async def get_purchased_products(self, user_data: any):
+    async def get_purchased_products(self, user_data: any, option: any = None):
         raise NotImplementedError
 
-    async def get_all_products(self, user_data: any):
+    async def get_all_products(self, user_data: any, option: any = None):
         raise NotImplementedError
 
     @classproperty

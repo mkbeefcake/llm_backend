@@ -87,7 +87,7 @@ class ReplicateProvider(BaseProvider):
         self.initialized = True
         pass
 
-    async def start_autobot(self, user_data: any):
+    async def start_autobot(self, user_data: any, option: any):
         await self.initialize(user_data=user_data)
 
         # Select relevant chats
@@ -120,7 +120,8 @@ class ReplicateProvider(BaseProvider):
                         product_id = pinecone_service.match_product(
                             suggested_products["search_product_processed"][
                                 "product_description"
-                            ]
+                            ],
+                            option["namespace"],
                         )
                         product_message = f'The user might be interested by {suggested_products["search_product_processed"][ "product_description"]}'
                         BackLog.info(
@@ -269,7 +270,7 @@ class ReplicateProvider(BaseProvider):
 
             print(traceback.format_exc())
 
-    async def get_purchased_products(self, user_data: any):
+    async def get_purchased_products(self, user_data: any, option: any = None):
         chat_list = "NEW FANS (Regular price)✨"
 
         await self.initialize(user_data=user_data)
@@ -320,7 +321,7 @@ class ReplicateProvider(BaseProvider):
         # await api.close_pools()
         return user_info
 
-    async def get_all_products(self, user_data: any):
+    async def get_all_products(self, user_data: any, option: any = None):
         await self.initialize(user_data=user_data)
 
         categories = await self.authed.get_content_categories()
