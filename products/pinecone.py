@@ -70,14 +70,14 @@ class PineconeService(ProductBaseService):
         if self.vectorstore is None:
             return "Couldn't connect to pinecone vector db"
 
+        batch = []
         for item in products_info["products"]:
             id = str(item["id"])
             value = self.openai.embed_query(item["label"])
             metadata = {"id": item["id"], "label": item["label"]}
-            self.index.update(
-                id=id, values=value, set_metadata=metadata, namespace=namespace
-            )
+            batch.append({"id": id, "values": value, "metadata": metadata})
 
+        self.index.upsert(vectors=batch, namespace=namespace)
         # dataset = pd.DataFrame(products_info["products"])
         # meta = [{"id": x} for x in dataset["id"]]
 
