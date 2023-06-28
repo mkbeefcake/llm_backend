@@ -30,33 +30,39 @@ def update_purchased(user_id: str, provider_name: str, key: str, content: any):
         updated = []
 
         # iterate original content
-        for original in purchased_data[provider_name][key]:
-            org_message_id = original["message_id"]
-            found = False
+        try:
+            for original in purchased_data[provider_name][key]:
+                org_message_id = original["message_id"]
+                found = False
 
-            for newest in content:
-                new_message_id = newest["message_id"]
-                if org_message_id == new_message_id:
-                    updated.append(newest)
-                    found = True
-                    break
+                for newest in content:
+                    new_message_id = newest["message_id"]
+                    if org_message_id == new_message_id:
+                        updated.append(newest)
+                        found = True
+                        break
 
-            if found == False:
-                updated.append(original)
+                if found == False:
+                    updated.append(original)
+        except Exception as e:
+            pass
 
         # iterate new content
-        for newest in content:
-            new_message_id = newest["message_id"]
-            found = False
+        try:
+            for newest in content:
+                new_message_id = newest["message_id"]
+                found = False
 
-            for current in updated:
-                current_message_id = current["message_id"]
-                if new_message_id == current_message_id:
-                    found = True
-                    break
+                for current in updated:
+                    current_message_id = current["message_id"]
+                    if new_message_id == current_message_id:
+                        found = True
+                        break
 
-            if found == False:
-                updated.append(newest)
+                if found == False:
+                    updated.append(newest)
+        except Exception as e:
+            pass
 
         purchased_data[provider_name][key] = updated
 
