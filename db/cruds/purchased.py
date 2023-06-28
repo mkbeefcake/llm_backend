@@ -27,7 +27,38 @@ def update_purchased(user_id: str, provider_name: str, key: str, content: any):
         pass
         # del purchased_data[provider_name][key]
     else:
-        purchased_data[provider_name][key] = content
+        updated = []
+
+        # iterate original content
+        for original in purchased_data[provider_name][key]:
+            org_message_id = original["message_id"]
+            found = False
+
+            for newest in content:
+                new_message_id = newest["message_id"]
+                if org_message_id == new_message_id:
+                    updated.append(newest)
+                    found = True
+                    break
+
+            if found == False:
+                updated.append(original)
+
+        # iterate new content
+        for newest in content:
+            new_message_id = newest["message_id"]
+            found = False
+
+            for current in updated:
+                current_message_id = current["message_id"]
+                if new_message_id == current_message_id:
+                    found = True
+                    break
+
+            if found == False:
+                updated.append(newest)
+
+        purchased_data[provider_name][key] = updated
 
     purchased_doc_ref.update(
         {
