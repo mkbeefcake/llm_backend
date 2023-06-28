@@ -322,7 +322,7 @@ class ReplicateProvider(BaseProvider):
                 BackLog.exception(instance=self, message=f"{str(e)}")
                 pass
 
-            all_users_info[user_id] = user_info
+            all_users_info[str(user_id)] = user_info
 
         # await api.close_pools()
         return all_users_info
