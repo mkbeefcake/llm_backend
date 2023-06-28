@@ -53,7 +53,7 @@ def update_purchased(user_id: str, provider_name: str, key: str, content: any):
         # iterate new content
         try:
             for newest in content:
-                if "message_id" not in original:
+                if "message_id" not in newest:
                     updated.append(newest)
                     continue
 
