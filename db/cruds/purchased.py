@@ -14,7 +14,7 @@ def update_purchased(user_id: str, provider_name: str, key: str, content: any):
         key
     )
     purchased_doc = purchased_doc_ref.get()
-    if not purchased_doc.exists():
+    if not purchased_doc.exists:
         purchased_doc_ref.set({})
 
     purchased_data = purchased_doc_ref.get().val()
