@@ -31,7 +31,9 @@ class PineconeService(ProductBaseService):
 
         try:
             # Pinecone initialize index
-            pinecone.init(api_key=PINECONE_API_KEY, environment="us-east1-gcp")
+            pinecone.init(
+                api_key=PINECONE_API_KEY, environment="northamerica-northeast1-gcp"
+            )
 
             # Get the vectorstore and add new products
             dimension = 1536
@@ -68,22 +70,20 @@ class PineconeService(ProductBaseService):
         if self.vectorstore is None:
             return "Couldn't connect to pinecone vector db"
 
-        dataset = pd.DataFrame(products_info["products"])
-        meta = [{"id": x} for x in dataset["id"]]
+        for item in products_info["products"]:
+            id = item["id"]
+            value = self.openai.embed_query(item["label"])
+            metadata = {"id": item["id"], "label": item["label"]}
+            self.index.update(
+                id=id, values=value, set_metadata=metadata, namespace=namespace
+            )
 
-        self.vectorstore.add_texts(
-            namespace=namespace, texts=dataset["label"], metadatas=meta
-        )
+        # dataset = pd.DataFrame(products_info["products"])
+        # meta = [{"id": x} for x in dataset["id"]]
 
-        # docs = []
-        # ids = ids or [str(uuid.uuid4()) for _ in dataset["label"]]
-        # for i, text in enumerate(dataset["label"]):
-        #     embedding = self.openai.embed_query(text)
-        #     metadata = meta[i] if meta else {}
-        #     docs.append((ids[i], embedding, metadata))
-
-        # # upsert to Pinecone
-        # self.index.upsert(vectors=docs, namespace=namespace, batch_size=32)
+        # self.vectorstore.add_texts(
+        #     namespace=namespace, texts=dataset["label"], metadatas=meta
+        # )
 
         BackLog.info(self, f"Import Done")
         pass

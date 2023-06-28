@@ -34,6 +34,8 @@ class ProductPipeline(TaskManager):
                 content=purchased_info,
             )
 
+            print(f"Import purchases : Done, {user_id}")
+
         except Exception as e:
             print(f"Exception occurred : {str(e)}")
         pass
@@ -120,6 +122,7 @@ class ProductPipeline(TaskManager):
             elif provider_name == "gmailprovider":
                 pass
 
+            print(f"Import products : Done, {user_id}")
         except Exception as e:
             print(f"Exception occurred : {str(e)}")
         pass
