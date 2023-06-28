@@ -32,6 +32,9 @@ def update_purchased(user_id: str, provider_name: str, key: str, content: any):
         # iterate original content
         try:
             for original in purchased_data[provider_name][key]:
+                if "message_id" in original:
+                    continue
+
                 org_message_id = original["message_id"]
                 found = False
 
@@ -50,6 +53,10 @@ def update_purchased(user_id: str, provider_name: str, key: str, content: any):
         # iterate new content
         try:
             for newest in content:
+                if "message_id" in original:
+                    updated.append(newest)
+                    continue
+
                 new_message_id = newest["message_id"]
                 found = False
 
