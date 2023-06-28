@@ -19,10 +19,11 @@ def update_purchased(user_id: str, provider_name: str, key: str, content: any):
 
     purchased_data = purchased_doc_ref.get().to_dict()
 
-    if content == "":
+    if content == None or content == "":
         pass
         # del purchased_data[provider_name][key]
     else:
+        # iterate original content
         for chatuser_id in purchased_data:
             if chatuser_id in content and "statistics" in content[chatuser_id]:
                 purchased_data[chatuser_id]["statistics"] = content[chatuser_id][
@@ -71,6 +72,10 @@ def update_purchased(user_id: str, provider_name: str, key: str, content: any):
                     pass
 
                 purchased_data[chatuser_id]["purchased"] = updated
+
+        for chatuser_id in content:
+            if chatuser_id not in purchased_data:
+                purchased_data[chatuser_id] = content[chatuser_id]
 
         purchased_doc_ref.update(purchased_data)
     return {"message": "Purchased data updated successfully"}
