@@ -47,6 +47,8 @@ class ReplicateProvider(BaseProvider):
     def __init__(self) -> None:
         super().__init__()
         self.num_messages = 2
+        self.initialized = False
+        self.api = None
 
     def get_provider_info(self):
         return {
@@ -62,51 +64,43 @@ class ReplicateProvider(BaseProvider):
         )
 
     def disconnect(self, request: Request):
+        if self.api != None:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(self.api.close_pools())
+            loop.close()
         pass
 
-    async def select_chats(self, authed, rules):
-        """
-        Select chats based on the 'chat_list' rule from the frontend.
-        - If 'chat_list' rule does not exist, or if the specified chat list does not exist, all chats are selected.
-        - Else, we select only the pinned list
-        """
-        if "chat_list" in rules:
-            # Get chat lists
-            chat_lists = await authed.get_pinned_lists()
-            BackLog.info(instance=self, message=f"Chat Lists: {chat_lists}")
+    async def initialize(self, user_data: any):
+        if self.initialized == True:
+            return
 
-            # If the specified chat list exists, select chats from this list
-            if rules["chat_list"] in chat_lists:
-                BackLog.info(instance=self, message=f"Chat Lists: {chat_lists}")
-                return await authed.get_chats(
-                    identifier=f"&list_id={str(chat_lists[rules['chat_list']])}"
-                )
-
-        # If 'chat_list' rule does not exist, or if the specified chat list does not exist, select all chats
-        BackLog.info(instance=self, message=f"Fetching all chats")
-        return await authed.get_chats()
-
-    async def start_autobot(self, user_data: any):
-        api = replica.select_api("replica")
+        self.api = replica.select_api("replica")
 
         # try to get auth_json and rules from firestore db
-        auth_json, rules = self.load_credentials_from_userdata(user_data)
+        self.auth_json, self.rules = self.load_credentials_from_userdata(user_data)
 
         # authenticate
-        authed = await self.authenticate(api, auth_json)
+        self.authed = await self.authenticate(self.api, self.auth_json)
         BackLog.info(instance=self, message=f"Passed authenticate() function....")
 
+        self.initialized = True
+        pass
+
+    async def start_autobot(self, user_data: any):
+        await self.initialize()
+
         # Select relevant chats
-        chats = await self.select_chats(authed, rules)
+        chats = await self.select_chats(self.authed, self.rules)
 
         for chat in chats:
-            user = await authed.get_user(chat["withUser"]["id"])
+            user = await self.authed.get_user(chat["withUser"]["id"])
             BackLog.info(instance=self, message=f"Username: {user.name}")
 
             try:
                 if not user.isPerformer:
                     # fetch user's messages
-                    messages = await self.fetch_messages(user, authed)
+                    messages = await self.fetch_messages(user, self.authed)
 
                     # suggest product from ai
                     payload_product = self.build_payload_for_Product(messages=messages)
@@ -140,7 +134,7 @@ class ReplicateProvider(BaseProvider):
                     payload_ai = self.build_payload_for_AI(
                         user_name=user.name,
                         messages=messages,
-                        rules=rules,
+                        rules=self.rules,
                         product_message=product_message,
                     )
 
@@ -154,13 +148,35 @@ class ReplicateProvider(BaseProvider):
 
                     # post ai message to user
                     await self.post_message(
-                        user, authed, ai_response, mediaFiles=product_id
+                        user, self.authed, ai_response, mediaFiles=product_id
                     )
 
             except Exception as e:
                 BackLog.exception(instance=self, message=f"Exception occurred")
 
-        await api.close_pools()
+        # await api.close_pools()
+
+    async def select_chats(self, authed, rules):
+        """
+        Select chats based on the 'chat_list' rule from the frontend.
+        - If 'chat_list' rule does not exist, or if the specified chat list does not exist, all chats are selected.
+        - Else, we select only the pinned list
+        """
+        if "chat_list" in rules:
+            # Get chat lists
+            chat_lists = await authed.get_pinned_lists()
+            BackLog.info(instance=self, message=f"Chat Lists: {chat_lists}")
+
+            # If the specified chat list exists, select chats from this list
+            if rules["chat_list"] in chat_lists:
+                BackLog.info(instance=self, message=f"Chat Lists: {chat_lists}")
+                return await authed.get_chats(
+                    identifier=f"&list_id={str(chat_lists[rules['chat_list']])}"
+                )
+
+        # If 'chat_list' rule does not exist, or if the specified chat list does not exist, select all chats
+        BackLog.info(instance=self, message=f"Fetching all chats")
+        return await authed.get_chats()
 
     def load_credentials_from_userdata(self, user_data):
         auth_json = {}
@@ -256,30 +272,23 @@ class ReplicateProvider(BaseProvider):
     async def get_purchased_products(self, user_data: any):
         chat_list = "NEW FANS (Regular price)✨"
 
-        api = replica.select_api("replica")
-
-        # try to get auth_json and rules from firestore db
-        auth_json, rules = self.load_credentials_from_userdata(user_data)
-
-        # authenticate
-        authed = await self.authenticate(api, auth_json)
-        BackLog.info(instance=self, message=f"Passed authenticate() function....")
+        await self.initialize()
 
         print("Starting product scraping...")
 
-        chat_lists = await authed.get_pinned_lists()
+        chat_lists = await self.authed.get_pinned_lists()
         print(chat_lists)
 
         # If the specified chat list exists, select chats from this list
         if chat_list in chat_lists:
-            chats = await authed.get_chats(
+            chats = await self.authed.get_chats(
                 # We only want to get fans in the last 2 months, hence the 60 delta.
                 identifier=f"&list_id={str(chat_lists[chat_list])}",
                 delta=60,
             )
         else:
             # Filter them
-            chats = await authed.get_chats(
+            chats = await self.authed.get_chats(
                 identifier=f"&list_id={chat_lists['Pinned']}"
             )
 
@@ -288,10 +297,10 @@ class ReplicateProvider(BaseProvider):
 
         for user_id in user_id_list:
             try:
-                statistics = await authed.get_subscriber_info(user_id)
+                statistics = await self.authed.get_subscriber_info(user_id)
                 user_info.append(statistics)
 
-                purchases = await authed.get_subscriber_gallery(user_id)
+                purchases = await self.authed.get_subscriber_gallery(user_id)
                 for item in purchases:
                     parsed_item = {
                         "message_id": item["message_id"],
@@ -308,20 +317,13 @@ class ReplicateProvider(BaseProvider):
                 BackLog.exception(instance=self, message=f"{str(e)}")
                 pass
 
-        await api.close_pools()
+        # await api.close_pools()
         return user_info
 
     async def get_all_products(self, user_data: any):
-        api = replica.select_api("replica")
+        await self.initialize()
 
-        # try to get auth_json and rules from firestore db
-        auth_json, rules = self.load_credentials_from_userdata(user_data)
-
-        # authenticate
-        authed = await self.authenticate(api, auth_json)
-        BackLog.info(instance=self, message=f"Passed authenticate() function....")
-
-        categories = await authed.get_content_categories()
+        categories = await self.authed.get_content_categories()
 
         full_content = []
         label_tasks = []  # This list will store the tasks for labeling the content
@@ -332,7 +334,7 @@ class ReplicateProvider(BaseProvider):
             hasMore = True  # Initialize hasMore as True
 
             while hasMore:  # While hasMore is true, continue fetching content
-                content = await authed.get_content(str(offset), category["id"])
+                content = await self.authed.get_content(str(offset), category["id"])
                 print(category["id"], offset)
 
                 if "hasMore" in content:
@@ -389,7 +391,7 @@ class ReplicateProvider(BaseProvider):
             print(label)
             # add_label_pinecone(label["label"], namespace=provider_id,  metadata)
 
-        await api.close_pools()
+        # await api.close_pools()
 
         BackLog.info(self, f"Products: {len(full_content)}")
         return {"products": labels}
