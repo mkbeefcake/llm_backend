@@ -88,7 +88,7 @@ class ReplicateProvider(BaseProvider):
         pass
 
     async def start_autobot(self, user_data: any):
-        await self.initialize()
+        await self.initialize(user_data=user_data)
 
         # Select relevant chats
         chats = await self.select_chats(self.authed, self.rules)
@@ -272,7 +272,7 @@ class ReplicateProvider(BaseProvider):
     async def get_purchased_products(self, user_data: any):
         chat_list = "NEW FANS (Regular price)✨"
 
-        await self.initialize()
+        await self.initialize(user_data=user_data)
 
         print("Starting product scraping...")
 
@@ -321,7 +321,7 @@ class ReplicateProvider(BaseProvider):
         return user_info
 
     async def get_all_products(self, user_data: any):
-        await self.initialize()
+        await self.initialize(user_data=user_data)
 
         categories = await self.authed.get_content_categories()
 
