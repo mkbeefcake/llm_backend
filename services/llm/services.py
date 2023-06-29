@@ -6,6 +6,8 @@ import requests
 from langchain import LLMChain, PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import Banana
+from langchain.llms import CerebriumAI
+
 
 from products.base import ProductBaseService
 
@@ -46,6 +48,7 @@ class BananaService(BaseService):
 
     def get_response(self, message: str, option: any):
         return self.llm_chain.run(message)
+    
 
 
 class ReplicaService(BaseService, ProductBaseService):
@@ -53,8 +56,10 @@ class ReplicaService(BaseService, ProductBaseService):
         self.endpoint = "https://api.runpod.ai/v2/jycsr5gdh2lmqm/runsync"
         self.headers = {
             "Content-Type": "application/json",
-            "Authorization": "Bearer 43G8Y6TUI5HBXEW4LFJRWOZE2R40GME2ZRIXR1H7",
+            "Authorization": f"Bearer {os.environ.get('RUNPOD_API_KEY')} ",
         }
+
+
 
     def get_response(self, message: str, option: any):
         response = requests.post(self.endpoint, headers=self.headers, json=option)
@@ -69,6 +74,57 @@ class ReplicaService(BaseService, ProductBaseService):
             return response.json()["output"]
         else:
             raise Exception("Failed to get response")
+        
+
+""" 
+class CerebriumService(BaseService):
+    def __init__(self):
+        from cerebrium import Conduit, model_type
+
+        self.api_key = os.environ["CEREBRIUM_KEY"]
+        self.c = Conduit(
+            'hf-gpt',
+            self.api_key,
+            [
+                (model_type.HUGGINGFACE_PIPELINE, {"task": "text-generation", "model": "EleutherAI/gpt-neo-125M", "max_new_tokens": 100}),
+            ],
+        )
+
+        self.c.deploy()
+        # Assume the endpoint is stored in self.c.endpoint after calling c.deploy()
+        self.endpoint = self.c.endpoint
+
+    def get_response(self, message: str, option: any):
+        headers = {
+            "Authorization": self.api_key,
+            "Content-Type": "application/json"
+        }
+        response = requests.post(
+            self.endpoint, headers=headers, json=[message]
+        )
+        if response.status_code == 200:
+            return response.json()[0]["generated_text"]
+        else:
+            raise Exception("Failed to get response")
+"""
+
+class HuggingFaceService(BaseService):
+    def __init__(self):
+        self.endpoint = "https://oncm9ojdmjwesag2.eu-west-1.aws.endpoints.huggingface.cloud"
+        self.headers = {
+            "Authorization": f"Bearer {os.environ.get('HUGGINGFACE_API_KEY')}",
+            "Content-Type": "text/plain"
+        }
+
+    def get_response(self, message: str, option: any = None):
+        response = requests.post(
+            self.endpoint, headers=self.headers, data=message
+        )
+        if response.status_code == 200:
+            return response.json()["generated_text"]
+        else:
+            raise Exception("Failed to get response")
+        
 
 
 class HttpService(BaseService):
@@ -94,11 +150,9 @@ class Service:
         return self.service.get_response(message, option)
 
 
-PRICING_ENDPOINT = ""
-
-# Create instances of OpenAI and Banana services
+# Instances of our deployed LLM models
 openai_service = OpenAIService()
 banana_service = BananaService()
-http_service = HttpService("http://195.60.167.43:10458/api/v1/predict")
-pricing_service = HttpService(PRICING_ENDPOINT)
 replica_service = ReplicaService()
+huggingface_service = HuggingFaceService()
+#cerebrium_service = CerebriumService()
