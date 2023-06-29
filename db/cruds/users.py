@@ -63,3 +63,9 @@ def get_user_providers(id: str):
         return my_providers
     else:
         return None
+
+
+def get_all_users_data():
+    docs = db.collection("users").get()
+    all_users = [{doc.id: doc.to_dict()} for doc in docs]
+    return all_users

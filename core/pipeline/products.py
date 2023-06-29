@@ -1,8 +1,8 @@
 import json
 
 from core.task.task import TaskManager
-from db.cruds.purchased import update_purchased
-from db.firebase import get_all_users_data
+from db.cruds.purchased import get_last_message_ids, update_purchased
+from db.cruds.users import get_all_users_data
 from products.pinecone import pinecone_service
 from providers.bridge import bridge
 
@@ -22,10 +22,14 @@ class ProductPipeline(TaskManager):
     ):
         try:
             user_content = json.loads(user_data)
+            last_message_ids = get_last_message_ids(
+                user_id=user_id, provider_name=provider_name, key=identifier_name
+            )
             purchased_info = await bridge.get_purchased_products(
                 provider_name=provider_name,
                 identifier_name=identifier_name,
                 user_data=user_content,
+                option={last_message_ids},
             )
             update_purchased(
                 user_id=user_id,

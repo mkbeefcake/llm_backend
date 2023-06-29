@@ -271,12 +271,18 @@ class ReplicateProvider(BaseProvider):
             print(traceback.format_exc())
 
     async def get_purchased_products(self, user_data: any, option: any = None):
-        chat_list = "NEW FANS (Regular price)✨"
-
         await self.initialize(user_data=user_data)
+
+        # Get last_message_ids from option
+        if "last_message_ids" in option:
+            last_message_ids = option["last_message_ids"]
+        else:
+            last_message_ids = None
 
         print("Starting product scraping...")
 
+        # get pinned list
+        chat_list = "NEW FANS (Regular price)✨"
         chat_lists = await self.authed.get_pinned_lists()
         print(chat_lists)
 
@@ -297,6 +303,15 @@ class ReplicateProvider(BaseProvider):
         all_users_info = {}
 
         for user_id in user_id_list:
+            # get last_message_id in firebase db
+            if (
+                user_id in last_message_ids
+                and "last_message_id" in last_message_ids[user_id]
+            ):
+                last_message_id = last_message_ids[user_id]["last_message_id"]
+            else:
+                last_message_id = None
+
             user_info = {}
             try:
                 statistics = await self.authed.get_subscriber_info(user_id)

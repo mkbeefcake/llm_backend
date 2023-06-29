@@ -3,46 +3,83 @@ import json
 from db.firebase import db
 
 
+"""
+Here 'key' means 'identifier_name' from frontend
+"""
+
+
+def get_last_message_id(user_id: str, provider_name: str, key: str, chatuser_id: str):
+    document_ref = db.collection(
+        f"purchased/{user_id}/{provider_name}/{key}/last_message_ids"
+    ).document(chatuser_id)
+    doc = document_ref.get()
+    if not doc.exists:
+        document_ref.set({"last_message_id": "0"})
+
+    return document_ref.get().to_dict()["last_message_id"]
+
+
+def set_last_message_id(
+    user_id: str, provider_name: str, key: str, chatuser_id: str, last_message_id: str
+):
+    document_ref = db.collection(
+        f"purchased/{user_id}/{provider_name}/{key}/last_message_ids"
+    ).document(chatuser_id)
+    document_ref.update({"last_message_id": last_message_id})
+
+
+def get_last_message_ids(user_id: str, provider_name: str, key: str):
+    all_docs = db.collection(
+        f"purchased/{user_id}/{provider_name}/{key}/last_message_ids"
+    ).get()
+    return all_docs.to_dict()
+
+
 def create_purchased(user_id: str):
-    purchased_doc_ref = db.collection("purchased").document(user_id)
-    purchased_doc_ref.set({})
+    document_ref = db.collection("purchased").document(user_id)
+    document_ref.set({})
     return {"message": "Purchased created successfully"}
 
 
-def update_purchased(user_id: str, provider_name: str, key: str, content: any):
-    purchased_doc_ref = db.collection(f"purchased/{user_id}/{provider_name}").document(
-        key
-    )
-    purchased_doc = purchased_doc_ref.get()
-    if not purchased_doc.exists:
-        purchased_doc_ref.set({})
+def update_purchased(user_id: str, provider_name: str, key: str, new_content: any):
+    document_ref = db.collection(f"purchased/{user_id}/{provider_name}").document(key)
+    doc = document_ref.get()
+    if not doc.exists:
+        document_ref.set({})
 
-    purchased_data = purchased_doc_ref.get().to_dict()
+    original_data = document_ref.get().to_dict()
 
-    if content == None or content == "":
+    if new_content == None or new_content == "":
         pass
-        # del purchased_data[provider_name][key]
+        # del original_data[provider_name][key]
     else:
-        # iterate original content
-        for chatuser_id in purchased_data:
-            if chatuser_id in content and "statistics" in content[chatuser_id]:
-                purchased_data[chatuser_id]["statistics"] = content[chatuser_id][
+        # iterate all chat users from original
+        for chatuser_id in original_data:
+            # get last_message_id
+            last_message_id = get_last_message_id(
+                user_id, provider_name, key, chatuser_id
+            )
+
+            # update statistic
+            if chatuser_id in new_content and "statistics" in new_content[chatuser_id]:
+                original_data[chatuser_id]["statistics"] = new_content[chatuser_id][
                     "statistics"
                 ]
 
-            if chatuser_id in content and "purchased" in content[chatuser_id]:
-                original_content = purchased_data[chatuser_id]["purchased"]
-                newest_content = content[chatuser_id]["purchased"]
+            # update purchased
+            if chatuser_id in new_content and "purchased" in new_content[chatuser_id]:
+                original_new_content = original_data[chatuser_id]["purchased"]
+                newest_new_content = new_content[chatuser_id]["purchased"]
 
                 updated = []
 
-                # iterate original content
+                # iterate original new_content
                 try:
-                    for original in original_content:
+                    for original in original_new_content:
                         org_message_id = original["message_id"]
                         found = False
 
-                        for newest in newest_content:
+                        for newest in newest_new_content:
                             new_message_id = newest["message_id"]
                             if org_message_id == new_message_id:
                                 updated.append(newest)
@@ -54,9 +91,9 @@ def update_purchased(user_id: str, provider_name: str, key: str, content: any):
                 except Exception as e:
                     pass
 
-                # iterate new content
+                # iterate new new_content
                 try:
-                    for newest in newest_content:
+                    for newest in newest_new_content:
                         new_message_id = newest["message_id"]
                         found = False
 
@@ -68,14 +105,42 @@ def update_purchased(user_id: str, provider_name: str, key: str, content: any):
 
                         if found == False:
                             updated.append(newest)
+                            if int(last_message_id) < int(new_message_id):
+                                last_message_id = new_message_id
+
                 except Exception as e:
                     pass
 
-                purchased_data[chatuser_id]["purchased"] = updated
+                original_data[chatuser_id]["purchased"] = updated
 
-        for chatuser_id in content:
-            if chatuser_id not in purchased_data:
-                purchased_data[chatuser_id] = content[chatuser_id]
+            # update last_message_id
+            set_last_message_id(
+                user_id, provider_name, key, chatuser_id, last_message_id
+            )
 
-        purchased_doc_ref.update(purchased_data)
+        # iterate all chat users from new_content
+        for chatuser_id in new_content:
+            if chatuser_id not in original_data:
+                # add new content
+                original_data[chatuser_id] = new_content[chatuser_id]
+
+                # get last_message_id
+                last_message_id = get_last_message_id(
+                    user_id, provider_name, key, chatuser_id
+                )
+                try:
+                    for newest in newest_new_content:
+                        new_message_id = newest["message_id"]
+                        if int(last_message_id) < int(new_message_id):
+                            last_message_id = new_message_id
+
+                except Exception as e:
+                    pass
+
+                # update last_message_id
+                set_last_message_id(
+                    user_id, provider_name, key, chatuser_id, last_message_id
+                )
+
+        document_ref.update(original_data)
     return {"message": "Purchased data updated successfully"}
