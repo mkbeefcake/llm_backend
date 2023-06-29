@@ -326,16 +326,17 @@ class ReplicateProvider(BaseProvider):
                     )
 
                     for item in purchases:
-                        parsed_item = {
-                            "message_id": item["message_id"],
-                            "price": item["price"],
-                            "medias": [item for item in item["media"]],
-                            # "media_count": item["mediaCount"],
-                            "created": item["createdAt"],
-                            # "purchased": item["isOpened"],
-                            "timestamp": item["createdAt"],
-                        }
-                        purchased_items.append(parsed_item)
+                        if int(item["message_id"]) > last_message_id:
+                            parsed_item = {
+                                "message_id": item["message_id"],
+                                "price": item["price"],
+                                "medias": [item for item in item["media"]],
+                                # "media_count": item["mediaCount"],
+                                "created": item["createdAt"],
+                                # "purchased": item["isOpened"],
+                                "timestamp": item["createdAt"],
+                            }
+                            purchased_items.append(parsed_item)
 
                     if next_last_id == None:
                         break

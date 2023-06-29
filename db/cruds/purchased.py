@@ -72,18 +72,18 @@ def update_purchased(user_id: str, provider_name: str, key: str, new_content: an
 
             # update purchased
             if chatuser_id in new_content and "purchased" in new_content[chatuser_id]:
-                original_new_content = original_data[chatuser_id]["purchased"]
-                newest_new_content = new_content[chatuser_id]["purchased"]
+                original_purchased = original_data[chatuser_id]["purchased"]
+                newest_purchased = new_content[chatuser_id]["purchased"]
 
                 updated = []
 
-                # iterate original new_content
+                # iterate original purchased
                 try:
-                    for original in original_new_content:
+                    for original in original_purchased:
                         org_message_id = original["message_id"]
                         found = False
 
-                        for newest in newest_new_content:
+                        for newest in newest_purchased:
                             new_message_id = newest["message_id"]
                             if org_message_id == new_message_id:
                                 updated.append(newest)
@@ -95,9 +95,9 @@ def update_purchased(user_id: str, provider_name: str, key: str, new_content: an
                 except Exception as e:
                     pass
 
-                # iterate new new_content
+                # iterate new purchased
                 try:
-                    for newest in newest_new_content:
+                    for newest in newest_purchased:
                         new_message_id = newest["message_id"]
                         found = False
 
@@ -133,7 +133,7 @@ def update_purchased(user_id: str, provider_name: str, key: str, new_content: an
                     user_id, provider_name, key, chatuser_id
                 )
                 try:
-                    for newest in newest_new_content:
+                    for newest in newest_purchased:
                         new_message_id = newest["message_id"]
                         if int(last_message_id) < int(new_message_id):
                             last_message_id = new_message_id
