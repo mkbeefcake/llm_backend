@@ -9,6 +9,7 @@ from services.llm.services import (
     http_service,
     openai_service,
     replica_service,
+    huggingface_service,
 )
 
 LLM_SERVICE_ENDPOINT = "http://195.60.167.43:10458/api/v1/predict"
@@ -32,6 +33,8 @@ class Service:
             result = banana_service.get_response(message=message, option="")
         elif service_name == "replica_service":
             result = replica_service.get_response(message=message, option=option)
+        elif service_name == "huggingface_service":
+            result = huggingface_service.get_response(message=message, option=option)
         else:
             result = http_service.get_response(message=message, option="")
 
