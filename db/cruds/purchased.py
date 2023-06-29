@@ -32,7 +32,11 @@ def get_last_message_ids(user_id: str, provider_name: str, key: str):
     all_docs = db.collection(
         f"purchased/{user_id}/{provider_name}/{key}/last_message_ids"
     ).get()
-    return all_docs.to_dict()
+
+    content = {}
+    for doc in all_docs:
+        content[doc.id] = doc.to_dict()
+    return content
 
 
 def create_purchased(user_id: str):

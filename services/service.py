@@ -7,9 +7,9 @@ from db.schemas.service import ServiceSchema
 from services.llm.services import (
     banana_service,
     http_service,
+    huggingface_service,
     openai_service,
     replica_service,
-    huggingface_service,
 )
 
 LLM_SERVICE_ENDPOINT = "http://195.60.167.43:10458/api/v1/predict"

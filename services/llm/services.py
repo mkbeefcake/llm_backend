@@ -5,9 +5,7 @@ from getpass import getpass
 import requests
 from langchain import LLMChain, PromptTemplate
 from langchain.chat_models import ChatOpenAI
-from langchain.llms import Banana
-from langchain.llms import CerebriumAI
-
+from langchain.llms import Banana, CerebriumAI
 
 from products.base import ProductBaseService
 
@@ -48,7 +46,6 @@ class BananaService(BaseService):
 
     def get_response(self, message: str, option: any):
         return self.llm_chain.run(message)
-    
 
 
 class ReplicaService(BaseService, ProductBaseService):
@@ -58,8 +55,6 @@ class ReplicaService(BaseService, ProductBaseService):
             "Content-Type": "application/json",
             "Authorization": f"Bearer {os.environ.get('RUNPOD_API_KEY')} ",
         }
-
-
 
     def get_response(self, message: str, option: any):
         response = requests.post(self.endpoint, headers=self.headers, json=option)
@@ -74,7 +69,7 @@ class ReplicaService(BaseService, ProductBaseService):
             return response.json()["output"]
         else:
             raise Exception("Failed to get response")
-        
+
 
 """ 
 class CerebriumService(BaseService):
@@ -108,23 +103,23 @@ class CerebriumService(BaseService):
             raise Exception("Failed to get response")
 """
 
+
 class HuggingFaceService(BaseService):
     def __init__(self):
-        self.endpoint = "https://oncm9ojdmjwesag2.eu-west-1.aws.endpoints.huggingface.cloud"
+        self.endpoint = (
+            "https://oncm9ojdmjwesag2.eu-west-1.aws.endpoints.huggingface.cloud"
+        )
         self.headers = {
             "Authorization": f"Bearer {os.environ.get('HUGGINGFACE_API_KEY')}",
-            "Content-Type": "text/plain"
+            "Content-Type": "text/plain",
         }
 
     def get_response(self, message: str, option: any = None):
-        response = requests.post(
-            self.endpoint, headers=self.headers, data=message
-        )
+        response = requests.post(self.endpoint, headers=self.headers, data=message)
         if response.status_code == 200:
             return response.json()["generated_text"]
         else:
             raise Exception("Failed to get response")
-        
 
 
 class HttpService(BaseService):
@@ -156,4 +151,4 @@ banana_service = BananaService()
 replica_service = ReplicaService()
 huggingface_service = HuggingFaceService()
 http_service = HttpService("http://195.60.167.43:10458/api/v1/predict")
-#cerebrium_service = CerebriumService()
+# cerebrium_service = CerebriumService()

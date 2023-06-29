@@ -29,13 +29,13 @@ class ProductPipeline(TaskManager):
                 provider_name=provider_name,
                 identifier_name=identifier_name,
                 user_data=user_content,
-                option={last_message_ids},
+                option={"last_message_ids": last_message_ids},
             )
             update_purchased(
                 user_id=user_id,
                 provider_name=provider_name,
                 key=identifier_name,
-                content=purchased_info,
+                new_content=purchased_info,
             )
 
             print(f"Import purchases : Done, {user_id}")

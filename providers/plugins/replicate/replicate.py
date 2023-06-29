@@ -2,11 +2,11 @@ import asyncio
 import json
 import os
 
+import replica
 import requests
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
-import replica
 from core.utils.log import BackLog
 from products.pinecone import pinecone_service
 from providers.base import BaseProvider
@@ -305,31 +305,40 @@ class ReplicateProvider(BaseProvider):
         for user_id in user_id_list:
             # get last_message_id in firebase db
             if (
-                user_id in last_message_ids
-                and "last_message_id" in last_message_ids[user_id]
+                str(user_id) in last_message_ids
+                and "last_message_id" in last_message_ids[str(user_id)]
             ):
-                last_message_id = last_message_ids[user_id]["last_message_id"]
+                last_message_id = int(last_message_ids[str(user_id)]["last_message_id"])
             else:
-                last_message_id = None
+                last_message_id = 0
 
             user_info = {}
             try:
                 statistics = await self.authed.get_subscriber_info(user_id)
                 user_info["statistics"] = statistics
 
-                purchases = await self.authed.get_subscriber_gallery(user_id)
                 purchased_items = []
-                for item in purchases:
-                    parsed_item = {
-                        "message_id": item["message_id"],
-                        "price": item["price"],
-                        "medias": [item for item in item["media"]],
-                        # "media_count": item["mediaCount"],
-                        "created": item["createdAt"],
-                        # "purchased": item["isOpened"],
-                        "timestamp": item["createdAt"],
-                    }
-                    purchased_items.append(parsed_item)
+
+                next_last_id = None
+                while next_last_id == None or int(next_last_id) > last_message_id:
+                    purchases, next_last_id = await self.authed.get_subscriber_gallery(
+                        user_id, next_last_id
+                    )
+
+                    for item in purchases:
+                        parsed_item = {
+                            "message_id": item["message_id"],
+                            "price": item["price"],
+                            "medias": [item for item in item["media"]],
+                            # "media_count": item["mediaCount"],
+                            "created": item["createdAt"],
+                            # "purchased": item["isOpened"],
+                            "timestamp": item["createdAt"],
+                        }
+                        purchased_items.append(parsed_item)
+
+                    if next_last_id == None:
+                        break
 
                 user_info["purchased"] = purchased_items
 
