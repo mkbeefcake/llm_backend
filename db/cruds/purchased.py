@@ -132,6 +132,11 @@ def update_purchased(user_id: str, provider_name: str, key: str, new_content: an
                 last_message_id = get_last_message_id(
                     user_id, provider_name, key, chatuser_id
                 )
+
+                if "purchased" not in new_content[chatuser_id]:
+                    continue
+
+                newest_purchased = new_content[chatuser_id]["purchased"]
                 try:
                     for newest in newest_purchased:
                         new_message_id = newest["message_id"]
