@@ -87,11 +87,17 @@ def update_purchased(user_id: str, provider_name: str, key: str, new_content: an
                             new_message_id = newest["message_id"]
                             if org_message_id == new_message_id:
                                 updated.append(newest)
+                                if int(last_message_id) < int(new_message_id):
+                                    last_message_id = new_message_id
+
                                 found = True
                                 break
 
                         if found == False:
                             updated.append(original)
+                            if int(last_message_id) < int(org_message_id):
+                                last_message_id = org_message_id
+
                 except Exception as e:
                     pass
 
