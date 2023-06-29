@@ -7,15 +7,14 @@ on:
     branches: [ master ]
 
 jobs:
-
     deploy:
-
         name: Setup Neo-chatbot backend
         runs-on: ubuntu-latest
         env:
           IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_APP_NAME }}
+          RUNPOD_API_KEY: ${{ secrets.RUNPOD_API_KEY }}
+          HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
         steps:
-
         - name: Login
           uses: google-github-actions/setup-gcloud@v0
           with:
@@ -28,7 +27,7 @@ jobs:
 
         - name: Checkout repository
           uses: actions/checkout@v2
-          
+
         - name: create credential files
           run: |
             echo '${{secrets.CHAT_AUTOMATION_FIREBASE}}' > chat-automation-firebase.json
@@ -39,10 +38,7 @@ jobs:
         - name: Build Docker image
           run: |
             source .env
-            docker build --build-arg SECRET_KEY=$SECRET_KEY --build-arg OPENAI_API_KEY=$OPENAI_API_KEY --build-arg BANANA_MODEL_KEY=$BANANA_MODEL_KEY . -t $IMAGE_NAME
-
-#         - name: Test Docker image
-#           run: docker run $IMAGE_NAME 
+            docker build --build-arg SECRET_KEY=$SECRET_KEY --build-arg OPENAI_API_KEY=$OPENAI_API_KEY --build-arg BANANA_MODEL_KEY=$BANANA_MODEL_KEY --build-arg RUNPOD_API_KEY=$RUNPOD_API_KEY --build-arg HUGGINGFACE_API_KEY=$HUGGINGFACE_API_KEY . -t $IMAGE_NAME
 
         - name: Push Docker image         
           run: docker push $IMAGE_NAME
