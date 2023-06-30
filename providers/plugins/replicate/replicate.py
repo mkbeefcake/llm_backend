@@ -43,8 +43,8 @@ async def label_content(type, url, k, id, item):
     return {
         "id": id,
         "label": aggregate_labels(response_json),
-        "category": item["name"],
-        "createdAt": item["createdAt"],
+        "category": item["category"],
+        "createdAt": item["created"],
         "type": item["type"],
         "full": item["full"],
     }
@@ -367,7 +367,7 @@ class ReplicateProvider(BaseProvider):
         full_content = []
         label_tasks = []  # This list will store the tasks for labeling the content
 
-        print("Content List", len(full_content))
+        print("get_all_product()")
         for category in categories:
             offset = 0  # Create an offset variable
             hasMore = True  # Initialize hasMore as True
@@ -393,7 +393,7 @@ class ReplicateProvider(BaseProvider):
 
                             # Add a task to label this content
                             try:
-                                print(parsed_item["full"])
+                                print(f"|-- Item: {parsed_item['id']}")
                                 # print(parsed_item["full"], parsed_item["id"])
                                 # base64_content = download_and_encode_content(parsed_item["full"], authed)
 
@@ -416,7 +416,7 @@ class ReplicateProvider(BaseProvider):
                 else:
                     break  # Break the loop if the content does not contain the "hasMore" key
 
-        print(full_content)
+        # print(full_content)
 
         # Label all contents in parallel
         try:
@@ -427,9 +427,9 @@ class ReplicateProvider(BaseProvider):
 
             print(traceback.print_exc())
 
-        for label in labels:
-            print(label)
-            # add_label_pinecone(label["label"], namespace=provider_id,  metadata)
+        # for label in labels:
+        #     print(label)
+        # add_label_pinecone(label["label"], namespace=provider_id,  metadata)
 
         # await api.close_pools()
 
