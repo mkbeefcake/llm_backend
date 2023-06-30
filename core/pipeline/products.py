@@ -6,7 +6,7 @@ from db.cruds.purchased import get_last_message_ids, update_purchased
 from db.cruds.users import get_all_users_data
 from products.pinecone import pinecone_service
 from providers.bridge import bridge
-
+from core.utils.log import BackLog
 
 class ProductPipeline(TaskManager):
     def __init__(self) -> None:
@@ -58,31 +58,35 @@ class ProductPipeline(TaskManager):
             for provider_name in list(content.keys()):
                 print(f"|-- Provider: {provider_name}")
 
-                for identifier_name in list(content[provider_name].keys()):
-                    print(f"|---- Identifier: {identifier_name}")
+                try:
+                    for identifier_name in list(content[provider_name].keys()):
+                        print(f"|---- Identifier: {identifier_name}")
 
-                    user_data = json.dumps(content[provider_name][identifier_name])
-                    if (
-                        self.status_of_purchased_products_task(
-                            uid, provider_name, identifier_name
-                        )
-                        == False
-                    ):
-                        if not uid in self.purchased_task_list:
-                            self.purchased_task_list[uid] = {}
+                        user_data = json.dumps(content[provider_name][identifier_name])
+                        if (
+                            self.status_of_purchased_products_task(
+                                uid, provider_name, identifier_name
+                            )
+                            == False
+                        ):
+                            if not uid in self.purchased_task_list:
+                                self.purchased_task_list[uid] = {}
 
-                        if not provider_name in self.purchased_task_list[uid]:
-                            self.purchased_task_list[uid][provider_name] = {}
+                            if not provider_name in self.purchased_task_list[uid]:
+                                self.purchased_task_list[uid][provider_name] = {}
 
-                        self.purchased_task_list[uid][provider_name][
-                            identifier_name
-                        ] = self.create_onetime_task(
-                            ProductPipeline._fetch_purchased_products_func,
-                            user_id=uid,
-                            provider_name=provider_name,
-                            identifier_name=identifier_name,
-                            user_data=user_data,
-                        )
+                            self.purchased_task_list[uid][provider_name][
+                                identifier_name
+                            ] = self.create_onetime_task(
+                                ProductPipeline._fetch_purchased_products_func,
+                                user_id=uid,
+                                provider_name=provider_name,
+                                identifier_name=identifier_name,
+                                user_data=user_data,
+                            )
+                except Exception as e:
+                    BackLog.exception(instance=self, message=f"Exception occurred {str(e)}")
+                    pass
 
         pass
 
@@ -156,31 +160,35 @@ class ProductPipeline(TaskManager):
             for provider_name in list(content.keys()):
                 print(f"|-- Provider: {provider_name}")
 
-                for identifier_name in list(content[provider_name].keys()):
-                    print(f"|---- Identifier: {identifier_name}")
+                try:
+                    for identifier_name in list(content[provider_name].keys()):
+                        print(f"|---- Identifier: {identifier_name}")
 
-                    user_data = json.dumps(content[provider_name][identifier_name])
-                    if (
-                        self.status_of_all_products_task(
-                            uid, provider_name, identifier_name
-                        )
-                        == False
-                    ):
-                        if not uid in self.allproducts_task_list:
-                            self.allproducts_task_list[uid] = {}
+                        user_data = json.dumps(content[provider_name][identifier_name])
+                        if (
+                            self.status_of_all_products_task(
+                                uid, provider_name, identifier_name
+                            )
+                            == False
+                        ):
+                            if not uid in self.allproducts_task_list:
+                                self.allproducts_task_list[uid] = {}
 
-                        if not provider_name in self.allproducts_task_list[uid]:
-                            self.allproducts_task_list[uid][provider_name] = {}
+                            if not provider_name in self.allproducts_task_list[uid]:
+                                self.allproducts_task_list[uid][provider_name] = {}
 
-                        self.allproducts_task_list[uid][provider_name][
-                            identifier_name
-                        ] = self.create_onetime_task(
-                            ProductPipeline._fetch_all_products_func,
-                            user_id=uid,
-                            provider_name=provider_name,
-                            identifier_name=identifier_name,
-                            user_data=user_data,
-                        )
+                            self.allproducts_task_list[uid][provider_name][
+                                identifier_name
+                            ] = self.create_onetime_task(
+                                ProductPipeline._fetch_all_products_func,
+                                user_id=uid,
+                                provider_name=provider_name,
+                                identifier_name=identifier_name,
+                                user_data=user_data,
+                            )
+                except Exception as e:
+                    BackLog.exception(instance=self, message=f"Exception occurred {str(e)}")
+                    pass
 
         pass
 
