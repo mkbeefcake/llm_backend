@@ -128,7 +128,7 @@ class ReplicateProvider(BaseProvider):
                             suggested_products["search_product_processed"][
                                 "product_description"
                             ],
-                            option["namespace"],
+                            option,
                         )
                         BackLog.info(
                             instance=self, message=f"Product matches: {product_matches}"
