@@ -30,7 +30,7 @@ def aggregate_labels(response_json):
     return result
 
 
-async def label_content(type, url, k, id):
+async def label_content(type, url, k, id, item):
     endpoint = PRODUCT_REPLICA_ENDPOINT
     resource = requests.get(url)
 
@@ -40,7 +40,14 @@ async def label_content(type, url, k, id):
     }
     response = requests.post(endpoint, files={"file": resource.content}, data=payload)
     response_json = response.json()
-    return {"id": id, "label": aggregate_labels(response_json)}
+    return {
+        "id": id,
+        "label": aggregate_labels(response_json),
+        "category": item["name"],
+        "createdAt": item["createdAt"],
+        "type": item["type"],
+        "full": item["full"],
+    }
 
 
 class ReplicateProvider(BaseProvider):
@@ -395,6 +402,7 @@ class ReplicateProvider(BaseProvider):
                                     url=parsed_item["full"],
                                     k=15,
                                     id=parsed_item["id"],
+                                    item=parsed_item,
                                 )
                                 label_tasks.append(task)
                             except:

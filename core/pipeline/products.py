@@ -1,6 +1,7 @@
 import json
 
 from core.task.task import TaskManager
+from db.cruds.product import update_products
 from db.cruds.purchased import get_last_message_ids, update_purchased
 from db.cruds.users import get_all_users_data
 from products.pinecone import pinecone_service
@@ -118,6 +119,15 @@ class ProductPipeline(TaskManager):
                 user_data=user_content,
             )
 
+            # save these to DB
+            update_products(
+                user_id=user_id,
+                provider_name=provider_name,
+                key=identifier_name,
+                new_content=products_info["products"],
+            )
+
+            # pass it to AI service : Pinecone service
             if provider_name == "replicateprovider":
                 pinecone_service.update_products(
                     products_info=products_info,
