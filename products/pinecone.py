@@ -63,7 +63,7 @@ class PineconeService(ProductBaseService):
         if docs is not None and type(docs) == list and len(docs) > 0:
             return [docs[0].metadata["id"]]
         else:
-            return "Nothing"
+            return None
 
     def update_products(self, products_info, option):
         self.initialize()
