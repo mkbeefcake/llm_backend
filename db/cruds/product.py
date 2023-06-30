@@ -36,15 +36,12 @@ def update_products(user_id: str, provider_name: str, key: str, new_content: any
         # del original_data[provider_name][key]
     else:
         if "products" in original_data:
-            original_data["products"].extends(new_content)
+            original_data["products"] += new_content
         else:
             original_data["products"] = new_content
 
-        unique_array = [
-            dict(t) for t in {tuple(d.items()) for d in original_data["products"]}
-        ]
         original_data["products"] = sorted(
-            unique_array, key=lambda x: x["id"], reverse=True
+            original_data["products"], key=lambda x: x["id"], reverse=True
         )
         original_data["last_product_id"] = original_data["products"][0]["id"]
 
