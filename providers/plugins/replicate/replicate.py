@@ -169,18 +169,29 @@ class ReplicateProvider(BaseProvider):
         Select chats based on the 'chat_list' rule from the frontend.
         - If 'chat_list' rule does not exist, or if the specified chat list does not exist, all chats are selected.
         - Else, we select only the pinned list
-        """
-        if "chat_list" in rules:
-            # Get chat lists
-            chat_lists = await authed.get_pinned_lists()
-            BackLog.info(instance=self, message=f"Chat Lists: {chat_lists}")
 
-            # If the specified chat list exists, select chats from this list
-            if rules["chat_list"] in chat_lists:
+        Available rules : 
+        - unread
+
+        """
+        BackLog.info(instance=self, message=f"Rules: {rules}")
+        if "chat_list" in rules:
+
+            if rules["chat_list"] == "unread":
+                BackLog.info(instance=self, message=f"Fetching unread chats")
+                return await authed.get_chats(identifier="&filter=unread")
+            
+            else:
+                # Getting custom lists by their ID 
+                chat_lists = await authed.get_pinned_lists()
                 BackLog.info(instance=self, message=f"Chat Lists: {chat_lists}")
-                return await authed.get_chats(
-                    identifier=f"&list_id={str(chat_lists[rules['chat_list']])}"
-                )
+
+                # If the specified chat list exists, select chats from this list
+                if rules["chat_list"] in chat_lists:
+                    BackLog.info(instance=self, message=f"Chat Lists: {chat_lists}")
+                    return await authed.get_chats(
+                        identifier=f"&list_id={str(chat_lists[rules['chat_list']])}"
+                    )
 
         # If 'chat_list' rule does not exist, or if the specified chat list does not exist, select all chats
         BackLog.info(instance=self, message=f"Fetching all chats")
