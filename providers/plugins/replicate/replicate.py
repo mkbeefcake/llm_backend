@@ -108,7 +108,10 @@ class ReplicateProvider(BaseProvider):
                 if not user.isPerformer:
                     # fetch user's messages
                     messages = await self.fetch_messages(user, self.authed)
-
+                    BackLog.info(
+                        instance=self,
+                        message=f"Messages: {messages}",
+                    )
                     # suggest product from ai
                     payload_product = self.build_payload_for_Product(messages=messages)
                     suggested_products = replica_service.suggest_product(
@@ -131,52 +134,54 @@ class ReplicateProvider(BaseProvider):
                             option,
                         )
                         BackLog.info(
-                            instance=self, message=f"Product matches: {product_matches}"
+                            instance=self, message=f"Product desired: {product_matches}"
                         )
 
-                        # Assess if product is in user history. Take the first product not in history.
-                        product_history = self.get_purchase_history(
-                            chat["withUser"]["id"], option["purchased"]
-                        )
-                        BackLog.info(
-                            instance=self,
-                            message=f"Purchased history: {product_history}",
-                        )
-                        product_id = next(
-                            (
-                                element
-                                for element in product_matches
-                                if element not in product_history
-                            ),
-                            None,
-                        )
+                        if product_matches != None: 
 
-                        product_message = f'The user might be interested by {suggested_products["search_product_processed"][ "product_description"]}'
-                        BackLog.info(
-                            instance=self, message=f"Matched Product: {product_id}"
-                        )
+                            # Assess if product is in user history. Take the first product not in history.
+                            product_history = self.get_purchase_history(
+                                chat["withUser"]["id"], option["purchased"]
+                            )
+                            BackLog.info(
+                                instance=self,
+                                message=f"Purchased history: {product_history}",
+                            )
+                            product_id = next(
+                                (
+                                    element
+                                    for element in product_matches
+                                    if element not in product_history
+                                ),
+                                None,
+                            )
 
-                        # fetch user info
-                        user_info = self.fetch_user_info(option["purchased"])
-                        BackLog.info(
-                            instance=self, message=f"User Purchased: {user_info}"
-                        )
+                            product_message = f'The user might be interested by {suggested_products["search_product_processed"][ "product_description"]}. You would want to make them buy it.'
+                            BackLog.info(
+                                instance=self, message=f"Matched Product: {product_id}"
+                            )
 
-                        # fetch product info
-                        product_info = self.fetch_product_info(
-                            product_id, option["products"]
-                        )
-                        BackLog.info(
-                            instance=self, message=f"User Product: {product_info}"
-                        )
+                            # fetch user info
+                            user_info = self.fetch_user_info(option["purchased"])
+                            BackLog.info(
+                                instance=self, message=f"User Purchased: {user_info}"
+                            )
 
-                        # price product
-                        product_price = self.predict_product_price(
-                            user_info, product_info
-                        )
-                        BackLog.info(
-                            instance=self, message=f"Product Priced at: {product_price}"
-                        )
+                            # fetch product info
+                            product_info = self.fetch_product_info(
+                                product_id, option["products"]
+                            )
+                            BackLog.info(
+                                instance=self, message=f"User Product: {product_info}"
+                            )
+
+                            # price product
+                            product_price = self.predict_product_price(
+                                user_info, product_info
+                            )
+                            BackLog.info(
+                                instance=self, message=f"Product Priced at: {product_price}"
+                            )
 
                     else:
                         product_id = []
@@ -189,6 +194,9 @@ class ReplicateProvider(BaseProvider):
                         messages=messages,
                         rules=self.rules,
                         product_message=product_message,
+                    )
+                    BackLog.info(
+                        instance=self, message=f"Payload sent to AI: {payload_ai}"
                     )
 
                     ai_response = replica_service.get_response(
@@ -316,7 +324,7 @@ class ReplicateProvider(BaseProvider):
         return payload
 
     def build_payload_for_AI(
-        self, user_name: str, messages: any, rules, product_message=""
+        self, user_name: str, messages: any, rules, product_message: str =""
     ):
         prompt_template = ""
         if "prompt_template" in rules:
