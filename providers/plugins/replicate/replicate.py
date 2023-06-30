@@ -295,9 +295,7 @@ class ReplicateProvider(BaseProvider):
             )
         else:
             # Filter them
-            chats = await self.authed.get_chats(
-                identifier=f"&list_id={chat_lists['Pinned']}"
-            )
+            chats = await self.authed.get_chats()
 
         user_id_list = [item["withUser"]["id"] for item in chats]
         all_users_info = {}
