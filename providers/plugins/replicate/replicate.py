@@ -131,23 +131,42 @@ class ReplicateProvider(BaseProvider):
                             option["namespace"],
                         )
 
-                        # Assess if product is in user history. Take the first product not in history. 
-                        product_history = self.get_purchase_history(chat["withUser"]["id"])
-                        product_id = next((element for element in product_matches if element not in product_history), None)
+                        # Assess if product is in user history. Take the first product not in history.
+                        product_history = self.get_purchase_history(
+                            chat["withUser"]["id"]
+                        )
+                        product_id = next(
+                            (
+                                element
+                                for element in product_matches
+                                if element not in product_history
+                            ),
+                            None,
+                        )
 
                         product_message = f'The user might be interested by {suggested_products["search_product_processed"][ "product_description"]}'
                         BackLog.info(
                             instance=self, message=f"Matched Product: {product_id}"
                         )
 
-                        # fetch user info 
-                        user_info = self.fetch_user_info(user)
-                        
-                        # fetch product info
-                        product_info = self.fetch_product_info(product_id)
+                        # fetch user info
+                        user_info = self.fetch_user_info(option["purchased"])
+                        BackLog.info(
+                            instance=self, message=f"User Purchased: {user_info}"
+                        )
 
-                        # price product 
-                        product_price = self.predict_product_price(user_info, product_info)
+                        # fetch product info
+                        product_info = self.fetch_product_info(
+                            product_id, option["products"]
+                        )
+                        BackLog.info(
+                            instance=self, message=f"User Product: {product_info}"
+                        )
+
+                        # price product
+                        product_price = self.predict_product_price(
+                            user_info, product_info
+                        )
                         BackLog.info(
                             instance=self, message=f"Product Priced at: {product_price}"
                         )
@@ -174,9 +193,9 @@ class ReplicateProvider(BaseProvider):
                     )
 
                     # post ai message to user
-                    await self.post_message(
-                        user, self.authed, ai_response, mediaFiles=product_id, price=product_price
-                    )
+                    # await self.post_message(
+                    #     user, self.authed, ai_response, mediaFiles=product_id, price=product_price
+                    # )
 
             except Exception as e:
                 BackLog.exception(instance=self, message=f"Exception occurred")
@@ -189,19 +208,18 @@ class ReplicateProvider(BaseProvider):
         - If 'chat_list' rule does not exist, or if the specified chat list does not exist, all chats are selected.
         - Else, we select only the pinned list
 
-        Available rules : 
+        Available rules :
         - unread
 
         """
         BackLog.info(instance=self, message=f"Rules: {rules}")
         if "chat_list" in rules:
-
             if rules["chat_list"] == "unread":
                 BackLog.info(instance=self, message=f"Fetching unread chats")
                 return await authed.get_chats(identifier="&filter=unread")
-            
+
             else:
-                # Getting custom lists by their ID 
+                # Getting custom lists by their ID
                 chat_lists = await authed.get_pinned_lists()
                 BackLog.info(instance=self, message=f"Chat Lists: {chat_lists}")
 
@@ -261,26 +279,28 @@ class ReplicateProvider(BaseProvider):
                 break
 
         return messages
-    
-    def predict_product_price(self, user_info:dict, product_info:dict) -> float: 
+
+    def predict_product_price(self, user_info: dict, product_info: dict) -> float:
         # TODO : Implement a function predicting the price of a product based on user info and product info.
         # self.pricing_model.predict(user_info, product_info)
         return 10
 
     def get_purchase_history(self, user_id: str) -> list:
-        # TODO : Implement a function fetching for each chat user_id their purchase history in the db. 
+        # TODO : Implement a function fetching for each chat user_id their purchase history in the db.
         # self.db.get_purchase_history(user_id)
         return []
-    
 
-    def fetch_user_info(self, user_id: str) -> dict:
-        # TODO : Implement a function fetching for each chat user_id their purchase history in the db. 
+    def fetch_user_info(self, purchased) -> dict:
+        # TODO : Implement a function fetching for each chat user_id their purchase history in the db.
         # self.db.get_purchase_history(user_id)
-        return {}
-    
-    def fetch_product_info(self, product_id: str) -> dict:
-        # TODO : Implement a function fetching details for each product 
-        return {}
+        return purchased
+
+    def fetch_product_info(self, product_id: str, products) -> dict:
+        for dictionary in products["products"]:
+            if dictionary.get("id") == product_id:
+                return dictionary
+
+        return None
 
     def build_payload_for_Product(self, messages: any):
         payload = {"input": {"search_prod_input": {"history": messages}}}
@@ -464,7 +484,7 @@ class ReplicateProvider(BaseProvider):
                 else:
                     break  # Break the loop if the content does not contain the "hasMore" key
 
-        #print(full_content)
+        # print(full_content)
 
         # Label all contents in parallel
         try:
@@ -475,9 +495,9 @@ class ReplicateProvider(BaseProvider):
 
             print(traceback.print_exc())
 
-        #for label in labels:
+        # for label in labels:
         #    print(label)
-            # add_label_pinecone(label["label"], namespace=provider_id,  metadata)
+        # add_label_pinecone(label["label"], namespace=provider_id,  metadata)
 
         # await api.close_pools()
 

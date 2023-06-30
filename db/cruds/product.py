@@ -14,6 +14,15 @@ def create_products(user_id: str):
     return {"message": "Product created successfully"}
 
 
+def get_products(user_id: str, provider_name: str, key: str):
+    document_ref = db.collection(f"products/{user_id}/{provider_name}").document(key)
+    doc = document_ref.get()
+    if not doc.exists:
+        return {}
+
+    return document_ref.get().to_dict()
+
+
 def update_products(user_id: str, provider_name: str, key: str, new_content: any):
     document_ref = db.collection(f"products/{user_id}/{provider_name}").document(key)
     doc = document_ref.get()

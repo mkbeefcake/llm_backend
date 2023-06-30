@@ -45,6 +45,15 @@ def create_purchased(user_id: str):
     return {"message": "Purchased created successfully"}
 
 
+def get_purchased(user_id: str, provider_name: str, key: str):
+    document_ref = db.collection(f"purchased/{user_id}/{provider_name}").document(key)
+    doc = document_ref.get()
+    if not doc.exists:
+        return {}
+
+    return document_ref.get().to_dict()
+
+
 def update_purchased(user_id: str, provider_name: str, key: str, new_content: any):
     document_ref = db.collection(f"purchased/{user_id}/{provider_name}").document(key)
     doc = document_ref.get()

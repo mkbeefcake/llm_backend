@@ -1,5 +1,7 @@
 from core.task.task import TaskManager
 from core.utils.log import BackLog
+from db.cruds.product import get_products
+from db.cruds.purchased import get_purchased
 from db.cruds.users import get_user_data
 from providers.bridge import bridge
 
@@ -12,20 +14,30 @@ class AutoBot(TaskManager):
 
     async def start(user_id: str, provider_name: str, identifier_name: str):
         user_data = get_user_data(user_id)
+        purchased = get_purchased(user_id, provider_name, key=identifier_name)
+        products = get_products(user_id, provider_name, key=identifier_name)
 
         if provider_name in user_data and identifier_name in user_data[provider_name]:
             await bridge.start_autobot(
                 provider_name,
                 identifier_name,
                 user_data[provider_name][identifier_name],
-                {"namespace": f"{provider_name}_{user_id}_{identifier_name}"},
+                {
+                    "namespace": f"{provider_name}_{user_id}_{identifier_name}",
+                    "purchased": purchased,
+                    "products": products,
+                },
             )
         else:
             await bridge.start_autobot(
                 provider_name,
                 identifier_name,
                 None,
-                {"namespace": f"{provider_name}_{user_id}_{identifier_name}"},
+                {
+                    "namespace": f"{provider_name}_{user_id}_{identifier_name}",
+                    "purchased": purchased,
+                    "products": products,
+                },
             )
         pass
 
