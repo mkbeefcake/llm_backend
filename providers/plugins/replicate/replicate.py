@@ -130,10 +130,17 @@ class ReplicateProvider(BaseProvider):
                             ],
                             option["namespace"],
                         )
+                        BackLog.info(
+                            instance=self, message=f"Product matches: {product_matches}"
+                        )
 
                         # Assess if product is in user history. Take the first product not in history.
                         product_history = self.get_purchase_history(
-                            chat["withUser"]["id"]
+                            chat["withUser"]["id"], option["purchased"]
+                        )
+                        BackLog.info(
+                            instance=self,
+                            message=f"Purchased history: {product_history}",
                         )
                         product_id = next(
                             (
@@ -285,9 +292,11 @@ class ReplicateProvider(BaseProvider):
         # self.pricing_model.predict(user_info, product_info)
         return 10
 
-    def get_purchase_history(self, user_id: str) -> list:
+    def get_purchase_history(self, user_id: str, purchased) -> list:
         # TODO : Implement a function fetching for each chat user_id their purchase history in the db.
         # self.db.get_purchase_history(user_id)
+        if user_id in purchased:
+            return purchased[user_id]
         return []
 
     def fetch_user_info(self, purchased) -> dict:
