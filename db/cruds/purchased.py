@@ -81,7 +81,14 @@ def update_purchased(user_id: str, provider_name: str, key: str, new_content: an
 
             # update purchased
             if chatuser_id in new_content and "purchased" in new_content[chatuser_id]:
-                original_purchased = original_data[chatuser_id]["purchased"]
+                if (
+                    chatuser_id not in original_data
+                    or "purchased" not in original_data[chatuser_id]
+                ):
+                    original_purchased = []
+                else:
+                    original_purchased = original_data[chatuser_id]["purchased"]
+
                 newest_purchased = new_content[chatuser_id]["purchased"]
 
                 updated = []

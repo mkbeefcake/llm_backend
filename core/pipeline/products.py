@@ -43,7 +43,7 @@ class ProductPipeline(TaskManager):
             print(f"Import purchases : Done, {user_id}")
 
         except Exception as e:
-            print(f"Exception occurred : {str(e)}")
+            BackLog.exception(instance=None, message=f"Exception occurred...")
         pass
 
     def fetch_purchased_products(self):
@@ -147,7 +147,8 @@ class ProductPipeline(TaskManager):
 
             print(f"Import products : Done, {user_id}")
         except Exception as e:
-            print(f"Exception occurred : {str(e)}")
+            BackLog.exception(instance=None, message=f"Exception occurred...")
+
         pass
 
     def fetch_all_products(self):
