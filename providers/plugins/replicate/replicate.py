@@ -481,6 +481,10 @@ class ReplicateProvider(BaseProvider):
                 )
                 pass
 
+            BackLog.info(
+                self,
+                f"{self.identifier_name}: Loaded purchased products for {str(user_id)}, {len(user_info['purchased'])}",
+            )
             all_users_info[str(user_id)] = user_info
 
         # await api.close_pools()
