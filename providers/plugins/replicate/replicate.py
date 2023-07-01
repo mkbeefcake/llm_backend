@@ -477,7 +477,7 @@ class ReplicateProvider(BaseProvider):
         label_tasks = []  # This list will store the tasks for labeling the content
         for category in categories:
             offset = 0  # Create an offset variable
-            content = await self.authed.get_content(category["id"], offset, limit=5)
+            content = await self.authed.get_content(category["id"], offset, limit=1)
 
             for item in content:
                 parsed_item = {
