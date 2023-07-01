@@ -56,6 +56,7 @@ class ReplicateProvider(BaseProvider):
         self.num_messages = 2
         self.initialized = False
         self.api = None
+        self.delta = 0
 
     def get_provider_info(self):
         return {
@@ -240,33 +241,48 @@ class ReplicateProvider(BaseProvider):
             if rules["chat_list"] == "unread":
                 BackLog.info(
                     instance=self,
-                    message=f"{self.identifier_name}: Fetching unread chats",
+                    message=f"{self.identifier_name}: Fetching unread chats, delta = {self.delta}",
                 )
-                return await authed.get_chats(identifier="&filter=unread")
+                if self.delta > 0:
+                    return await authed.get_chats(
+                        identifier="&filter=unread", delta=self.delta
+                    )
+                else:
+                    return await authed.get_chats(identifier="&filter=unread")
 
             else:
                 # Getting custom lists by their ID
                 chat_lists = await authed.get_pinned_lists()
                 BackLog.info(
                     instance=self,
-                    message=f"{self.identifier_name}: Chat Lists: {chat_lists}",
+                    message=f"{self.identifier_name}: Chat Lists: {chat_lists}, delta = {self.delta}",
                 )
 
                 # If the specified chat list exists, select chats from this list
                 if rules["chat_list"] in chat_lists:
                     BackLog.info(
                         instance=self,
-                        message=f"{self.identifier_name}: Chat Lists: {chat_lists}",
+                        message=f"{self.identifier_name}: Selected chat: {rules['chat_list']}, delta = {self.delta}",
                     )
-                    return await authed.get_chats(
-                        identifier=f"&list_id={str(chat_lists[rules['chat_list']])}"
-                    )
+                    if self.delta > 0:
+                        return await authed.get_chats(
+                            identifier=f"&list_id={str(chat_lists[rules['chat_list']])}",
+                            delta=self.delta,
+                        )
+                    else:
+                        return await authed.get_chats(
+                            identifier=f"&list_id={str(chat_lists[rules['chat_list']])}"
+                        )
 
         # If 'chat_list' rule does not exist, or if the specified chat list does not exist, select all chats
         BackLog.info(
-            instance=self, message=f"{self.identifier_name}: Fetching all chats"
+            instance=self,
+            message=f"{self.identifier_name}: Fetching all chats, delta = {self.delta}",
         )
-        return await authed.get_chats()
+        if self.delta > 0:
+            return await authed.get_chats(delta=self.delta)
+        else:
+            return await authed.get_chats()
 
     def load_credentials_from_userdata(self, user_data):
         auth_json = {}
@@ -286,6 +302,9 @@ class ReplicateProvider(BaseProvider):
                     instance=self,
                     message=f"{self.identifier_name}: Rules: loaded successfully.....",
                 )
+
+                if "delta" in rules:
+                    self.delta = int(rules["delta"])
 
         except Exception as e:
             BackLog.exception(
@@ -404,22 +423,7 @@ class ReplicateProvider(BaseProvider):
             last_message_ids = None
 
         print("Starting product scraping...")
-
-        # get pinned list
-        chat_list = "NEW FANS (Regular price)✨"
-        chat_lists = await self.authed.get_pinned_lists()
-        print(chat_lists)
-
-        # If the specified chat list exists, select chats from this list
-        if chat_list in chat_lists:
-            chats = await self.authed.get_chats(
-                # We only want to get fans in the last 2 months, hence the 60 delta.
-                identifier=f"&list_id={str(chat_lists[chat_list])}",
-                delta=3,
-            )
-        else:
-            # Filter them
-            chats = await self.authed.get_chats(identifier=f"&filter=unread")
+        chats = await self.select_chats(self.authed, self.rules)
 
         user_id_list = [item["withUser"]["id"] for item in chats]
         all_users_info = {}
