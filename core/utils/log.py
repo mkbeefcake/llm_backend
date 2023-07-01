@@ -29,3 +29,6 @@ class BackLog:
 
     def exception(instance, message):
         BackLog.logger.exception((f"[{instance.__class__.__name__}] {message}"))
+        import traceback
+
+        print(traceback.print_exc())

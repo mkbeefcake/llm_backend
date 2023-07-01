@@ -220,7 +220,7 @@ class ReplicateProvider(BaseProvider):
             except Exception as e:
                 BackLog.exception(
                     instance=self,
-                    message=f"{self.identifier_name}: Exception occurred... {str(e)}",
+                    message=f"{self.identifier_name}: Exception occurred...",
                 )
 
         # await api.close_pools()
@@ -290,7 +290,7 @@ class ReplicateProvider(BaseProvider):
         except Exception as e:
             BackLog.exception(
                 instance=self,
-                message=f"{self.identifier_name}: Exception occurred... {str(e)}",
+                message=f"{self.identifier_name}: Exception occurred...",
             )
 
         return auth_json, rules
@@ -459,7 +459,7 @@ class ReplicateProvider(BaseProvider):
             except Exception as e:
                 BackLog.exception(
                     instance=self,
-                    message=f"{self.identifier_name}: Exception occurred.. {str(e)}",
+                    message=f"{self.identifier_name}: Exception occurred...",
                 )
                 pass
 
