@@ -440,7 +440,7 @@ class ReplicateProvider(BaseProvider):
                 user_info["statistics"] = statistics
 
                 purchases = await self.authed.get_subscriber_gallery(
-                    user_id, None, to_specific_id=last_message_id, limit=50
+                    user_id, None, to_specific_id=last_message_id, limit=40
                 )
 
                 purchased_items = []
@@ -477,7 +477,7 @@ class ReplicateProvider(BaseProvider):
         label_tasks = []  # This list will store the tasks for labeling the content
         for category in categories:
             offset = 0  # Create an offset variable
-            content = await self.authed.get_content(category["id"], offset, limit=30)
+            content = await self.authed.get_content(category["id"], offset, limit=5)
 
             for item in content:
                 parsed_item = {
