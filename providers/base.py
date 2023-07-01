@@ -10,6 +10,10 @@ class BaseProviderMeta(ABCMeta, ClasspropertyMeta):
 
 
 class BaseProvider(metaclass=BaseProviderMeta):
+    def __init__(self) -> None:
+        self.identifier_name = ""
+        pass
+
     def get_provider_info(self):
         return {
             "provider": BaseProvider.__name__.lower(),
@@ -49,6 +53,9 @@ class BaseProvider(metaclass=BaseProviderMeta):
 
     async def get_all_products(self, user_data: any, option: any = None):
         raise NotImplementedError
+
+    def set_name(self, identifier_name: str):
+        self.identifier_name = identifier_name
 
     @classproperty
     def plugin_name(cls) -> str:

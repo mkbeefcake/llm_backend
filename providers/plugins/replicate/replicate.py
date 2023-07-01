@@ -2,11 +2,11 @@ import asyncio
 import json
 import os
 
+import replica
 import requests
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
-import replica
 from core.utils.log import BackLog
 from products.pinecone import pinecone_service
 from providers.base import BaseProvider
@@ -89,7 +89,10 @@ class ReplicateProvider(BaseProvider):
 
         # authenticate
         self.authed = await self.authenticate(self.api, self.auth_json)
-        BackLog.info(instance=self, message=f"Passed authenticate() function....")
+        BackLog.info(
+            instance=self,
+            message=f"{self.identifier_name}: Passed authenticate() function....",
+        )
 
         self.initialized = True
         pass
@@ -102,7 +105,9 @@ class ReplicateProvider(BaseProvider):
 
         for chat in chats:
             user = await self.authed.get_user(chat["withUser"]["id"])
-            BackLog.info(instance=self, message=f"Username: {user.name}")
+            BackLog.info(
+                instance=self, message=f"{self.identifier_name}: Username: {user.name}"
+            )
 
             try:
                 if not user.isPerformer:
@@ -116,7 +121,7 @@ class ReplicateProvider(BaseProvider):
                     )
                     BackLog.info(
                         instance=self,
-                        message=f"Suggested Product from AI: {suggested_products}",
+                        message=f"{self.identifier_name}: Suggested Product from AI: {suggested_products}",
                     )
 
                     # if a product is suggested, we match it in the db and retrieve the product id
@@ -131,7 +136,8 @@ class ReplicateProvider(BaseProvider):
                             option,
                         )
                         BackLog.info(
-                            instance=self, message=f"Product matches: {product_matches}"
+                            instance=self,
+                            message=f"{self.identifier_name}: Product matches: {product_matches}",
                         )
 
                         # Assess if product is in user history. Take the first product not in history.
@@ -140,7 +146,7 @@ class ReplicateProvider(BaseProvider):
                         )
                         BackLog.info(
                             instance=self,
-                            message=f"Purchased history: {product_history}",
+                            message=f"{self.identifier_name}: Purchased history: {product_history}",
                         )
                         product_id = next(
                             (
@@ -153,7 +159,8 @@ class ReplicateProvider(BaseProvider):
 
                         product_message = f'The user might be interested by {suggested_products["search_product_processed"][ "product_description"]}'
                         BackLog.info(
-                            instance=self, message=f"Matched Product: {product_id}"
+                            instance=self,
+                            message=f"{self.identifier_name}: Matched Product: {product_id}",
                         )
 
                         # fetch user info
@@ -161,7 +168,8 @@ class ReplicateProvider(BaseProvider):
                             chat["withUser"]["id"], option["purchased"]
                         )
                         BackLog.info(
-                            instance=self, message=f"User Purchased: {user_info}"
+                            instance=self,
+                            message=f"{self.identifier_name}: User Purchased: {user_info}",
                         )
 
                         # fetch product info
@@ -169,7 +177,8 @@ class ReplicateProvider(BaseProvider):
                             product_id, option["products"]
                         )
                         BackLog.info(
-                            instance=self, message=f"User Product: {product_info}"
+                            instance=self,
+                            message=f"{self.identifier_name}: User Product: {product_info}",
                         )
 
                         # price product
@@ -177,7 +186,8 @@ class ReplicateProvider(BaseProvider):
                             user_info, product_info
                         )
                         BackLog.info(
-                            instance=self, message=f"Product Priced at: {product_price}"
+                            instance=self,
+                            message=f"{self.identifier_name}: Product Priced at: {product_price}",
                         )
 
                     else:
@@ -198,7 +208,8 @@ class ReplicateProvider(BaseProvider):
                         option=payload_ai,
                     )
                     BackLog.info(
-                        instance=self, message=f"Response from AI: {ai_response}"
+                        instance=self,
+                        message=f"{self.identifier_name}: Response from AI: {ai_response}",
                     )
 
                     # post ai message to user
@@ -207,7 +218,10 @@ class ReplicateProvider(BaseProvider):
                     # )
 
             except Exception as e:
-                BackLog.exception(instance=self, message=f"Exception occurred")
+                BackLog.exception(
+                    instance=self,
+                    message=f"{self.identifier_name}: Exception occurred... {str(e)}",
+                )
 
         # await api.close_pools()
 
@@ -221,26 +235,37 @@ class ReplicateProvider(BaseProvider):
         - unread
 
         """
-        BackLog.info(instance=self, message=f"Rules: {rules}")
+        # BackLog.info(instance=self, message=f"{self.identifier_name}: Rules: {rules}")
         if "chat_list" in rules:
             if rules["chat_list"] == "unread":
-                BackLog.info(instance=self, message=f"Fetching unread chats")
+                BackLog.info(
+                    instance=self,
+                    message=f"{self.identifier_name}: Fetching unread chats",
+                )
                 return await authed.get_chats(identifier="&filter=unread")
 
             else:
                 # Getting custom lists by their ID
                 chat_lists = await authed.get_pinned_lists()
-                BackLog.info(instance=self, message=f"Chat Lists: {chat_lists}")
+                BackLog.info(
+                    instance=self,
+                    message=f"{self.identifier_name}: Chat Lists: {chat_lists}",
+                )
 
                 # If the specified chat list exists, select chats from this list
                 if rules["chat_list"] in chat_lists:
-                    BackLog.info(instance=self, message=f"Chat Lists: {chat_lists}")
+                    BackLog.info(
+                        instance=self,
+                        message=f"{self.identifier_name}: Chat Lists: {chat_lists}",
+                    )
                     return await authed.get_chats(
                         identifier=f"&list_id={str(chat_lists[rules['chat_list']])}"
                     )
 
         # If 'chat_list' rule does not exist, or if the specified chat list does not exist, select all chats
-        BackLog.info(instance=self, message=f"Fetching all chats")
+        BackLog.info(
+            instance=self, message=f"{self.identifier_name}: Fetching all chats"
+        )
         return await authed.get_chats()
 
     def load_credentials_from_userdata(self, user_data):
@@ -250,22 +275,31 @@ class ReplicateProvider(BaseProvider):
         try:
             if "option" in user_data:
                 auth_json = json.loads(user_data["option"])
-                BackLog.info(instance=self, message=f"AUTH_JSON: {auth_json}")
+                BackLog.info(
+                    instance=self,
+                    message=f"{self.identifier_name}: AUTH_JSON: loaded successfully....",
+                )
 
             if "rules" in user_data:
                 rules = json.loads(user_data["rules"])
-                BackLog.info(instance=self, message=f"Rules: {rules}")
+                BackLog.info(
+                    instance=self,
+                    message=f"{self.identifier_name}: Rules: loaded successfully.....",
+                )
 
         except Exception as e:
-            BackLog.exception(instance=self, message="Exception occurred")
+            BackLog.exception(
+                instance=self,
+                message=f"{self.identifier_name}: Exception occurred... {str(e)}",
+            )
 
         return auth_json, rules
 
     async def authenticate(self, api: replica.api_types, auth_json):
-        BackLog.info(
-            instance=self,
-            message=f"Type: {type(auth_json)}, Creds: {auth_json}",
-        )
+        # BackLog.info(
+        #     instance=self,
+        #     message=f"Type: {type(auth_json)}, Creds: {auth_json}",
+        # )
         auth = api.add_auth(auth_json)
         return await auth.login()
 
@@ -423,7 +457,10 @@ class ReplicateProvider(BaseProvider):
                 user_info["purchased"] = purchased_items
 
             except Exception as e:
-                BackLog.exception(instance=self, message=f"{str(e)}")
+                BackLog.exception(
+                    instance=self,
+                    message=f"{self.identifier_name}: Exception occurred.. {str(e)}",
+                )
                 pass
 
             all_users_info[str(user_id)] = user_info
@@ -481,5 +518,5 @@ class ReplicateProvider(BaseProvider):
 
         # await api.close_pools()
 
-        BackLog.info(self, f"Products: {len(full_content)}")
+        BackLog.info(self, f"{self.identifier_name}: Products: {len(full_content)}")
         return {"products": labels}
