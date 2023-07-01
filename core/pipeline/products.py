@@ -40,7 +40,7 @@ class ProductPipeline(TaskManager):
                 new_content=purchased_info,
             )
 
-            print(f"Import purchases : Done, {user_id}")
+            print(f"Import purchases : Done, {user_id} - {identifier_name}")
 
         except Exception as e:
             BackLog.exception(instance=None, message=f"Exception occurred...")
