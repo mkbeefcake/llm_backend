@@ -492,16 +492,16 @@ class ReplicateProvider(BaseProvider):
 
                 # Add a task to label this content
                 try:
-                    print(f"|-- Item: {parsed_item['id']}")
-
-                    task = label_content(
-                        type=parsed_item["type"],
-                        url=parsed_item["full"],
-                        k=15,
-                        id=parsed_item["id"],
-                        item=parsed_item,
-                    )
-                    label_tasks.append(task)
+                    print(f"|-- Item: {parsed_item['id']} - {parsed_item['type']}")
+                    if parsed_item["type"] == "photo":
+                        task = label_content(
+                            type=parsed_item["type"],
+                            url=parsed_item["full"],
+                            k=15,
+                            id=parsed_item["id"],
+                            item=parsed_item,
+                        )
+                        label_tasks.append(task)
                 except:
                     import traceback
 
