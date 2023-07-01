@@ -57,6 +57,7 @@ class ReplicateProvider(BaseProvider):
         self.initialized = False
         self.api = None
         self.delta = 0
+        self.product_limit_per_category = 0
 
     def get_provider_info(self):
         return {
@@ -305,6 +306,19 @@ class ReplicateProvider(BaseProvider):
 
                 if "delta" in rules:
                     self.delta = int(rules["delta"])
+                    BackLog.info(
+                        instance=self,
+                        message=f"{self.identifier_name}: Rules: delta = {self.delta}",
+                    )
+
+                if "product_limit_per_category" in rules:
+                    self.product_limit_per_category = int(
+                        rules["product_limit_per_category"]
+                    )
+                    BackLog.info(
+                        instance=self,
+                        message=f"{self.identifier_name}: Rules: product limit per category = {self.product_limit_per_category}",
+                    )
 
         except Exception as e:
             BackLog.exception(
@@ -481,7 +495,15 @@ class ReplicateProvider(BaseProvider):
         label_tasks = []  # This list will store the tasks for labeling the content
         for category in categories:
             offset = 0  # Create an offset variable
-            content = await self.authed.get_content(category["id"], offset, limit=1)
+
+            if self.product_limit_per_category > 0:
+                content = await self.authed.get_content(
+                    category["id"], offset, limit=self.product_limit_per_category
+                )
+            else:
+                content = await self.authed.get_content(
+                    category["id"], offset, limit=self.product_limit_per_category
+                )
 
             for item in content:
                 parsed_item = {
@@ -522,5 +544,8 @@ class ReplicateProvider(BaseProvider):
 
         # await api.close_pools()
 
-        BackLog.info(self, f"{self.identifier_name}: Products: {len(full_content)}")
+        BackLog.info(
+            self,
+            f"{self.identifier_name}: Products: {len(full_content)}, Labels = {len(labels)}",
+        )
         return {"products": labels}
