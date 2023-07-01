@@ -79,8 +79,8 @@ class ReplicateProvider(BaseProvider):
         pass
 
     async def initialize(self, user_data: any):
-        if self.initialized == True:
-            return
+        # if self.initialized == True:
+        #     return
 
         self.api = replica.select_api("replica")
 
