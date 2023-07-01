@@ -2,11 +2,11 @@ import asyncio
 import json
 import os
 
-import replica
 import requests
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
+import replica
 from core.utils.log import BackLog
 from products.pinecone import pinecone_service
 from providers.base import BaseProvider
@@ -108,10 +108,7 @@ class ReplicateProvider(BaseProvider):
                 if not user.isPerformer:
                     # fetch user's messages
                     messages = await self.fetch_messages(user, self.authed)
-                    BackLog.info(
-                        instance=self,
-                        message=f"Messages: {messages}",
-                    )
+
                     # suggest product from ai
                     payload_product = self.build_payload_for_Product(messages=messages)
                     suggested_products = replica_service.suggest_product(
@@ -134,54 +131,54 @@ class ReplicateProvider(BaseProvider):
                             option,
                         )
                         BackLog.info(
-                            instance=self, message=f"Product desired: {product_matches}"
+                            instance=self, message=f"Product matches: {product_matches}"
                         )
 
-                        if product_matches != None: 
+                        # Assess if product is in user history. Take the first product not in history.
+                        product_history = self.get_purchase_history(
+                            chat["withUser"]["id"], option["purchased"]
+                        )
+                        BackLog.info(
+                            instance=self,
+                            message=f"Purchased history: {product_history}",
+                        )
+                        product_id = next(
+                            (
+                                element
+                                for element in product_matches
+                                if element not in product_history
+                            ),
+                            None,
+                        )
 
-                            # Assess if product is in user history. Take the first product not in history.
-                            product_history = self.get_purchase_history(
-                                chat["withUser"]["id"], option["purchased"]
-                            )
-                            BackLog.info(
-                                instance=self,
-                                message=f"Purchased history: {product_history}",
-                            )
-                            product_id = next(
-                                (
-                                    element
-                                    for element in product_matches
-                                    if element not in product_history
-                                ),
-                                None,
-                            )
+                        product_message = f'The user might be interested by {suggested_products["search_product_processed"][ "product_description"]}'
+                        BackLog.info(
+                            instance=self, message=f"Matched Product: {product_id}"
+                        )
 
-                            product_message = f'The user might be interested by {suggested_products["search_product_processed"][ "product_description"]}. You would want to make them buy it.'
-                            BackLog.info(
-                                instance=self, message=f"Matched Product: {product_id}"
-                            )
+                        # fetch user info
+                        user_info = self.fetch_user_info(
+                            chat["withUser"]["id"], option["purchased"]
+                        )
+                        BackLog.info(
+                            instance=self, message=f"User Purchased: {user_info}"
+                        )
 
-                            # fetch user info
-                            user_info = self.fetch_user_info(option["purchased"])
-                            BackLog.info(
-                                instance=self, message=f"User Purchased: {user_info}"
-                            )
+                        # fetch product info
+                        product_info = self.fetch_product_info(
+                            product_id, option["products"]
+                        )
+                        BackLog.info(
+                            instance=self, message=f"User Product: {product_info}"
+                        )
 
-                            # fetch product info
-                            product_info = self.fetch_product_info(
-                                product_id, option["products"]
-                            )
-                            BackLog.info(
-                                instance=self, message=f"User Product: {product_info}"
-                            )
-
-                            # price product
-                            product_price = self.predict_product_price(
-                                user_info, product_info
-                            )
-                            BackLog.info(
-                                instance=self, message=f"Product Priced at: {product_price}"
-                            )
+                        # price product
+                        product_price = self.predict_product_price(
+                            user_info, product_info
+                        )
+                        BackLog.info(
+                            instance=self, message=f"Product Priced at: {product_price}"
+                        )
 
                     else:
                         product_id = []
@@ -194,9 +191,6 @@ class ReplicateProvider(BaseProvider):
                         messages=messages,
                         rules=self.rules,
                         product_message=product_message,
-                    )
-                    BackLog.info(
-                        instance=self, message=f"Payload sent to AI: {payload_ai}"
                     )
 
                     ai_response = replica_service.get_response(
@@ -303,13 +297,15 @@ class ReplicateProvider(BaseProvider):
     def get_purchase_history(self, user_id: str, purchased) -> list:
         # TODO : Implement a function fetching for each chat user_id their purchase history in the db.
         # self.db.get_purchase_history(user_id)
-        if user_id in purchased:
-            return purchased[user_id]
+        if str(user_id) in purchased:
+            return purchased[str(user_id)]
         return []
 
-    def fetch_user_info(self, purchased) -> dict:
+    def fetch_user_info(self, user_id, purchased) -> dict:
         # TODO : Implement a function fetching for each chat user_id their purchase history in the db.
         # self.db.get_purchase_history(user_id)
+        if str(user_id) in purchased:
+            return purchased[str(user_id)]
         return purchased
 
     def fetch_product_info(self, product_id: str, products) -> dict:
@@ -324,7 +320,7 @@ class ReplicateProvider(BaseProvider):
         return payload
 
     def build_payload_for_AI(
-        self, user_name: str, messages: any, rules, product_message: str =""
+        self, user_name: str, messages: any, rules, product_message=""
     ):
         prompt_template = ""
         if "prompt_template" in rules:
@@ -385,11 +381,11 @@ class ReplicateProvider(BaseProvider):
             chats = await self.authed.get_chats(
                 # We only want to get fans in the last 2 months, hence the 60 delta.
                 identifier=f"&list_id={str(chat_lists[chat_list])}",
-                delta=60,
+                delta=3,
             )
         else:
             # Filter them
-            chats = await self.authed.get_chats()
+            chats = await self.authed.get_chats(identifier=f"&filter=unread")
 
         user_id_list = [item["withUser"]["id"] for item in chats]
         all_users_info = {}
@@ -400,40 +396,29 @@ class ReplicateProvider(BaseProvider):
                 str(user_id) in last_message_ids
                 and "last_message_id" in last_message_ids[str(user_id)]
             ):
-                last_message_id = int(last_message_ids[str(user_id)]["last_message_id"])
+                last_message_id = last_message_ids[str(user_id)]["last_message_id"]
             else:
-                last_message_id = 0
+                last_message_id = "0"
 
             user_info = {}
             try:
                 statistics = await self.authed.get_subscriber_info(user_id)
                 user_info["statistics"] = statistics
 
+                purchases = await self.authed.get_subscriber_gallery(
+                    user_id, None, to_specific_id=last_message_id, limit=50
+                )
+
                 purchased_items = []
-
-                next_last_id = None
-                while next_last_id == None or int(next_last_id) > last_message_id:
-                    purchases, next_last_id = await self.authed.get_subscriber_gallery(
-                        user_id, next_last_id
-                    )
-
-                    for item in purchases:
-                        if int(item["message_id"]) <= last_message_id:
-                            break
-
-                        parsed_item = {
-                            "message_id": item["message_id"],
-                            "price": item["price"],
-                            "medias": [item for item in item["media"]],
-                            # "media_count": item["mediaCount"],
-                            "created": item["createdAt"],
-                            # "purchased": item["isOpened"],
-                            "timestamp": item["createdAt"],
-                        }
-                        purchased_items.append(parsed_item)
-
-                    if next_last_id == None:
-                        break
+                for item in purchases:
+                    parsed_item = {
+                        "message_id": item["message_id"],
+                        "price": item["price"],
+                        "medias": [item for item in item["media"]],
+                        "created": item["createdAt"],
+                        "timestamp": item["createdAt"],
+                    }
+                    purchased_items.append(parsed_item)
 
                 user_info["purchased"] = purchased_items
 
@@ -455,53 +440,35 @@ class ReplicateProvider(BaseProvider):
         label_tasks = []  # This list will store the tasks for labeling the content
         for category in categories:
             offset = 0  # Create an offset variable
-            hasMore = True  # Initialize hasMore as True
+            content = await self.authed.get_content(category["id"], offset, limit=30)
 
-            while hasMore:  # While hasMore is true, continue fetching content
-                content = await self.authed.get_content(str(offset), category["id"])
-                print(category["id"], offset)
+            for item in content:
+                parsed_item = {
+                    "category": category["name"],
+                    "id": item["id"],
+                    "type": item["type"],
+                    "created": item["createdAt"],
+                    "full": item["full"],
+                }
 
-                if "hasMore" in content:
-                    hasMore = content["hasMore"]
+                full_content.append(parsed_item)
 
-                    if len(content["list"]) > 0:
-                        for item in content["list"]:
-                            parsed_item = {
-                                "category": category["name"],
-                                "id": item["id"],
-                                "type": item["type"],
-                                "created": item["createdAt"],
-                                "full": item["full"],
-                            }
+                # Add a task to label this content
+                try:
+                    print(f"|-- Item: {parsed_item['id']}")
 
-                            full_content.append(parsed_item)
-
-                            # Add a task to label this content
-                            try:
-                                print(f"|-- Item: {parsed_item['id']}")
-                                # print(parsed_item["full"], parsed_item["id"])
-                                # base64_content = download_and_encode_content(parsed_item["full"], authed)
-
-                                task = label_content(
-                                    type=parsed_item["type"],
-                                    url=parsed_item["full"],
-                                    k=15,
-                                    id=parsed_item["id"],
-                                    item=parsed_item,
-                                )
-                                label_tasks.append(task)
-                            except:
-                                import traceback
-
-                                print(traceback.print_exc())
-
-                    offset += (
-                        24  # Increase the offset by 24 for the next batch of content
+                    task = label_content(
+                        type=parsed_item["type"],
+                        url=parsed_item["full"],
+                        k=15,
+                        id=parsed_item["id"],
+                        item=parsed_item,
                     )
-                else:
-                    break  # Break the loop if the content does not contain the "hasMore" key
+                    label_tasks.append(task)
+                except:
+                    import traceback
 
-        # print(full_content)
+                    print(traceback.print_exc())
 
         # Label all contents in parallel
         try:
@@ -511,10 +478,6 @@ class ReplicateProvider(BaseProvider):
             import traceback
 
             print(traceback.print_exc())
-
-        # for label in labels:
-        #    print(label)
-        # add_label_pinecone(label["label"], namespace=provider_id,  metadata)
 
         # await api.close_pools()
 
