@@ -215,9 +215,9 @@ class ReplicateProvider(BaseProvider):
                     )
 
                     # post ai message to user
-                    # await self.post_message(
-                    #     user, self.authed, ai_response, mediaFiles=product_id, price=product_price
-                    # )
+                    await self.post_message(
+                         user, self.authed, ai_response, mediaFiles=product_id, price=product_price
+                     )
 
             except Exception as e:
                 BackLog.exception(

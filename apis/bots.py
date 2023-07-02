@@ -13,7 +13,7 @@ router = APIRouter()
 async def start_auto_bot(
     provider_name: str = "gmailprovider",
     identifier_name: str = "john doe",
-    interval_seconds: int = 300,
+    interval_seconds: int = 200,
     curr_user: User = Depends(get_current_user),
 ):
     try:
