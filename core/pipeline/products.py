@@ -28,6 +28,7 @@ class ProductPipeline(TaskManager):
                 user_id=user_id, provider_name=provider_name, key=identifier_name
             )
             purchased_info = await bridge.get_purchased_products(
+                user_id=user_id,
                 provider_name=provider_name,
                 identifier_name=identifier_name,
                 user_data=user_content,
@@ -115,17 +116,14 @@ class ProductPipeline(TaskManager):
     All Products pipeline
     """
 
-    async def _fetch_all_products_func(
-        user_id: str, provider_name: str, identifier_name: str, user_data: str
+    def update_products_on_db_pinecone(
+        user_id: str, provider_name: str, identifier_name: str, products_info: any
     ):
+        BackLog.exception(
+            instance=None,
+            message=f"Saving {len(products_info['products'])} products on db and pinecone",
+        )
         try:
-            user_content = json.loads(user_data)
-            products_info = await bridge.get_all_products(
-                provider_name=provider_name,
-                identifier_name=identifier_name,
-                user_data=user_content,
-            )
-
             # save these to DB
             update_products(
                 user_id=user_id,
@@ -145,7 +143,24 @@ class ProductPipeline(TaskManager):
             elif provider_name == "gmailprovider":
                 pass
 
+        except Exception as e:
+            BackLog.exception(instance=None, message=f"Exception occurred...")
+
+    async def _fetch_all_products_func(
+        user_id: str, provider_name: str, identifier_name: str, user_data: str
+    ):
+        try:
+            user_content = json.loads(user_data)
+            await bridge.get_all_products(
+                user_id=user_id,
+                provider_name=provider_name,
+                identifier_name=identifier_name,
+                user_data=user_content,
+                steper=ProductPipeline.update_products_on_db_pinecone,
+            )
+
             print(f"Import products : Done, {user_id}")
+
         except Exception as e:
             BackLog.exception(instance=None, message=f"Exception occurred...")
 

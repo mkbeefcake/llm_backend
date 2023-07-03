@@ -19,6 +19,7 @@ class AutoBot(TaskManager):
 
         if provider_name in user_data and identifier_name in user_data[provider_name]:
             await bridge.start_autobot(
+                user_id,
                 provider_name,
                 identifier_name,
                 user_data[provider_name][identifier_name],
@@ -30,6 +31,7 @@ class AutoBot(TaskManager):
             )
         else:
             await bridge.start_autobot(
+                user_id,
                 provider_name,
                 identifier_name,
                 None,

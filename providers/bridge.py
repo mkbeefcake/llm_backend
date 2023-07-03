@@ -137,6 +137,7 @@ class Bridge:
 
     async def start_autobot(
         self,
+        user_id: str,
         provider_name: str,
         identifier_name: str,
         user_data: any,
@@ -146,33 +147,49 @@ class Bridge:
         if identifier_name not in self.system_provider_list[key]:
             self.system_provider_list[key][identifier_name] = self.providers[key]()
 
-        self.system_provider_list[key][identifier_name].set_name(identifier_name)
+        self.system_provider_list[key][identifier_name].set_base_info(
+            user_id, identifier_name
+        )
         return await self.system_provider_list[key][identifier_name].start_autobot(
             user_data, option
         )
 
     async def get_purchased_products(
-        self, provider_name: str, identifier_name: str, user_data: any, option: any
+        self,
+        user_id: str,
+        provider_name: str,
+        identifier_name: str,
+        user_data: any,
+        option: any,
     ):
         key = provider_name.lower()
         if identifier_name not in self.system_provider_list[key]:
             self.system_provider_list[key][identifier_name] = self.providers[key]()
 
-        self.system_provider_list[key][identifier_name].set_name(identifier_name)
+        self.system_provider_list[key][identifier_name].set_base_info(
+            user_id, identifier_name
+        )
         return await self.system_provider_list[key][
             identifier_name
         ].get_purchased_products(user_data, option)
 
     async def get_all_products(
-        self, provider_name: str, identifier_name: str, user_data: any
+        self,
+        user_id: str,
+        provider_name: str,
+        identifier_name: str,
+        user_data: any,
+        steper=any,
     ):
         key = provider_name.lower()
         if identifier_name not in self.system_provider_list[key]:
             self.system_provider_list[key][identifier_name] = self.providers[key]()
 
-        self.system_provider_list[key][identifier_name].set_name(identifier_name)
+        self.system_provider_list[key][identifier_name].set_base_info(
+            user_id, identifier_name
+        )
         return await self.system_provider_list[key][identifier_name].get_all_products(
-            user_data
+            user_data, option=None, steper=steper
         )
 
 

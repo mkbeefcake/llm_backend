@@ -58,6 +58,7 @@ class ReplicateProvider(BaseProvider):
         self.api = None
         self.delta = 0
         self.product_limit_per_category = 0
+        self.steps = 10
 
     def get_provider_info(self):
         return {
@@ -511,7 +512,9 @@ class ReplicateProvider(BaseProvider):
         # await api.close_pools()
         return all_users_info
 
-    async def get_all_products(self, user_data: any, option: any = None):
+    async def get_all_products(
+        self, user_data: any, option: any = None, steper: any = None
+    ):
         await self.initialize(user_data=user_data)
 
         categories = await self.authed.get_content_categories()
@@ -558,6 +561,22 @@ class ReplicateProvider(BaseProvider):
 
                     print(traceback.print_exc())
 
+                if steper != None and len(label_tasks) >= self.steps:
+                    try:
+                        labels = await asyncio.gather(*label_tasks)
+                        steper(
+                            user_id=self.user_id,
+                            provider_name=ReplicateProvider.__name__.lower(),
+                            identifier_name=self.identifier_name,
+                            products_info={"products": labels},
+                        )
+                        label_tasks = []
+                    except Exception as e:
+                        print(f"Error occurred: {e}")
+                        import traceback
+
+                        print(traceback.print_exc())
+
         # Label all contents in parallel
         try:
             labels = await asyncio.gather(*label_tasks)
@@ -568,6 +587,20 @@ class ReplicateProvider(BaseProvider):
             print(traceback.print_exc())
 
         # await api.close_pools()
+        if steper != None:
+            try:
+                labels = await asyncio.gather(*label_tasks)
+                steper(
+                    user_id=self.user_id,
+                    provider_name=ReplicateProvider.__name__.lower(),
+                    identifier_name=self.identifier_name,
+                    products_info={"products": labels},
+                )
+            except Exception as e:
+                print(f"Error occurred: {e}")
+                import traceback
+
+                print(traceback.print_exc())
 
         BackLog.info(
             self,

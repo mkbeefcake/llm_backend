@@ -11,6 +11,7 @@ class BaseProviderMeta(ABCMeta, ClasspropertyMeta):
 
 class BaseProvider(metaclass=BaseProviderMeta):
     def __init__(self) -> None:
+        self.user_id = ""
         self.identifier_name = ""
         pass
 
@@ -51,10 +52,13 @@ class BaseProvider(metaclass=BaseProviderMeta):
     async def get_purchased_products(self, user_data: any, option: any = None):
         raise NotImplementedError
 
-    async def get_all_products(self, user_data: any, option: any = None):
+    async def get_all_products(
+        self, user_data: any, option: any = None, steper: any = None
+    ):
         raise NotImplementedError
 
-    def set_name(self, identifier_name: str):
+    def set_base_info(self, user_id: str, identifier_name: str):
+        self.user_id = user_id
         self.identifier_name = identifier_name
 
     @classproperty
