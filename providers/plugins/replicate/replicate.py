@@ -158,8 +158,6 @@ class ReplicateProvider(BaseProvider):
                             ),
                             None,
                         )
-
-                        product_message = f'The user might be interested by {suggested_products["search_product_processed"][ "product_description"]}'
                         BackLog.info(
                             instance=self,
                             message=f"{self.identifier_name}: Matched Product: {product_id}",
@@ -191,6 +189,16 @@ class ReplicateProvider(BaseProvider):
                             instance=self,
                             message=f"{self.identifier_name}: Product Priced at: {product_price}",
                         )
+
+                        # Adjust prompt for AI to sell product
+                        product_message = "\n You will now act as a sales agent too who will give detail about product to the user too. " \
+                                          "The product details are: {product_description} And Convice {human_prefix} to buy it. " \
+                                          "You Must convince user to buy {product_description}, priced at {product_price} \n"
+
+                        product_message.format(product_description=suggested_products[
+                            "search_product_processed"]["product_description"],
+                                               product_price=product_price,
+                                               human_prefix=user.name)
 
                     else:
                         product_id = []
@@ -391,7 +399,10 @@ class ReplicateProvider(BaseProvider):
     ):
         prompt_template = ""
         if "prompt_template" in rules:
-            prompt_template = rules["prompt_template"]
+            prompt_template = product_message + "Character details: \n" \
+                              + rules["prompt_template"]
+        elif product_message:
+            prompt_template = product_message
 
         character_name = ""
         if "character_name" in rules:
