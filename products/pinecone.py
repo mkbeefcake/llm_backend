@@ -88,7 +88,7 @@ class PineconeService(ProductBaseService):
 
         ids = []
         texts = []
-        metadata = []
+        metadatas = []
 
         for item in products_info["products"]:
             id = str(item["id"])
@@ -96,10 +96,10 @@ class PineconeService(ProductBaseService):
 
             ids.append(id)
             texts.append(item["label"])
-            metadata.append(metadata)
+            metadatas.append(metadata)
 
         self.vectorstore.add_texts(
-            ids=ids, namespace=option["namespace"], texts=texts, metadatas=metadata
+            ids=ids, namespace=option["namespace"], texts=texts, metadatas=metadatas
         )
 
         BackLog.info(self, f"Import Done")

@@ -58,7 +58,7 @@ class ReplicateProvider(BaseProvider):
         self.api = None
         self.delta = 0
         self.product_limit_per_category = 0
-        self.steps = 10
+        self.steps = 3
 
     def get_provider_info(self):
         return {
@@ -563,6 +563,10 @@ class ReplicateProvider(BaseProvider):
 
                 if steper != None and len(label_tasks) >= self.steps:
                     try:
+                        BackLog.info(
+                            self,
+                            f"{self.identifier_name}: Waiting to get {len(label_tasks)} products' embedding....",
+                        )
                         labels = await asyncio.gather(*label_tasks)
                         steper(
                             user_id=self.user_id,
