@@ -58,6 +58,7 @@ class PineconeService(ProductBaseService):
             return "Couldn't connect to pinecone vector db"
 
         print("Namespace", option["namespace"])
+        print("message", messages)
         docs = self.vectorstore.similarity_search(
             messages, k=1, namespace=option["namespace"]
         )
