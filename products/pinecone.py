@@ -62,7 +62,7 @@ class PineconeService(ProductBaseService):
             messages, k=1, namespace=option["namespace"]
         )
         if docs is not None and type(docs) == list and len(docs) > 0:
-            return [docs[0].metadata["id"]]
+            return [int(float(docs[0].page_content))]
         else:
             return None
 
