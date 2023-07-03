@@ -121,7 +121,7 @@ class ProductPipeline(TaskManager):
     ):
         BackLog.info(
             instance=None,
-            message=f"Saving {len(products_info['products'])} products on db and pinecone",
+            message=f"{identifier_name}: Saving {len(products_info['products'])} products on db and pinecone",
         )
         try:
             # save these to DB
