@@ -56,7 +56,8 @@ class PineconeService(ProductBaseService):
 
         if self.vectorstore is None:
             return "Couldn't connect to pinecone vector db"
-
+        
+        print("Namespace", option["namespace"])
         docs = self.vectorstore.similarity_search(
             messages, k=1, namespace=option["namespace"]
         )
@@ -71,20 +72,35 @@ class PineconeService(ProductBaseService):
         if self.vectorstore is None:
             return "Couldn't connect to pinecone vector db"
 
+        """ 
         batch = []
         for item in products_info["products"]:
             id = str(item["id"])
             value = self.openai.embed_query(item["label"])
             metadata = {"id": item["id"], "label": item["label"]}
-            batch.append({"id": id, "values": value, "metadata": metadata})
+            batch.append({"id": id, "texts": value, "metadata": metadata})
 
-        self.index.upsert(vectors=batch, namespace=option["namespace"])
+        #self.index.upsert(vectors=batch, namespace=option["namespace"])
         # dataset = pd.DataFrame(products_info["products"])
         # meta = [{"id": x} for x in dataset["id"]]
+        """
 
-        # self.vectorstore.add_texts(
-        #     namespace=namespace, texts=dataset["label"], metadatas=meta
-        # )
+        ids = []
+        texts = []
+        metadata = []
+
+        for item in products_info["products"]:
+            id = str(item["id"])
+            texts = self.openai.embed_query(item["label"])
+            metadata = {"id": item["id"], "label": item["label"]}
+
+            ids.append(id)
+            texts.append(texts)
+            metadata.append(metadata)
+
+        self.vectorstore.add_texts(
+             ids=ids, namespace=option["namespace"], texts=texts, metadatas=metadata
+         )
 
         BackLog.info(self, f"Import Done")
         pass
