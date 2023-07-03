@@ -42,7 +42,7 @@ class PineconeService(ProductBaseService):
             self.vectorstore = Pinecone(
                 index=self.index,
                 embedding_function=self.openai.embed_query,
-                text_key="text",
+                text_key="id",
             )
 
         except Exception as e:
