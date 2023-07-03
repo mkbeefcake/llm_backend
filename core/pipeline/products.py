@@ -119,7 +119,7 @@ class ProductPipeline(TaskManager):
     def update_products_on_db_pinecone(
         user_id: str, provider_name: str, identifier_name: str, products_info: any
     ):
-        BackLog.exception(
+        BackLog.info(
             instance=None,
             message=f"Saving {len(products_info['products'])} products on db and pinecone",
         )
