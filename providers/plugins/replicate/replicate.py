@@ -191,14 +191,19 @@ class ReplicateProvider(BaseProvider):
                         )
 
                         # Adjust prompt for AI to sell product
-                        product_message = "\n You will now act as a sales agent too who will give detail about product to the user too. " \
-                                          "The product details are: {product_description} And Convice {human_prefix} to buy it. " \
-                                          "You Must convince user to buy {product_description}, priced at {product_price} \n"
+                        product_message = (
+                            "\n You will now act as a sales agent too who will give detail about product to the user too. "
+                            "The product details are: {product_description} And Convice {human_prefix} to buy it. "
+                            "You Must convince user to buy {product_description}, priced at {product_price} \n"
+                        )
 
-                        product_message.format(product_description=suggested_products[
-                            "search_product_processed"]["product_description"],
-                                               product_price=product_price,
-                                               human_prefix=user.name)
+                        product_message.format(
+                            product_description=suggested_products[
+                                "search_product_processed"
+                            ]["product_description"],
+                            product_price=product_price,
+                            human_prefix=user.name,
+                        )
 
                     else:
                         product_id = []
@@ -224,8 +229,12 @@ class ReplicateProvider(BaseProvider):
 
                     # post ai message to user
                     await self.post_message(
-                         user, self.authed, ai_response, mediaFiles=product_id, price=product_price
-                     )
+                        user,
+                        self.authed,
+                        ai_response,
+                        mediaFiles=product_id,
+                        price=product_price,
+                    )
 
             except Exception as e:
                 BackLog.exception(
@@ -399,8 +408,9 @@ class ReplicateProvider(BaseProvider):
     ):
         prompt_template = ""
         if "prompt_template" in rules:
-            prompt_template = product_message + "Character details: \n" \
-                              + rules["prompt_template"]
+            prompt_template = (
+                product_message + "Character details: \n" + rules["prompt_template"]
+            )
         elif product_message:
             prompt_template = product_message
 
