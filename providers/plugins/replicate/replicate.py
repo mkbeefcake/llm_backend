@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import random 
 
 import replica
 import requests
@@ -10,7 +11,7 @@ from starlette.requests import Request
 from core.utils.log import BackLog
 from products.pinecone import pinecone_service
 from providers.base import BaseProvider
-from services.service import replica_service
+from services.service import replica_service, textgen_service
 
 templates = Jinja2Templates(directory="templates/replicate")
 PRODUCT_REPLICA_ENDPOINT = os.getenv("PRODUCT_REPLICA_ENDPOINT")
@@ -105,143 +106,146 @@ class ReplicateProvider(BaseProvider):
 
         # Select relevant chats
         chats = await self.select_chats(self.authed, self.rules)
+        unread_chats = [chats for chats in chats if chats["unreadMessagesCount"] > 0]
+        if len(unread_chats) > 0:
+            for chat in unread_chats: 
+                user = await self.authed.get_user(chat["withUser"]["id"])
 
-        for chat in chats:
-            user = await self.authed.get_user(chat["withUser"]["id"])
-            BackLog.info(
-                instance=self, message=f"{self.identifier_name}: Username: {user.name}"
-            )
+                try:
+                    if not user.isPerformer:
 
-            try:
-                if not user.isPerformer:
-                    # fetch user's messages
-                    messages = await self.fetch_messages(user, self.authed)
+                        BackLog.info(
+                            instance=self, message=f"{self.identifier_name}: Replying to username: {user.name}"
+                        )
 
-                    # suggest product from ai
-                    payload_product = self.build_payload_for_Product(messages=messages)
-                    suggested_products = replica_service.suggest_product(
-                        messages=messages, option=payload_product
-                    )
-                    BackLog.info(
+                        # fetch user's messages
+                        messages = await self.fetch_messages(user, self.authed)
+
+                        # suggest product from ai
+                        payload_product = self.build_payload_for_Product(messages=messages)
+                        suggested_products = replica_service.suggest_product(
+                            messages=messages, option=payload_product
+                        )
+                        BackLog.info(
+                            instance=self,
+                            message=f"{self.identifier_name}: Suggested Product from AI: {suggested_products}",
+                        )
+
+                        # if a product is suggested, we match it in the db and retrieve the product id
+                        if (
+                            suggested_products["search_product_processed"]["product_intent"]
+                            == True
+                        ):
+                            product_matches = pinecone_service.match_product(
+                                suggested_products["search_product_processed"][
+                                    "product_description"
+                                ],
+                                option,
+                            )
+                            BackLog.info(
+                                instance=self,
+                                message=f"{self.identifier_name}: Product matches: {product_matches}",
+                            )
+
+                            # Assess if product is in user history. Take the first product not in history.
+                            product_history = self.get_purchase_history(
+                                chat["withUser"]["id"], option["purchased"]
+                            )
+                            BackLog.info(
+                                instance=self,
+                                message=f"{self.identifier_name}: Purchased history: {product_history}",
+                            )
+                            product_id = next(
+                                (
+                                    element
+                                    for element in product_matches
+                                    if element not in product_history
+                                ),
+                                None,
+                            )
+                            BackLog.info(
+                                instance=self,
+                                message=f"{self.identifier_name}: Matched Product: {product_id}",
+                            )
+
+                            # fetch user info
+                            user_info = self.fetch_user_info(
+                                chat["withUser"]["id"], option["purchased"]
+                            )
+                            BackLog.info(
+                                instance=self,
+                                message=f"{self.identifier_name}: User Purchased: {user_info}",
+                            )
+
+                            # fetch product info
+                            product_info = self.fetch_product_info(
+                                product_id, option["products"]
+                            )
+                            BackLog.info(
+                                instance=self,
+                                message=f"{self.identifier_name}: User Product: {product_info}",
+                            )
+
+                            # price product
+                            product_price = self.predict_product_price(
+                                user_info, product_info
+                            )
+                            BackLog.info(
+                                instance=self,
+                                message=f"{self.identifier_name}: Product Priced at: {product_price}",
+                            )
+
+                            # Adjust prompt for AI to sell product
+                            product_message = (
+                                "\n You will now act as a sales agent too who will give detail about product to the user too. "
+                                "The product details are: {product_description} And Convice {human_prefix} to buy it. "
+                                "You Must convince user to buy {product_description}, priced at {product_price} \n"
+                            )
+
+                            product_message.format(
+                                product_description=suggested_products[
+                                    "search_product_processed"
+                                ]["product_description"],
+                                product_price=product_price,
+                                human_prefix=user.name,
+                            )
+
+                        else:
+                            product_id = []
+                            product_message = ""
+                            product_price = 0
+
+                        # build payload & get ai response
+                        payload_ai = self.build_payload_for_AI(
+                            user_name=user.name,
+                            messages=messages,
+                            rules=self.rules,
+                            product_message=product_message,
+                        )
+
+                        ai_response = textgen_service.get_response(
+                            user_input=messages[0]["content"],
+                            history={}
+                        )
+                        BackLog.info(
+                            instance=self,
+                            message=f"{self.identifier_name}: Response from AI: {ai_response}",
+                        )
+
+                        # post ai message to user
+                        await self.post_message(
+                            user,
+                            self.authed,
+                            ai_response,
+                            mediaFiles=product_id,
+                            price=product_price,
+                        )
+
+                except Exception as e:
+                    BackLog.exception(
                         instance=self,
-                        message=f"{self.identifier_name}: Suggested Product from AI: {suggested_products}",
+                        message=f"{self.identifier_name}: Exception occurred...",
                     )
-
-                    # if a product is suggested, we match it in the db and retrieve the product id
-                    if (
-                        suggested_products["search_product_processed"]["product_intent"]
-                        == True
-                    ):
-                        product_matches = pinecone_service.match_product(
-                            suggested_products["search_product_processed"][
-                                "product_description"
-                            ],
-                            option,
-                        )
-                        BackLog.info(
-                            instance=self,
-                            message=f"{self.identifier_name}: Product matches: {product_matches}",
-                        )
-
-                        # Assess if product is in user history. Take the first product not in history.
-                        product_history = self.get_purchase_history(
-                            chat["withUser"]["id"], option["purchased"]
-                        )
-                        BackLog.info(
-                            instance=self,
-                            message=f"{self.identifier_name}: Purchased history: {product_history}",
-                        )
-                        product_id = next(
-                            (
-                                element
-                                for element in product_matches
-                                if element not in product_history
-                            ),
-                            None,
-                        )
-                        BackLog.info(
-                            instance=self,
-                            message=f"{self.identifier_name}: Matched Product: {product_id}",
-                        )
-
-                        # fetch user info
-                        user_info = self.fetch_user_info(
-                            chat["withUser"]["id"], option["purchased"]
-                        )
-                        BackLog.info(
-                            instance=self,
-                            message=f"{self.identifier_name}: User Purchased: {user_info}",
-                        )
-
-                        # fetch product info
-                        product_info = self.fetch_product_info(
-                            product_id, option["products"]
-                        )
-                        BackLog.info(
-                            instance=self,
-                            message=f"{self.identifier_name}: User Product: {product_info}",
-                        )
-
-                        # price product
-                        product_price = self.predict_product_price(
-                            user_info, product_info
-                        )
-                        BackLog.info(
-                            instance=self,
-                            message=f"{self.identifier_name}: Product Priced at: {product_price}",
-                        )
-
-                        # Adjust prompt for AI to sell product
-                        product_message = (
-                            "\n You will now act as a sales agent too who will give detail about product to the user too. "
-                            "The product details are: {product_description} And Convice {human_prefix} to buy it. "
-                            "You Must convince user to buy {product_description}, priced at {product_price} \n"
-                        )
-
-                        product_message.format(
-                            product_description=suggested_products[
-                                "search_product_processed"
-                            ]["product_description"],
-                            product_price=product_price,
-                            human_prefix=user.name,
-                        )
-
-                    else:
-                        product_id = []
-                        product_message = ""
-                        product_price = 0
-
-                    # build payload & get ai response
-                    payload_ai = self.build_payload_for_AI(
-                        user_name=user.name,
-                        messages=messages,
-                        rules=self.rules,
-                        product_message=product_message,
-                    )
-
-                    ai_response = replica_service.get_response(
-                        message=messages[0]["content"],
-                        option=payload_ai,
-                    )
-                    BackLog.info(
-                        instance=self,
-                        message=f"{self.identifier_name}: Response from AI: {ai_response}",
-                    )
-
-                    # post ai message to user
-                    await self.post_message(
-                        user,
-                        self.authed,
-                        ai_response,
-                        mediaFiles=product_id,
-                        price=product_price,
-                    )
-
-            except Exception as e:
-                BackLog.exception(
-                    instance=self,
-                    message=f"{self.identifier_name}: Exception occurred...",
-                )
 
         # await api.close_pools()
 
@@ -377,7 +381,7 @@ class ReplicateProvider(BaseProvider):
     def predict_product_price(self, user_info: dict, product_info: dict) -> float:
         # TODO : Implement a function predicting the price of a product based on user info and product info.
         # self.pricing_model.predict(user_info, product_info)
-        return 10
+        return random.randint(7, 20) / 2
 
     def get_purchase_history(self, user_id: str, purchased) -> list:
         # TODO : Implement a function fetching for each chat user_id their purchase history in the db.
