@@ -161,6 +161,7 @@ class ReplicateProvider(BaseProvider):
                         payload_product = self.build_payload_for_Product(messages=messages)
                         suggested_products = replica_service.suggest_product(
                             messages=messages, option=payload_product
+                            
                         )
                         BackLog.info(
                             instance=self,
