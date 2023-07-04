@@ -2,7 +2,7 @@ import os
 from abc import ABC, abstractmethod
 from getpass import getpass
 
-import requests
+import requests, traceback
 from langchain import LLMChain, PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import Banana, CerebriumAI
@@ -56,7 +56,7 @@ class ReplicaService(BaseService, ProductBaseService):
             "Authorization": f"Bearer {os.environ.get('RUNPOD_API_KEY')} ",
         }
 
-    def get_response(self, message: str, option: any):
+    def get_response(self, option: any):
         response = requests.post(self.endpoint, headers=self.headers, json=option)
         if response.status_code == 200:
             return response.json()["output"]
@@ -68,15 +68,15 @@ class ReplicaService(BaseService, ProductBaseService):
         if response.status_code == 200:
             return response.json()["output"]
         else:
-            raise Exception("Failed to get response")
+            raise Exception(traceback.format_exc())
+        
 
-
-""" 
+"""
 class CerebriumService(BaseService):
     def __init__(self):
         from cerebrium import Conduit, model_type
 
-        self.api_key = os.environ["CEREBRIUM_KEY"]
+        self.api_key = os.environ["CEREBRIUM_API_KEY"]
         self.c = Conduit(
             'hf-gpt',
             self.api_key,
@@ -101,13 +101,12 @@ class CerebriumService(BaseService):
             return response.json()[0]["generated_text"]
         else:
             raise Exception("Failed to get response")
-"""
-
+ """
 
 class HuggingFaceService(BaseService):
     def __init__(self):
         self.endpoint = (
-            "https://oncm9ojdmjwesag2.eu-west-1.aws.endpoints.huggingface.cloud"
+            "https://ramrhljba6iem7y4.us-east-1.aws.endpoints.huggingface.cloud"
         )
         self.headers = {
             "Authorization": f"Bearer {os.environ.get('HUGGINGFACE_API_KEY')}",
@@ -136,6 +135,60 @@ class HttpService(BaseService):
         else:
             raise Exception("Failed to get response")
 
+class TextGenService(BaseService):
+    def __init__(self):
+        self.endpoint = f"https://gne767iclw7qbd-3000.proxy.runpod.net/api/v1/chat"
+
+    def get_response(self, user_input: str, history: dict):
+        request = {
+            'user_input': user_input,
+            'max_new_tokens': 90,
+            'history': history,
+            'mode': 'chat',
+            'character': 'Estefania, the horniest Latina on OF',
+            'instruction_template': 'Vicuna-v1.1',
+            'your_name': 'You',
+            'regenerate': False,
+            '_continue': False,
+            'stop_at_newline': False,
+            'chat_generation_attempts': 1,
+            'chat-instruct_command': 'Continue the chat dialogue below. Write a single reply for the character "".\n\n',
+            'preset': 'None',
+            'do_sample': True,
+            'temperature': 0.7,
+            'top_p': 0.1,
+            'typical_p': 1,
+            'epsilon_cutoff': 0,
+            'eta_cutoff': 0,
+            'tfs': 1,
+            'top_a': 0,
+            'repetition_penalty': 1.18,
+            'repetition_penalty_range': 0,
+            'top_k': 40,
+            'min_length': 0,
+            'no_repeat_ngram_size': 0,
+            'num_beams': 1,
+            'penalty_alpha': 0,
+            'length_penalty': 1,
+            'early_stopping': False,
+            'mirostat_mode': 0,
+            'mirostat_tau': 5,
+            'mirostat_eta': 0.1,
+            'seed': -1,
+            'add_bos_token': True,
+            'truncation_length': 2048,
+            'ban_eos_token': False,
+            'skip_special_tokens': True,
+            'stopping_strings': []
+        }
+
+        response = requests.post(self.endpoint, headers=self.headers, json=request)
+        if response.status_code == 200:
+            result = response.json()['results'][0]['history']
+            return result['visible'][-1][1]
+        else:
+            raise Exception("Failed to get response")
+
 
 class Service:
     def __init__(self, service: BaseService):
@@ -149,6 +202,8 @@ class Service:
 openai_service = OpenAIService()
 banana_service = BananaService()
 replica_service = ReplicaService()
-huggingface_service = HuggingFaceService()
 http_service = HttpService("http://195.60.167.43:10458/api/v1/predict")
-# cerebrium_service = CerebriumService()
+textgen_service = TextGenService()
+
+#huggingface_service = HuggingFaceService()
+#cerebrium_service = CerebriumService()
