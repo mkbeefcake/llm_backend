@@ -2,6 +2,7 @@
 .idea/
 __pycache__/
 .env
+.DS_store
 neo-chatbot-f0fff-service_account_keys.json
 neo-chatbot-firebase.json
 oauth2-credentials.json
