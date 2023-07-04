@@ -7,7 +7,8 @@ from db.schemas.service import ServiceSchema
 from services.llm.services import (
     banana_service,
     http_service,
-    huggingface_service,
+    textgen_service,
+    #huggingface_service,
     openai_service,
     replica_service,
 )
@@ -33,8 +34,10 @@ class Service:
             result = banana_service.get_response(message=message, option="")
         elif service_name == "replica_service":
             result = replica_service.get_response(message=message, option=option)
-        elif service_name == "huggingface_service":
-            result = huggingface_service.get_response(message=message, option=option)
+        elif service_name == "textgen_service":
+            result = textgen_service.get_response(message=message, option=option)
+        #elif service_name == "huggingface_service":
+        #    result = huggingface_service.get_response(message=message, option=option)
         else:
             result = http_service.get_response(message=message, option="")
 
