@@ -3,7 +3,7 @@ import json
 import os
 import random 
 import re 
-
+import unicodedata
 import replica
 import requests
 from fastapi.templating import Jinja2Templates
@@ -18,12 +18,38 @@ templates = Jinja2Templates(directory="templates/replicate")
 PRODUCT_REPLICA_ENDPOINT = os.getenv("PRODUCT_REPLICA_ENDPOINT")
 
 
+
+def char_is_emoji(character):
+    return unicodedata.category(character) in ["So", "Sm"]
+
+def remove_abrupt_sentences(text):
+    # Split the text into sentences based on the presence of .!? as potential sentence delimiters
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+
+    # List to store complete sentences
+    complete_sentences = []
+    
+    # Loop over sentences
+    for sentence in sentences:
+        # If the sentence does not end with a punctuation mark or an emoji
+        if sentence[-1] in ".?!" or char_is_emoji(sentence[-1]):
+            complete_sentences.append(sentence)
+    
+    # Join the complete sentences back into a single text
+    cleaned_text = " ".join(complete_sentences)
+    
+    return cleaned_text
+
 def control_ai_response(string):
     # Remove content between asterisks
     string = re.sub(r'\*.*?\*', '', string)
     
     # Remove content between parentheses
     string = re.sub(r'\(.*?\)', '', string)
+
+    # Remove trailing lines 
+
+    string = remove_abrupt_sentences(string)
     
     return string
 
