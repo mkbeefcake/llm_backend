@@ -6,6 +6,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from apis.route import api_router
 from core.config import settings
+from products.pinecone import pinecone_service
 
 
 def include_router(app):
@@ -35,6 +36,15 @@ app = application_start()
 
 @app.get("/probe")
 async def probe():
+    return {"message": "ok"}
+
+
+@app.get("/testpoint")
+async def probe():
+    pinecone_service.match_product(
+        "hair",
+        option={"namespace": "replicateprovider_eN9ZdxgMdse3lFIYByBS90fN78S2_Stefi"},
+    )
     return {"message": "ok"}
 
 

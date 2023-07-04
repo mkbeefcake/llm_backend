@@ -42,7 +42,7 @@ class PineconeService(ProductBaseService):
             self.vectorstore = Pinecone(
                 index=self.index,
                 embedding_function=self.openai.embed_query,
-                text_key="text",
+                text_key="id",
             )
 
         except Exception as e:
@@ -56,13 +56,14 @@ class PineconeService(ProductBaseService):
 
         if self.vectorstore is None:
             return "Couldn't connect to pinecone vector db"
-        
+
         print("Namespace", option["namespace"])
+        print("message", messages)
         docs = self.vectorstore.similarity_search(
             messages, k=1, namespace=option["namespace"]
         )
         if docs is not None and type(docs) == list and len(docs) > 0:
-            return [docs[0].metadata["id"]]
+            return [int(float(docs[0].page_content))]
         else:
             return []
 
@@ -87,20 +88,19 @@ class PineconeService(ProductBaseService):
 
         ids = []
         texts = []
-        metadata = []
+        metadatas = []
 
         for item in products_info["products"]:
             id = str(item["id"])
-            texts = self.openai.embed_query(item["label"])
             metadata = {"id": item["id"], "label": item["label"]}
 
             ids.append(id)
-            texts.append(texts)
-            metadata.append(metadata)
+            texts.append(item["label"])
+            metadatas.append(metadata)
 
         self.vectorstore.add_texts(
-             ids=ids, namespace=option["namespace"], texts=texts, metadatas=metadata
-         )
+            ids=ids, namespace=option["namespace"], texts=texts, metadatas=metadatas
+        )
 
         BackLog.info(self, f"Import Done")
         pass

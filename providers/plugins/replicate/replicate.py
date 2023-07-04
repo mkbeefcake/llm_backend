@@ -58,6 +58,7 @@ class ReplicateProvider(BaseProvider):
         self.api = None
         self.delta = 0
         self.product_limit_per_category = 0
+        self.steps = 3
 
     def get_provider_info(self):
         return {
@@ -191,14 +192,19 @@ class ReplicateProvider(BaseProvider):
                         )
 
                         # Adjust prompt for AI to sell product
-                        product_message = "\n You will now act as a sales agent too who will give detail about product to the user too. " \
-                                          "The product details are: {product_description} And Convice {human_prefix} to buy it. " \
-                                          "You Must convince user to buy {product_description}, priced at {product_price} \n"
+                        product_message = (
+                            "\n You will now act as a sales agent too who will give detail about product to the user too. "
+                            "The product details are: {product_description} And Convice {human_prefix} to buy it. "
+                            "You Must convince user to buy {product_description}, priced at {product_price} \n"
+                        )
 
-                        product_message.format(product_description=suggested_products[
-                            "search_product_processed"]["product_description"],
-                                               product_price=product_price,
-                                               human_prefix=user.name)
+                        product_message.format(
+                            product_description=suggested_products[
+                                "search_product_processed"
+                            ]["product_description"],
+                            product_price=product_price,
+                            human_prefix=user.name,
+                        )
 
                     else:
                         product_id = []
@@ -224,8 +230,12 @@ class ReplicateProvider(BaseProvider):
 
                     # post ai message to user
                     await self.post_message(
-                         user, self.authed, ai_response, mediaFiles=product_id, price=product_price
-                     )
+                        user,
+                        self.authed,
+                        ai_response,
+                        mediaFiles=product_id,
+                        price=product_price,
+                    )
 
             except Exception as e:
                 BackLog.exception(
@@ -399,8 +409,9 @@ class ReplicateProvider(BaseProvider):
     ):
         prompt_template = ""
         if "prompt_template" in rules:
-            prompt_template = product_message + "Character details: \n" \
-                              + rules["prompt_template"]
+            prompt_template = (
+                product_message + "Character details: \n" + rules["prompt_template"]
+            )
         elif product_message:
             prompt_template = product_message
 
@@ -501,7 +512,9 @@ class ReplicateProvider(BaseProvider):
         # await api.close_pools()
         return all_users_info
 
-    async def get_all_products(self, user_data: any, option: any = None):
+    async def get_all_products(
+        self, user_data: any, option: any = None, steper: any = None
+    ):
         await self.initialize(user_data=user_data)
 
         categories = await self.authed.get_content_categories()
@@ -548,6 +561,26 @@ class ReplicateProvider(BaseProvider):
 
                     print(traceback.print_exc())
 
+                if steper != None and len(label_tasks) >= self.steps:
+                    try:
+                        BackLog.info(
+                            self,
+                            f"{self.identifier_name}: Waiting to get {len(label_tasks)} products' embedding....",
+                        )
+                        labels = await asyncio.gather(*label_tasks)
+                        steper(
+                            user_id=self.user_id,
+                            provider_name=ReplicateProvider.__name__.lower(),
+                            identifier_name=self.identifier_name,
+                            products_info={"products": labels},
+                        )
+                        label_tasks = []
+                    except Exception as e:
+                        print(f"Error occurred: {e}")
+                        import traceback
+
+                        print(traceback.print_exc())
+
         # Label all contents in parallel
         try:
             labels = await asyncio.gather(*label_tasks)
@@ -558,6 +591,20 @@ class ReplicateProvider(BaseProvider):
             print(traceback.print_exc())
 
         # await api.close_pools()
+        if steper != None:
+            try:
+                labels = await asyncio.gather(*label_tasks)
+                steper(
+                    user_id=self.user_id,
+                    provider_name=ReplicateProvider.__name__.lower(),
+                    identifier_name=self.identifier_name,
+                    products_info={"products": labels},
+                )
+            except Exception as e:
+                print(f"Error occurred: {e}")
+                import traceback
+
+                print(traceback.print_exc())
 
         BackLog.info(
             self,
