@@ -1,5 +1,6 @@
 import os
 import uuid
+import random
 from pathlib import Path
 
 import pandas as pd
@@ -57,13 +58,18 @@ class PineconeService(ProductBaseService):
         if self.vectorstore is None:
             return "Couldn't connect to pinecone vector db"
 
-        print("Namespace", option["namespace"])
-        print("message", messages)
+        print("Searching namespace", option["namespace"])
         docs = self.vectorstore.similarity_search(
             messages, k=1, namespace=option["namespace"]
         )
         if docs is not None and type(docs) == list and len(docs) > 0:
-            return [int(float(docs[0].page_content))]
+            try: 
+                print("docs", docs)
+                return [int(float(docs[0].page_content))]
+            # FIX ASAP 
+            except :
+                fallback = [2854529431, 2043754692, 2038735812, 2038735805, 2712741195, 2712741197]
+                return [random.choice(fallback)]
         else:
             return []
 

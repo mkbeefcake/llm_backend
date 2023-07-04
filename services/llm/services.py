@@ -137,34 +137,36 @@ class HttpService(BaseService):
 
 class TextGenService(BaseService):
     def __init__(self):
-        self.endpoint = f"https://gne767iclw7qbd-3000.proxy.runpod.net/api/v1/chat"
+        self.HOST = 'gne767iclw7qbd-5000.proxy.runpod.net'
+        self.URI = f'https://{self.HOST}/api/v1/chat'
 
-    def get_response(self, user_input: str, history: dict):
+    def get_response(self, user_input: str, history: list, username: str):
+        history = {'internal': [history], 'visible': [history]}
         request = {
             'user_input': user_input,
-            'max_new_tokens': 90,
+            'max_new_tokens': 200,
             'history': history,
-            'mode': 'chat',
+            'mode': 'chat-instruct',  # Valid options: 'chat', 'chat-instruct', 'instruct'
             'character': 'Estefania, the horniest Latina on OF',
             'instruction_template': 'Vicuna-v1.1',
-            'your_name': 'You',
+            'your_name': username,
             'regenerate': False,
             '_continue': False,
             'stop_at_newline': False,
             'chat_generation_attempts': 1,
-            'chat-instruct_command': 'Continue the chat dialogue below. Write a single reply for the character "".\n\n',
-            'preset': 'None',
+            'chat-instruct_command': 'Continue the chat dialogue below. Write a single reply for the character "<|character|>".\n\n<|prompt|>',
+            'preset': 'simple-1',
             'do_sample': True,
-            'temperature': 0.7,
-            'top_p': 0.1,
+            'temperature': 0.5,
+            'top_p': 0.9,
             'typical_p': 1,
-            'epsilon_cutoff': 0,
-            'eta_cutoff': 0,
+            'epsilon_cutoff': 0,  # In units of 1e-4
+            'eta_cutoff': 0,  # In units of 1e-4
             'tfs': 1,
             'top_a': 0,
-            'repetition_penalty': 1.18,
+            'repetition_penalty': 1.15,
             'repetition_penalty_range': 0,
-            'top_k': 40,
+            'top_k': 20,
             'min_length': 0,
             'no_repeat_ngram_size': 0,
             'num_beams': 1,
@@ -182,12 +184,12 @@ class TextGenService(BaseService):
             'stopping_strings': []
         }
 
-        response = requests.post(self.endpoint, headers=self.headers, json=request)
+        response = requests.post(self.URI, json=request)
         if response.status_code == 200:
             result = response.json()['results'][0]['history']
             return result['visible'][-1][1]
         else:
-            raise Exception("Failed to get response")
+            raise Exception(f"Failed to get response : {traceback.format_exc()}")
 
 
 class Service:

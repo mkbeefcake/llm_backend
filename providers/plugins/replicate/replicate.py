@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import random 
+import re 
 
 import replica
 import requests
@@ -16,6 +17,15 @@ from services.service import replica_service, textgen_service
 templates = Jinja2Templates(directory="templates/replicate")
 PRODUCT_REPLICA_ENDPOINT = os.getenv("PRODUCT_REPLICA_ENDPOINT")
 
+
+def control_ai_response(string):
+    # Remove content between asterisks
+    string = re.sub(r'\*.*?\*', '', string)
+    
+    # Remove content between parentheses
+    string = re.sub(r'\(.*?\)', '', string)
+    
+    return string
 
 def remove_brackets_and_braces(string):
     # Remove brackets [] & braces {}
@@ -54,7 +64,7 @@ async def label_content(type, url, k, id, item):
 class ReplicateProvider(BaseProvider):
     def __init__(self) -> None:
         super().__init__()
-        self.num_messages = 2
+        self.num_messages = 5
         self.initialized = False
         self.api = None
         self.delta = 0
@@ -106,21 +116,21 @@ class ReplicateProvider(BaseProvider):
 
         # Select relevant chats
         chats = await self.select_chats(self.authed, self.rules)
-        unread_chats = [chats for chats in chats if chats["unreadMessagesCount"] > 0]
-        if len(unread_chats) > 0:
-            for chat in unread_chats: 
-                user = await self.authed.get_user(chat["withUser"]["id"])
+        for chat in chats: 
+            user = await self.authed.get_user(chat["withUser"]["id"])
 
-                try:
-                    if not user.isPerformer:
+            try:
+                if not user.isPerformer:
+                    BackLog.info(
+                                instance=self, message=f"{self.identifier_name}: Checking user: {user.name}"
+                            )
 
+                    # fetch user's messages
+                    messages, last_message_role = await self.fetch_messages(user, self.authed)
+                    if last_message_role == "user":
                         BackLog.info(
-                            instance=self, message=f"{self.identifier_name}: Replying to username: {user.name}"
-                        )
-
-                        # fetch user's messages
-                        messages = await self.fetch_messages(user, self.authed)
-
+                                instance=self, message=f"{self.identifier_name}: Replying to user: {user.name}"
+                            )
                         # suggest product from ai
                         payload_product = self.build_payload_for_Product(messages=messages)
                         suggested_products = replica_service.suggest_product(
@@ -153,7 +163,7 @@ class ReplicateProvider(BaseProvider):
                             )
                             BackLog.info(
                                 instance=self,
-                                message=f"{self.identifier_name}: Purchased history: {product_history}",
+                                message=f"{self.identifier_name}: Viewed history: {product_history}",
                             )
                             product_id = next(
                                 (
@@ -195,21 +205,8 @@ class ReplicateProvider(BaseProvider):
                                 message=f"{self.identifier_name}: Product Priced at: {product_price}",
                             )
 
-                            # Adjust prompt for AI to sell product
-                            product_message = (
-                                "\n You will now act as a sales agent too who will give detail about product to the user too. "
-                                "The product details are: {product_description} And Convice {human_prefix} to buy it. "
-                                "You Must convince user to buy {product_description}, priced at {product_price} \n"
-                            )
-
-                            product_message.format(
-                                product_description=suggested_products[
-                                    "search_product_processed"
-                                ]["product_description"],
-                                product_price=product_price,
-                                human_prefix=user.name,
-                            )
-
+                            # build product message
+                            product_message = f'(You have to convince the user {user.name} to buy a {suggested_products["search_product_processed"]["product_description"]} photo of you for {product_price}$. You want the money)'
                         else:
                             product_id = []
                             product_message = ""
@@ -226,33 +223,59 @@ class ReplicateProvider(BaseProvider):
 
                         """
 
-                        history = self.build_payload_for_text_generation(
-                            messages=messages,
-                        )
+                        # TODO : Refactor ASAP 
+                        history, user_input = await self.format_text_gen_messages(messages, user)
+
+                        BackLog.info(
+                                instance=self,
+                                message=f"{self.identifier_name}: Last message from Ricardo : {user_input}, Last 10  {history}",
+                            )
+
+                        # For testing purposes
+                        #user_input = "what's your favorite landmark there ?"
+                        #history = ['hey slut', 'hey babe', 'horny my bitch ?', 'OMG YES! SO MUCH IT HURTS!', "where you living my slut ? ", "i live in los angeles baby" ]
 
                         ai_response = textgen_service.get_response(
-                            user_input=messages[0]["content"],
-                            history={}
+                            user_input=user_input + ' ' + product_message,
+                            history=history,
+                            username=user.name,
                         )
+
+                        # Parse ai response 
+                        ai_response = control_ai_response(ai_response)
+
                         BackLog.info(
                             instance=self,
                             message=f"{self.identifier_name}: Response from AI: {ai_response}",
                         )
 
                         # post ai message to user
-                        await self.post_message(
+                        print(type(product_price), )
+                        response = await self.post_message(
                             user,
                             self.authed,
                             ai_response,
-                            mediaFiles=product_id,
                             price=product_price,
+                            mediaFiles=[product_id],
+
                         )
 
-                except Exception as e:
-                    BackLog.exception(
-                        instance=self,
-                        message=f"{self.identifier_name}: Exception occurred...",
-                    )
+                        BackLog.info(
+                                instance=self,
+                                message=f"{self.identifier_name}: Sending message. Status code: {response}",
+                            )
+
+
+                    else: 
+                        BackLog.info(
+                            instance=self,
+                            message=f"{self.identifier_name}: No new messages from {user.name}. Skipping...",
+                        )
+            except Exception as e:
+                BackLog.exception(
+                    instance=self,
+                    message=f"{self.identifier_name}: Exception occurred...",
+                )
 
         # await api.close_pools()
 
@@ -283,10 +306,6 @@ class ReplicateProvider(BaseProvider):
             else:
                 # Getting custom lists by their ID
                 chat_lists = await authed.get_pinned_lists()
-                BackLog.info(
-                    instance=self,
-                    message=f"{self.identifier_name}: Chat Lists: {chat_lists}, delta = {self.delta}",
-                )
 
                 # If the specified chat list exists, select chats from this list
                 if rules["chat_list"] in chat_lists:
@@ -366,13 +385,13 @@ class ReplicateProvider(BaseProvider):
         return await auth.login()
 
     async def fetch_messages(self, user, authed):
-
-        """ TODO:UPDATE OLD FETCHING 
         messages = []
         last_message_id = None
+        
 
         while len(messages) < self.num_messages:
             fetched_messages = await user.get_message(last_message=last_message_id)
+            
             for message in fetched_messages["list"]:
                 if message["fromUser"]["id"] == user.id:
                     value = {"role": "user", "content": message["text"]}
@@ -385,16 +404,17 @@ class ReplicateProvider(BaseProvider):
             if not fetched_messages["list"]:
                 break
 
-        return messages
-        """
+        last_message_role = messages[0]["role"]
+
+        # Put message in right order
+        messages = messages[::-1]
+
+        return messages, last_message_role
+
+        
 
 
-        """
-        THOUGHTPAD: 
-        - What do we want to avoid ? 
-        
-        
-        """
+    async def format_text_gen_messages(self, messages, user):
 
         messages = []
         last_message_id = None
@@ -402,7 +422,6 @@ class ReplicateProvider(BaseProvider):
 
         while len(messages) < self.num_messages:
             fetched_messages = await user.get_message(last_message=last_message_id)
-
             for message in fetched_messages["list"]:
                 if message["fromUser"]["id"] == user.id:
                     role = "user"
@@ -415,25 +434,23 @@ class ReplicateProvider(BaseProvider):
                     messages[-1]["content"] += "\n" + content
                 else:
                     messages.append({"role": role, "content": content})
-
-                last_role = role
-
+                
             last_message_id = fetched_messages["list"][-1]["id"]
             if not fetched_messages["list"]:
                 break
 
-        # Ensure the first message is from assistant
-        if messages and messages[0]["role"] == "user":
-            messages.pop(0)
+        # Convert messages in correct order 
+        messages = messages[::-1]
 
-        # Raise error if the last message is from assistant
-        if not messages or messages[-1]["role"] == "assistant":
-            raise ValueError("The last message is from the assistant")
+        # Ensure the last message is from user and 
+        if messages and messages[-1]["role"] == "user":
+            last_message = messages[-1]["content"]
+            messages.pop(-1)
 
-        # Strip the role, keep only content
+
         messages = [message["content"] for message in messages]
 
-        return messages
+        return messages, last_message
 
     def predict_product_price(self, user_info: dict, product_info: dict) -> float:
         # TODO : Implement a function predicting the price of a product based on user info and product info.
@@ -508,12 +525,12 @@ class ReplicateProvider(BaseProvider):
 
     async def post_message(self, user, authed, response, price=0, mediaFiles=[]):
         try:
-            await authed.send_message(
+            response = await authed.send_message(
                 user_id=user.id, text=response, price=price, mediaFiles=mediaFiles
             )
+            return response
         except Exception:
             import traceback
-
             print(traceback.format_exc())
 
     async def get_purchased_products(self, user_data: any, option: any = None):
