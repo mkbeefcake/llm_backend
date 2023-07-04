@@ -215,12 +215,19 @@ class ReplicateProvider(BaseProvider):
                             product_message = ""
                             product_price = 0
 
+                        """ OLD SERVICE 
                         # build payload & get ai response
                         payload_ai = self.build_payload_for_AI(
                             user_name=user.name,
                             messages=messages,
                             rules=self.rules,
                             product_message=product_message,
+                        )
+
+                        """
+
+                        history = self.build_payload_for_text_generation(
+                            messages=messages,
                         )
 
                         ai_response = textgen_service.get_response(
@@ -359,6 +366,8 @@ class ReplicateProvider(BaseProvider):
         return await auth.login()
 
     async def fetch_messages(self, user, authed):
+
+        """ TODO:UPDATE OLD FETCHING 
         messages = []
         last_message_id = None
 
@@ -375,6 +384,54 @@ class ReplicateProvider(BaseProvider):
             last_message_id = fetched_messages["list"][-1]["id"]
             if not fetched_messages["list"]:
                 break
+
+        return messages
+        """
+
+
+        """
+        THOUGHTPAD: 
+        - What do we want to avoid ? 
+        
+        
+        """
+
+        messages = []
+        last_message_id = None
+        last_role = None
+
+        while len(messages) < self.num_messages:
+            fetched_messages = await user.get_message(last_message=last_message_id)
+
+            for message in fetched_messages["list"]:
+                if message["fromUser"]["id"] == user.id:
+                    role = "user"
+                else:
+                    role = "assistant"
+
+                content = message["text"]
+
+                if last_role == role and messages:
+                    messages[-1]["content"] += "\n" + content
+                else:
+                    messages.append({"role": role, "content": content})
+
+                last_role = role
+
+            last_message_id = fetched_messages["list"][-1]["id"]
+            if not fetched_messages["list"]:
+                break
+
+        # Ensure the first message is from assistant
+        if messages and messages[0]["role"] == "user":
+            messages.pop(0)
+
+        # Raise error if the last message is from assistant
+        if not messages or messages[-1]["role"] == "assistant":
+            raise ValueError("The last message is from the assistant")
+
+        # Strip the role, keep only content
+        messages = [message["content"] for message in messages]
 
         return messages
 
@@ -403,6 +460,12 @@ class ReplicateProvider(BaseProvider):
                 return dictionary
 
         return None
+    
+
+    def build_payload_for_TextGen(self, messages: any) -> dict:
+        """GOAL: Concatenate messages into an alternate dialog."""
+        payload = {"input": {"text_gen_input": {"history": messages}}}
+        return payload
 
     def build_payload_for_Product(self, messages: any):
         payload = {"input": {"search_prod_input": {"history": messages}}}
