@@ -161,17 +161,22 @@ class ReplicateProvider(BaseProvider):
                         payload_product = self.build_payload_for_Product(messages=messages)
                         suggested_products = replica_service.suggest_product(
                             messages=messages, option=payload_product
-                            
+
                         )
                         BackLog.info(
                             instance=self,
                             message=f"{self.identifier_name}: Suggested Product from AI: {suggested_products}",
                         )
 
+                        try: 
+                            suggested_products["search_product_processed"]["product_intent"] == True
+                            sell_product = True
+                        except:
+                            sell_product = False
+
                         # if a product is suggested, we match it in the db and retrieve the product id
                         if (
-                            suggested_products["search_product_processed"]["product_intent"]
-                            == True
+                            sell_product == True
                         ):
                             product_matches = pinecone_service.match_product(
                                 suggested_products["search_product_processed"][
@@ -292,12 +297,12 @@ class ReplicateProvider(BaseProvider):
                                 message=f"{self.identifier_name}: Sending message. Status code: {response}",
                             )
 
-
                     else: 
                         BackLog.info(
                             instance=self,
                             message=f"{self.identifier_name}: No new messages from {user.name}. Skipping...",
                         )
+                        
             except Exception as e:
                 BackLog.exception(
                     instance=self,
