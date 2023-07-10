@@ -4,13 +4,12 @@ from core.config import settings
 from core.utils.message import MessageErr, MessageOK
 from db.cruds.service import create_service, get_all_services, get_service
 from db.schemas.service import ServiceSchema
-from services.llm.services import (
+from services.llm.services import (  # huggingface_service,
     banana_service,
     http_service,
-    textgen_service,
-    #huggingface_service,
     openai_service,
     replica_service,
+    textgen_service,
 )
 
 LLM_SERVICE_ENDPOINT = "http://195.60.167.43:10458/api/v1/predict"
@@ -36,7 +35,7 @@ class Service:
             result = replica_service.get_response(message=message, option=option)
         elif service_name == "textgen_service":
             result = textgen_service.get_response(message=message, option=option)
-        #elif service_name == "huggingface_service":
+        # elif service_name == "huggingface_service":
         #    result = huggingface_service.get_response(message=message, option=option)
         else:
             result = http_service.get_response(message=message, option="")

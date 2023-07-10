@@ -1,9 +1,10 @@
 import asyncio
 import json
 import os
-import random 
-import re 
+import random
+import re
 import unicodedata
+
 import replica
 import requests
 from fastapi.templating import Jinja2Templates
@@ -18,40 +19,42 @@ templates = Jinja2Templates(directory="templates/replicate")
 PRODUCT_REPLICA_ENDPOINT = os.getenv("PRODUCT_REPLICA_ENDPOINT")
 
 
-
 def char_is_emoji(character):
     return unicodedata.category(character) in ["So", "Sm"]
 
+
 def remove_abrupt_sentences(text):
     # Split the text into sentences based on the presence of .!? as potential sentence delimiters
-    sentences = re.split(r'(?<=[.!?])\s+', text)
+    sentences = re.split(r"(?<=[.!?])\s+", text)
 
     # List to store complete sentences
     complete_sentences = []
-    
+
     # Loop over sentences
     for sentence in sentences:
         # If the sentence does not end with a punctuation mark or an emoji
         if sentence[-1] in ".?!" or char_is_emoji(sentence[-1]):
             complete_sentences.append(sentence)
-    
+
     # Join the complete sentences back into a single text
     cleaned_text = " ".join(complete_sentences)
-    
+
     return cleaned_text
+
 
 def control_ai_response(string):
     # Remove content between asterisks
-    string = re.sub(r'\*.*?\*', '', string)
-    
-    # Remove content between parentheses
-    string = re.sub(r'\(.*?\)', '', string)
+    string = re.sub(r"\*.*?\*", "", string)
 
-    # Remove trailing lines 
+    # Remove content between parentheses
+    string = re.sub(r"\(.*?\)", "", string)
+
+    # Remove trailing lines
 
     string = remove_abrupt_sentences(string)
-    
+
     return string
+
 
 def remove_brackets_and_braces(string):
     # Remove brackets [] & braces {}
@@ -142,42 +145,47 @@ class ReplicateProvider(BaseProvider):
 
         # Select relevant chats
         chats = await self.select_chats(self.authed, self.rules)
-        for chat in chats: 
+        for chat in chats:
             user = await self.authed.get_user(chat["withUser"]["id"])
 
             try:
                 if not user.isPerformer:
                     BackLog.info(
-                                instance=self, message=f"{self.identifier_name}: Checking user: {user.name}"
-                            )
+                        instance=self,
+                        message=f"{self.identifier_name}: Checking user: {user.name}",
+                    )
 
                     # fetch user's messages
-                    messages, last_message_role = await self.fetch_messages(user, self.authed)
+                    messages, last_message_role = await self.fetch_messages(
+                        user, self.authed
+                    )
                     if last_message_role == "user":
                         BackLog.info(
-                                instance=self, message=f"{self.identifier_name}: Replying to user: {user.name}"
-                            )
+                            instance=self,
+                            message=f"{self.identifier_name}: Replying to user: {user.name}",
+                        )
                         # suggest product from ai
-                        payload_product = self.build_payload_for_Product(messages=messages)
+                        payload_product = self.build_payload_for_Product(
+                            messages=messages
+                        )
                         suggested_products = replica_service.suggest_product(
                             messages=messages, option=payload_product
-
                         )
                         BackLog.info(
                             instance=self,
                             message=f"{self.identifier_name}: Suggested Product from AI: {suggested_products}",
                         )
 
-                        try: 
-                            suggested_products["search_product_processed"]["product_intent"] == True
+                        try:
+                            suggested_products["search_product_processed"][
+                                "product_intent"
+                            ] == True
                             sell_product = True
                         except:
                             sell_product = False
 
                         # if a product is suggested, we match it in the db and retrieve the product id
-                        if (
-                            sell_product == True
-                        ):
+                        if sell_product == True:
                             product_matches = pinecone_service.match_product(
                                 suggested_products["search_product_processed"][
                                     "product_description"
@@ -255,25 +263,27 @@ class ReplicateProvider(BaseProvider):
 
                         """
 
-                        # TODO : Refactor ASAP 
-                        history, user_input = await self.format_text_gen_messages(messages, user)
+                        # TODO : Refactor ASAP
+                        history, user_input = await self.format_text_gen_messages(
+                            messages, user
+                        )
 
                         BackLog.info(
-                                instance=self,
-                                message=f"{self.identifier_name}: Last message from Ricardo : {user_input}, Last 10  {history}",
-                            )
+                            instance=self,
+                            message=f"{self.identifier_name}: Last message from Ricardo : {user_input}, Last 10  {history}",
+                        )
 
                         # For testing purposes
-                        #user_input = "what's your favorite landmark there ?"
-                        #history = ['hey slut', 'hey babe', 'horny my bitch ?', 'OMG YES! SO MUCH IT HURTS!', "where you living my slut ? ", "i live in los angeles baby" ]
+                        # user_input = "what's your favorite landmark there ?"
+                        # history = ['hey slut', 'hey babe', 'horny my bitch ?', 'OMG YES! SO MUCH IT HURTS!', "where you living my slut ? ", "i live in los angeles baby" ]
 
                         ai_response = textgen_service.get_response(
-                            user_input=user_input + ' ' + product_message,
+                            user_input=user_input + " " + product_message,
                             history=history,
                             username=user.name,
                         )
 
-                        # Parse ai response 
+                        # Parse ai response
                         ai_response = control_ai_response(ai_response)
 
                         BackLog.info(
@@ -282,27 +292,28 @@ class ReplicateProvider(BaseProvider):
                         )
 
                         # post ai message to user
-                        print(type(product_price), )
+                        print(
+                            type(product_price),
+                        )
                         response = await self.post_message(
                             user,
                             self.authed,
                             ai_response,
                             price=product_price,
                             mediaFiles=[product_id],
-
                         )
 
                         BackLog.info(
-                                instance=self,
-                                message=f"{self.identifier_name}: Sending message. Status code: {response}",
-                            )
+                            instance=self,
+                            message=f"{self.identifier_name}: Sending message. Status code: {response}",
+                        )
 
-                    else: 
+                    else:
                         BackLog.info(
                             instance=self,
                             message=f"{self.identifier_name}: No new messages from {user.name}. Skipping...",
                         )
-                        
+
             except Exception as e:
                 BackLog.exception(
                     instance=self,
@@ -419,11 +430,10 @@ class ReplicateProvider(BaseProvider):
     async def fetch_messages(self, user, authed):
         messages = []
         last_message_id = None
-        
 
         while len(messages) < self.num_messages:
             fetched_messages = await user.get_message(last_message=last_message_id)
-            
+
             for message in fetched_messages["list"]:
                 if message["fromUser"]["id"] == user.id:
                     value = {"role": "user", "content": message["text"]}
@@ -443,11 +453,7 @@ class ReplicateProvider(BaseProvider):
 
         return messages, last_message_role
 
-        
-
-
     async def format_text_gen_messages(self, messages, user):
-
         messages = []
         last_message_id = None
         last_role = None
@@ -466,19 +472,18 @@ class ReplicateProvider(BaseProvider):
                     messages[-1]["content"] += "\n" + content
                 else:
                     messages.append({"role": role, "content": content})
-                
+
             last_message_id = fetched_messages["list"][-1]["id"]
             if not fetched_messages["list"]:
                 break
 
-        # Convert messages in correct order 
+        # Convert messages in correct order
         messages = messages[::-1]
 
-        # Ensure the last message is from user and 
+        # Ensure the last message is from user and
         if messages and messages[-1]["role"] == "user":
             last_message = messages[-1]["content"]
             messages.pop(-1)
-
 
         messages = [message["content"] for message in messages]
 
@@ -509,7 +514,6 @@ class ReplicateProvider(BaseProvider):
                 return dictionary
 
         return None
-    
 
     def build_payload_for_TextGen(self, messages: any) -> dict:
         """GOAL: Concatenate messages into an alternate dialog."""
@@ -563,6 +567,7 @@ class ReplicateProvider(BaseProvider):
             return response
         except Exception:
             import traceback
+
             print(traceback.format_exc())
 
     async def get_purchased_products(self, user_data: any, option: any = None):

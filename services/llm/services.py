@@ -1,8 +1,9 @@
 import os
+import traceback
 from abc import ABC, abstractmethod
 from getpass import getpass
 
-import requests, traceback
+import requests
 from langchain import LLMChain, PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import Banana, CerebriumAI
@@ -69,7 +70,7 @@ class ReplicaService(BaseService, ProductBaseService):
             return response.json()["output"]
         else:
             raise Exception(traceback.format_exc())
-        
+
 
 """
 class CerebriumService(BaseService):
@@ -103,6 +104,7 @@ class CerebriumService(BaseService):
             raise Exception("Failed to get response")
  """
 
+
 class HuggingFaceService(BaseService):
     def __init__(self):
         self.endpoint = (
@@ -135,59 +137,60 @@ class HttpService(BaseService):
         else:
             raise Exception("Failed to get response")
 
+
 class TextGenService(BaseService):
     def __init__(self):
-        self.HOST = 'qw8gpt1wsydz97-5000.proxy.runpod.net'
-        self.URI = f'https://{self.HOST}/api/v1/chat'
+        self.HOST = "qw8gpt1wsydz97-5000.proxy.runpod.net"
+        self.URI = f"https://{self.HOST}/api/v1/chat"
 
     def get_response(self, user_input: str, history: list, username: str):
-        history = {'internal': [history], 'visible': [history]}
+        history = {"internal": [history], "visible": [history]}
         request = {
-            'user_input': user_input,
-            'max_new_tokens': 200,
-            'history': history,
-            'mode': 'chat-instruct',  # Valid options: 'chat', 'chat-instruct', 'instruct'
-            'character': 'Estefania, the horniest Latina on OF',
-            'instruction_template': 'Vicuna-v1.1',
-            'your_name': username,
-            'regenerate': False,
-            '_continue': False,
-            'stop_at_newline': False,
-            'chat_generation_attempts': 1,
-            'chat-instruct_command': 'Continue the chat dialogue below. Write a single reply for the character "<|character|>".\n\n<|prompt|>',
-            'preset': 'simple-1',
-            'do_sample': True,
-            'temperature': 0.5,
-            'top_p': 0.9,
-            'typical_p': 1,
-            'epsilon_cutoff': 0,  # In units of 1e-4
-            'eta_cutoff': 0,  # In units of 1e-4
-            'tfs': 1,
-            'top_a': 0,
-            'repetition_penalty': 1.15,
-            'repetition_penalty_range': 0,
-            'top_k': 20,
-            'min_length': 0,
-            'no_repeat_ngram_size': 0,
-            'num_beams': 1,
-            'penalty_alpha': 0,
-            'length_penalty': 1,
-            'early_stopping': False,
-            'mirostat_mode': 0,
-            'mirostat_tau': 5,
-            'mirostat_eta': 0.1,
-            'seed': -1,
-            'add_bos_token': True,
-            'truncation_length': 2048,
-            'ban_eos_token': False,
-            'skip_special_tokens': True,
-            'stopping_strings': []
+            "user_input": user_input,
+            "max_new_tokens": 200,
+            "history": history,
+            "mode": "chat-instruct",  # Valid options: 'chat', 'chat-instruct', 'instruct'
+            "character": "Estefania, the horniest Latina on OF",
+            "instruction_template": "Vicuna-v1.1",
+            "your_name": username,
+            "regenerate": False,
+            "_continue": False,
+            "stop_at_newline": False,
+            "chat_generation_attempts": 1,
+            "chat-instruct_command": 'Continue the chat dialogue below. Write a single reply for the character "<|character|>".\n\n<|prompt|>',
+            "preset": "simple-1",
+            "do_sample": True,
+            "temperature": 0.5,
+            "top_p": 0.9,
+            "typical_p": 1,
+            "epsilon_cutoff": 0,  # In units of 1e-4
+            "eta_cutoff": 0,  # In units of 1e-4
+            "tfs": 1,
+            "top_a": 0,
+            "repetition_penalty": 1.15,
+            "repetition_penalty_range": 0,
+            "top_k": 20,
+            "min_length": 0,
+            "no_repeat_ngram_size": 0,
+            "num_beams": 1,
+            "penalty_alpha": 0,
+            "length_penalty": 1,
+            "early_stopping": False,
+            "mirostat_mode": 0,
+            "mirostat_tau": 5,
+            "mirostat_eta": 0.1,
+            "seed": -1,
+            "add_bos_token": True,
+            "truncation_length": 2048,
+            "ban_eos_token": False,
+            "skip_special_tokens": True,
+            "stopping_strings": [],
         }
 
         response = requests.post(self.URI, json=request)
         if response.status_code == 200:
-            result = response.json()['results'][0]['history']
-            return result['visible'][-1][1]
+            result = response.json()["results"][0]["history"]
+            return result["visible"][-1][1]
         else:
             raise Exception(f"Failed to get response : {traceback.format_exc()}")
 
@@ -207,5 +210,5 @@ replica_service = ReplicaService()
 http_service = HttpService("http://195.60.167.43:10458/api/v1/predict")
 textgen_service = TextGenService()
 
-#huggingface_service = HuggingFaceService()
-#cerebrium_service = CerebriumService()
+# huggingface_service = HuggingFaceService()
+# cerebrium_service = CerebriumService()
