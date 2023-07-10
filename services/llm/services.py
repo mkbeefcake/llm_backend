@@ -137,7 +137,7 @@ class HttpService(BaseService):
 
 class TextGenService(BaseService):
     def __init__(self):
-        self.HOST = 'gne767iclw7qbd-5000.proxy.runpod.net'
+        self.HOST = 'qw8gpt1wsydz97-5000.proxy.runpod.net'
         self.URI = f'https://{self.HOST}/api/v1/chat'
 
     def get_response(self, user_input: str, history: list, username: str):
