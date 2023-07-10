@@ -14,11 +14,13 @@ class TaskManager:
 
         try:
             while True:
-                BackLog.info(instance=self, message=f"Running Task...")
-
                 start_timestamp = get_current_timestamp()
+                BackLog.info(instance=self, message=f"Running Task...{start_timestamp}")
+
                 await task_func(**kwargs)
+
                 end_timestamp = get_current_timestamp()
+                BackLog.info(instance=self, message=f"Ended Task...{end_timestamp}")
 
                 new_interval = interval + start_timestamp - end_timestamp
                 if new_interval > 0:
