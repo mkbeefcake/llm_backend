@@ -17,6 +17,7 @@ from services.service import replica_service, textgen_service
 
 templates = Jinja2Templates(directory="templates/replicate")
 PRODUCT_REPLICA_ENDPOINT = os.getenv("PRODUCT_REPLICA_ENDPOINT")
+PRODUCT_REPLICA_ENDPOINT_NEW = os.getenv("PRODUCT_REPLICA_ENDPOINT_NEW")
 
 
 def char_is_emoji(character):
@@ -68,6 +69,21 @@ def aggregate_labels(response_json):
     values = [str(value) for value in prediction.keys()]
     result = ",".join(values)
     return result
+
+
+async def label_content_new(type, url, k, id, item):
+    endpoint = PRODUCT_REPLICA_ENDPOINT_NEW
+    endpoint = endpoint + f"?type={type}&url={url}&k={k}"
+    response = requests.post(endpoint)
+    response_json = response.json()
+    return {
+        "id": id,
+        "label": aggregate_labels(response_json),
+        "category": item["category"],
+        "createdAt": item["created"],
+        "type": item["type"],
+        "full": item["full"],
+    }
 
 
 async def label_content(type, url, k, id, item):
@@ -683,7 +699,7 @@ class ReplicateProvider(BaseProvider):
                 try:
                     print(f"|-- Item: {parsed_item['id']} - {parsed_item['type']}")
                     if parsed_item["type"] == "photo":
-                        task = label_content(
+                        task = label_content_new(
                             type=parsed_item["type"],
                             url=parsed_item["full"],
                             k=15,
