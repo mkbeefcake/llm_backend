@@ -154,6 +154,22 @@ class Bridge:
             user_data, option
         )
 
+    def update_provider_info(
+        self,
+        user_id: str,
+        provider_name: str,
+        identifier_name: str,
+        user_data: any,
+        option: any = None,
+    ):
+        key = provider_name.lower()
+        if identifier_name not in self.system_provider_list[key]:
+            self.system_provider_list[key][identifier_name] = self.providers[key]()
+
+        return self.system_provider_list[key][identifier_name].update_provider_info(
+            user_data, option
+        )
+
     async def get_purchased_products(
         self,
         user_id: str,

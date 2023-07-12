@@ -375,7 +375,8 @@ class GMailProvider(BaseProvider):
 
         pass
 
-    pass
+    def update_provider_info(self, user_data: any, option: any = None):
+        raise NotImplementedError
 
     async def get_purchased_products(self, user_data: any, option: any = None):
         pass

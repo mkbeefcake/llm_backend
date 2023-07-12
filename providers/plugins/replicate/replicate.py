@@ -5,11 +5,11 @@ import random
 import re
 import unicodedata
 
-import replica
 import requests
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
+import replica
 from core.utils.log import BackLog
 from products.pinecone import pinecone_service
 from providers.base import BaseProvider
@@ -122,8 +122,8 @@ class ReplicateProvider(BaseProvider):
         pass
 
     async def initialize(self, user_data: any):
-        # if self.initialized == True:
-        #     return
+        if self.initialized == True:
+            return
 
         self.api = replica.select_api("replica")
 
@@ -138,6 +138,20 @@ class ReplicateProvider(BaseProvider):
         )
 
         self.initialized = True
+        pass
+
+    def finalize(self):
+        if self.api:
+            self.api = None
+        if self.auth_json:
+            self.auth_json = None
+        if self.rules:
+            self.rules = None
+        if self.authed:
+            self.authed = None
+
+    def update_provider_info(self, user_data: any, option: any = None):
+        self.auth_json, self.rules = self.load_credentials_from_userdata(user_data)
         pass
 
     async def start_autobot(self, user_data: any, option: any):

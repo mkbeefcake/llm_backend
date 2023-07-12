@@ -49,6 +49,9 @@ class BaseProvider(metaclass=BaseProviderMeta):
     async def start_autobot(self, user_data: any, option: any = None):
         raise NotImplementedError
 
+    def update_provider_info(self, user_data: any, option: any = None):
+        raise NotImplementedError
+
     async def get_purchased_products(self, user_data: any, option: any = None):
         raise NotImplementedError
 

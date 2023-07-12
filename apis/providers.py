@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 
 from core.bot.autobot import autobot
 from core.utils.message import MessageErr, MessageOK
-from db.cruds.users import get_user_providers, update_user
+from db.cruds.users import get_user_data, get_user_providers, update_user
 from db.schemas.users import UsersSchema
 from providers.bridge import bridge
 
@@ -87,13 +87,22 @@ async def update_provider_info(
     curr_user: User = Depends(get_current_user),
 ):
     try:
-        return MessageOK(
-            data=update_user(
-                user=UsersSchema(id=curr_user["uid"], email=curr_user["email"]),
-                provider_name=provider_name,
-                key=identifier_name,
-                content=social_info,
-            )
+        user_id = curr_user["uid"]
+        result = update_user(
+            user=UsersSchema(id=user_id, email=curr_user["email"]),
+            provider_name=provider_name,
+            key=identifier_name,
+            content=social_info,
         )
+
+        user_data = get_user_data(user_id)
+        bridge.update_provider_info(
+            user_id,
+            provider_name,
+            identifier_name,
+            user_data[provider_name][identifier_name],
+        )
+
+        return MessageOK(data=result)
     except Exception as e:
         return MessageErr(reason=str(e))
