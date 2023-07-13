@@ -363,7 +363,7 @@ class ReplicateProvider(BaseProvider):
                 }
 
             elif type == "video":
-                vidcap = imageio.get_reader(io.BytesIo(resource.content), "ffmpeg")
+                vidcap = imageio.get_reader(io.BytesIO(resource.content), "ffmpeg")
 
                 # Get the total number of frames
                 total_frames = vidcap.count_frames()
