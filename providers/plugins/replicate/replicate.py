@@ -762,7 +762,9 @@ class ReplicateProvider(BaseProvider):
 
                 # Add a task to label this content
                 try:
-                    print(f"|-- Item: {parsed_item['id']} - {parsed_item['type']}")
+                    print(
+                        f"|-- Identifier: {self.identifier_name} Item: {parsed_item['id']} - {parsed_item['type']}"
+                    )
                     task = self.label_content(
                         type=parsed_item["type"],
                         url=parsed_item["full"],
