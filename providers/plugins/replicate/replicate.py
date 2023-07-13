@@ -376,7 +376,7 @@ class ReplicateProvider(BaseProvider):
                 for frame_number in frames_to_capture:
                     # Get the specific frame
                     frame = vidcap.get_data(frame_number)
-                    image = Image.open(frame)
+                    image = Image.fromarray(frame)
                     jpeg_bytes = io.BytesIO()
                     image.save(jpeg_bytes, format="JPEG")
                     jpeg_bytes = jpeg_bytes.getvalue()
@@ -394,18 +394,13 @@ class ReplicateProvider(BaseProvider):
                     predictions.append(prediction)
 
                 # Create a list of keys that are common in all predictions
-                common_keys = set.intersection(
-                    *(set(prediction.keys()) for prediction in predictions)
-                )
+                final_prediction = {}
+                for d in predictions:
+                    final_prediction.update(d)
 
-                # Average the predictions for each common key
-                average_prediction = {
-                    key: np.mean([pred[key] for pred in predictions])
-                    for key in common_keys
-                }
                 product = {
                     "id": id,
-                    "label": aggregate_labels(average_prediction),
+                    "label": aggregate_labels(final_prediction),
                     "category": item["category"],
                     "createdAt": item["created"],
                     "type": item["type"],
