@@ -1,10 +1,13 @@
 import asyncio
+import io
 import json
 import os
 import random
 import re
 import unicodedata
 
+import imageio
+import numpy as np
 import requests
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
@@ -72,6 +75,8 @@ def aggregate_labels(response_json):
 
 
 class ReplicateProvider(BaseProvider):
+    product_caches = {}
+
     def __init__(self) -> None:
         super().__init__()
         self.num_messages = 5
@@ -80,7 +85,6 @@ class ReplicateProvider(BaseProvider):
         self.delta = 0
         self.product_limit_per_category = 0
         self.steps = 3
-        self.product_caches = {}
 
     def get_provider_info(self):
         return {
@@ -334,30 +338,76 @@ class ReplicateProvider(BaseProvider):
 
     async def label_content(self, type, url, k, id, item):
         try:
-            if id in self.product_caches:
-                return self.product_caches[id]
+            if id in ReplicateProvider.product_caches:
+                return ReplicateProvider.product_caches[id]
 
             endpoint = PRODUCT_REPLICA_ENDPOINT
             resource = requests.get(url)
 
-            payload = {
-                "k": k,
-                "type": type,
-            }
-            response = requests.post(
-                endpoint, files={"file": resource.content}, data=payload
-            )
-            response_json = response.json()
-            product = {
-                "id": id,
-                "label": aggregate_labels(response_json),
-                "category": item["category"],
-                "createdAt": item["created"],
-                "type": item["type"],
-                "full": item["full"],
-            }
+            if type == "photo":
+                payload = {
+                    "k": k,
+                    "type": type,
+                }
+                response = requests.post(
+                    endpoint, files={"file": resource.content}, data=payload
+                )
+                response_json = response.json()
+                product = {
+                    "id": id,
+                    "label": aggregate_labels(response_json),
+                    "category": item["category"],
+                    "createdAt": item["created"],
+                    "type": item["type"],
+                    "full": item["full"],
+                }
 
-            self.product_caches[id] = product
+            elif type == "video":
+                vidcap = imageio.get_reader(io.BytesIo(resource.content), "ffmpeg")
+
+                # Get the total number of frames
+                total_frames = vidcap.count_frames()
+
+                # Get the frame numbers we want to capture
+                frames_to_capture = np.linspace(0, total_frames - 1, 3, dtype=int)
+
+                predictions = []
+                for frame_number in frames_to_capture:
+                    # Get the specific frame
+                    frame = vidcap.get_data(frame_number)
+
+                    # Process the frame with your model
+                    payload = {
+                        "k": k,
+                        "type": "photo",
+                    }
+                    response = requests.post(
+                        endpoint, files={"file": frame}, data=payload
+                    )
+
+                    prediction = response.json()
+                    predictions.append(prediction)
+
+                # Create a list of keys that are common in all predictions
+                common_keys = set.intersection(
+                    *(set(prediction.keys()) for prediction in predictions)
+                )
+
+                # Average the predictions for each common key
+                average_prediction = {
+                    key: np.mean([pred[key] for pred in predictions])
+                    for key in common_keys
+                }
+                product = {
+                    "id": id,
+                    "label": aggregate_labels(average_prediction),
+                    "category": item["category"],
+                    "createdAt": item["created"],
+                    "type": item["type"],
+                    "full": item["full"],
+                }
+
+            ReplicateProvider.product_caches[id] = product
             return product
 
         except Exception as e:
