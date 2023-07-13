@@ -10,6 +10,7 @@ import imageio
 import numpy as np
 import requests
 from fastapi.templating import Jinja2Templates
+from PIL import Image
 from starlette.requests import Request
 
 import replica
@@ -342,9 +343,9 @@ class ReplicateProvider(BaseProvider):
                 return ReplicateProvider.product_caches[id]
 
             endpoint = PRODUCT_REPLICA_ENDPOINT
-            resource = requests.get(url)
 
             if type == "photo":
+                resource = requests.get(url)
                 payload = {
                     "k": k,
                     "type": type,
@@ -363,7 +364,7 @@ class ReplicateProvider(BaseProvider):
                 }
 
             elif type == "video":
-                vidcap = imageio.get_reader(io.BytesIO(resource.content), "ffmpeg")
+                vidcap = imageio.get_reader(url, "ffmpeg")
 
                 # Get the total number of frames
                 total_frames = vidcap.count_frames()
@@ -375,6 +376,10 @@ class ReplicateProvider(BaseProvider):
                 for frame_number in frames_to_capture:
                     # Get the specific frame
                     frame = vidcap.get_data(frame_number)
+                    image = Image.open(frame)
+                    jpeg_bytes = io.BytesIO()
+                    image.save(jpeg_bytes, format="JPEG")
+                    jpeg_bytes = jpeg_bytes.getvalue()
 
                     # Process the frame with your model
                     payload = {
@@ -382,7 +387,7 @@ class ReplicateProvider(BaseProvider):
                         "type": "photo",
                     }
                     response = requests.post(
-                        endpoint, files={"file": frame}, data=payload
+                        endpoint, files={"file": jpeg_bytes}, data=payload
                     )
 
                     prediction = response.json()
