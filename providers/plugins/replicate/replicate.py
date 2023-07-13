@@ -83,11 +83,12 @@ class ReplicateProvider(BaseProvider):
         super().__init__()
         self.num_messages = 5
         self.initialized = False
+        self.initializing = False
         self.api = None
         self.delta = 0
         self.product_limit_per_category = 0
         self.steps = 3
-        self.initialize_lock = threading.Lock()
+        self.initialize_lock = threading.Condition()
 
     def get_provider_info(self):
         return {
@@ -112,27 +113,30 @@ class ReplicateProvider(BaseProvider):
 
     async def initialize(self, user_data: any):
         # lock threading
-        self.initialize_lock.acquire()
+        if self.initializing == True:
+            self.initialize_lock.wait()
 
         if self.initialized == True:
             return
+        try:
+            self.initializing = True
+            self.api = replica.select_api("replica")
 
-        self.api = replica.select_api("replica")
+            # try to get auth_json and rules from firestore db
+            self.auth_json, self.rules = self.load_credentials_from_userdata(user_data)
 
-        # try to get auth_json and rules from firestore db
-        self.auth_json, self.rules = self.load_credentials_from_userdata(user_data)
+            # authenticate
+            self.authed = await self.authenticate(self.api, self.auth_json)
+            BackLog.info(
+                instance=self,
+                message=f"{self.identifier_name}: Passed authenticate() function....",
+            )
 
-        # authenticate
-        self.authed = await self.authenticate(self.api, self.auth_json)
-        BackLog.info(
-            instance=self,
-            message=f"{self.identifier_name}: Passed authenticate() function....",
-        )
+            self.initialized = True
 
-        self.initialized = True
+        finally:
+            self.initializing = False
 
-        # release threading
-        self.initialize_lock.release()
         pass
 
     def finalize(self):
