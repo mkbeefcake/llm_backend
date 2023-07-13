@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
 
 from core.bot.autobot import autobot
+from core.pipeline.products import products_pipeline
 from core.utils.message import MessageErr, MessageOK
 from db.cruds.users import get_user_data, get_user_providers, update_user
 from db.schemas.users import UsersSchema
@@ -101,6 +102,13 @@ async def update_provider_info(
             provider_name,
             identifier_name,
             user_data[provider_name][identifier_name],
+        )
+
+        products_pipeline.fetch_all_products_for_one(
+            user_id,
+            provider_name,
+            identifier_name,
+            user_data=user_data[provider_name][identifier_name],
         )
 
         return MessageOK(data=result)
