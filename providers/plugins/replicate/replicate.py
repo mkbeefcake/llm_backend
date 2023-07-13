@@ -4,6 +4,7 @@ import json
 import os
 import random
 import re
+import threading
 import unicodedata
 
 import imageio
@@ -86,6 +87,7 @@ class ReplicateProvider(BaseProvider):
         self.delta = 0
         self.product_limit_per_category = 0
         self.steps = 3
+        self.initialize_lock = threading.Lock()
 
     def get_provider_info(self):
         return {
@@ -109,6 +111,9 @@ class ReplicateProvider(BaseProvider):
         pass
 
     async def initialize(self, user_data: any):
+        # lock threading
+        self.initialize_lock.acquire()
+
         if self.initialized == True:
             return
 
@@ -125,6 +130,9 @@ class ReplicateProvider(BaseProvider):
         )
 
         self.initialized = True
+
+        # release threading
+        self.initialize_lock.release()
         pass
 
     def finalize(self):
