@@ -71,41 +71,6 @@ def aggregate_labels(response_json):
     return result
 
 
-async def label_content_new(type, url, k, id, item):
-    endpoint = PRODUCT_REPLICA_ENDPOINT_NEW
-    endpoint = endpoint + f"?type={type}&url={url}&k={k}"
-    response = requests.post(endpoint)
-    response_json = response.json()
-    return {
-        "id": id,
-        "label": aggregate_labels(response_json),
-        "category": item["category"],
-        "createdAt": item["created"],
-        "type": item["type"],
-        "full": item["full"],
-    }
-
-
-async def label_content(type, url, k, id, item):
-    endpoint = PRODUCT_REPLICA_ENDPOINT
-    resource = requests.get(url)
-
-    payload = {
-        "k": k,
-        "type": type,
-    }
-    response = requests.post(endpoint, files={"file": resource.content}, data=payload)
-    response_json = response.json()
-    return {
-        "id": id,
-        "label": aggregate_labels(response_json),
-        "category": item["category"],
-        "createdAt": item["created"],
-        "type": item["type"],
-        "full": item["full"],
-    }
-
-
 class ReplicateProvider(BaseProvider):
     def __init__(self) -> None:
         super().__init__()
@@ -115,6 +80,7 @@ class ReplicateProvider(BaseProvider):
         self.delta = 0
         self.product_limit_per_category = 0
         self.steps = 3
+        self.product_caches = {}
 
     def get_provider_info(self):
         return {
@@ -351,6 +317,55 @@ class ReplicateProvider(BaseProvider):
                 )
 
         # await api.close_pools()
+
+    # async def label_content_new(self, type, url, k, id, item):
+    #     endpoint = PRODUCT_REPLICA_ENDPOINT_NEW
+    #     endpoint = endpoint + f"?type={type}&url={url}&k={k}"
+    #     response = requests.post(endpoint)
+    #     response_json = response.json()
+    #     return {
+    #         "id": id,
+    #         "label": aggregate_labels(response_json),
+    #         "category": item["category"],
+    #         "createdAt": item["created"],
+    #         "type": item["type"],
+    #         "full": item["full"],
+    #     }
+
+    async def label_content(self, type, url, k, id, item):
+        try:
+            if id in self.product_caches:
+                return self.product_caches[id]
+
+            endpoint = PRODUCT_REPLICA_ENDPOINT
+            resource = requests.get(url)
+
+            payload = {
+                "k": k,
+                "type": type,
+            }
+            response = requests.post(
+                endpoint, files={"file": resource.content}, data=payload
+            )
+            response_json = response.json()
+            product = {
+                "id": id,
+                "label": aggregate_labels(response_json),
+                "category": item["category"],
+                "createdAt": item["created"],
+                "type": item["type"],
+                "full": item["full"],
+            }
+
+            self.product_caches[id] = product
+            return product
+
+        except Exception as e:
+            BackLog.exception(
+                instance=None,
+                message=f"Failed to call replica tagging service: url {url}",
+            )
+            pass
 
     async def select_chats(self, authed, rules):
         """
@@ -698,15 +713,14 @@ class ReplicateProvider(BaseProvider):
                 # Add a task to label this content
                 try:
                     print(f"|-- Item: {parsed_item['id']} - {parsed_item['type']}")
-                    if parsed_item["type"] == "photo":
-                        task = label_content_new(
-                            type=parsed_item["type"],
-                            url=parsed_item["full"],
-                            k=15,
-                            id=parsed_item["id"],
-                            item=parsed_item,
-                        )
-                        label_tasks.append(task)
+                    task = self.label_content(
+                        type=parsed_item["type"],
+                        url=parsed_item["full"],
+                        k=15,
+                        id=parsed_item["id"],
+                        item=parsed_item,
+                    )
+                    label_tasks.append(task)
                 except:
                     import traceback
 
