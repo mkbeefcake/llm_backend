@@ -76,7 +76,7 @@ class ProductPipeline(TaskManager):
                     user_id=user_id,
                     provider_name=provider_name,
                     identifier_name=identifier_name,
-                    user_data=user_data,
+                    user_data=json.dumps(user_data),
                 )
         except Exception as e:
             BackLog.exception(instance=self, message=f"Exception occurred {str(e)}")
@@ -231,7 +231,7 @@ class ProductPipeline(TaskManager):
                     user_id=user_id,
                     provider_name=provider_name,
                     identifier_name=identifier_name,
-                    user_data=user_data,
+                    user_data=json.dumps(user_data),
                 )
         except Exception as e:
             BackLog.exception(instance=self, message=f"Exception occurred {str(e)}")
