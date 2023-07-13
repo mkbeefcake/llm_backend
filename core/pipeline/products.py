@@ -47,6 +47,41 @@ class ProductPipeline(TaskManager):
             BackLog.exception(instance=None, message=f"Exception occurred...")
         pass
 
+    def fetch_purchased_products_for_one(
+        self, user_id, provider_name, identifier_name, user_data
+    ):
+        print(f"****** Fetch Purchased Products for one *******")
+        print(
+            f"user: {user_id}, provider: {provider_name}, identifer: {identifier_name}"
+        )
+        try:
+            if (
+                self.status_of_purchased_products_task(
+                    uid=user_id,
+                    provider_name=provider_name,
+                    identifier_name=identifier_name,
+                )
+                == False
+            ):
+                if not user_id in self.purchased_task_list:
+                    self.purchased_task_list[user_id] = {}
+
+                if not provider_name in self.purchased_task_list[user_id]:
+                    self.purchased_task_list[user_id][provider_name] = {}
+
+                self.purchased_task_list[user_id][provider_name][
+                    identifier_name
+                ] = self.create_onetime_task(
+                    ProductPipeline._fetch_purchased_products_func,
+                    user_id=user_id,
+                    provider_name=provider_name,
+                    identifier_name=identifier_name,
+                    user_data=user_data,
+                )
+        except Exception as e:
+            BackLog.exception(instance=self, message=f"Exception occurred {str(e)}")
+            pass
+
     def fetch_purchased_products(self):
         print(f"****** Fetch Purchased Products *******")
         all_user_info = get_all_users_data()
