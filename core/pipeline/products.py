@@ -3,7 +3,7 @@ import json
 
 from core.task.task import TaskManager
 from core.utils.log import BackLog
-from db.cruds.product import update_products
+from db.cruds.product import get_products, update_products
 from db.cruds.purchased import get_last_message_ids, update_purchased
 from db.cruds.users import get_all_users_data
 from products.pinecone import pinecone_service
@@ -202,12 +202,15 @@ class ProductPipeline(TaskManager):
     ):
         try:
             user_content = json.loads(user_data)
+            products = get_products(user_id, provider_name, key=identifier_name)
+
             await bridge.get_all_products(
                 user_id=user_id,
                 provider_name=provider_name,
                 identifier_name=identifier_name,
                 user_data=user_content,
                 steper=ProductPipeline.update_products_on_db_pinecone,
+                option={"products": products},
             )
 
             print(f"Import products : Done, {user_id} - {identifier_name}")

@@ -198,6 +198,7 @@ class Bridge:
         identifier_name: str,
         user_data: any,
         steper=any,
+        option=any,
     ):
         key = provider_name.lower()
         if identifier_name not in self.system_provider_list[key]:
@@ -207,7 +208,7 @@ class Bridge:
             user_id, identifier_name
         )
         return await self.system_provider_list[key][identifier_name].get_all_products(
-            user_data, option=None, steper=steper
+            user_data, option=option, steper=steper
         )
 
 

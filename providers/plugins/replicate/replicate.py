@@ -29,6 +29,13 @@ def char_is_emoji(character):
     return unicodedata.category(character) in ["So", "Sm"]
 
 
+def find_element_by_id(array, id):
+    for element in array:
+        if element.get("id") == id:
+            return element
+    return None
+
+
 def remove_abrupt_sentences(text):
     # Split the text into sentences based on the presence of .!? as potential sentence delimiters
     sentences = re.split(r"(?<=[.!?])\s+", text)
@@ -765,6 +772,11 @@ class ReplicateProvider(BaseProvider):
         if await self.initialize(user_data=user_data) != True:
             return
 
+        if "products" in option:
+            products = option["products"]
+        else:
+            products = []
+
         categories = await self.authed.get_content_categories()
 
         full_content = []
@@ -782,6 +794,12 @@ class ReplicateProvider(BaseProvider):
                 )
 
             for item in content:
+                if find_element_by_id(products, item["id"]) != None:
+                    print(
+                        f"|-- Identifier: {self.identifier_name} Item: {item['id']} already existed"
+                    )
+                    continue
+
                 parsed_item = {
                     "category": category["name"],
                     "id": item["id"],
