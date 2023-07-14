@@ -110,7 +110,7 @@ class ReplicateProvider(BaseProvider):
         )
 
     async def disconnect(self, request: Request):
-        if self.api != None:
+        if self.api != None and self.initialized == True:
             await self.api.close_pools()
         pass
 
@@ -323,6 +323,7 @@ class ReplicateProvider(BaseProvider):
                         print(
                             type(product_price),
                         )
+
                         # response = await self.post_message(
                         #     user,
                         #     self.authed,
@@ -635,7 +636,7 @@ class ReplicateProvider(BaseProvider):
 
     def fetch_user_info(self, user_id, purchased) -> dict:
         # TODO : Implement a function fetching for each chat user_id their purchase history in the db.
-        # self.db.get_purchase_history(user_id)        
+        # self.db.get_purchase_history(user_id)
         if purchased is not None and str(user_id) in purchased:
             return purchased[str(user_id)]
         return purchased
