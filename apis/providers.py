@@ -112,7 +112,7 @@ async def update_provider_info(
         #     user_data=user_data[provider_name][identifier_name],
         # )
         response = requests.post(
-            f"https://chat-automation-387710-yix5m2x4pq-uc.a.run.app/products/fetch_purchased_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+            f"https://chat-automation-387710-purchased-yix5m2x4pq-uc.a.run.app/products/fetch_purchased_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
         )
         response_json = response.json()
 
@@ -123,7 +123,7 @@ async def update_provider_info(
         #     user_data=user_data[provider_name][identifier_name],
         # )
         response = requests.post(
-            f"https://chat-automation-387710-yix5m2x4pq-uc.a.run.app/products/fetch_all_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+            f"chat-automation-387710-products-yix5m2x4pq-uc.a.run.app/products/fetch_all_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
         )
         response_json = response.json()
 
