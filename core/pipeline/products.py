@@ -204,13 +204,18 @@ class ProductPipeline(TaskManager):
             user_content = json.loads(user_data)
             products = get_products(user_id, provider_name, key=identifier_name)
 
+            if "products" in products:
+                option = {"products": products["products"]}
+            else:
+                option = None
+
             await bridge.get_all_products(
                 user_id=user_id,
                 provider_name=provider_name,
                 identifier_name=identifier_name,
                 user_data=user_content,
                 steper=ProductPipeline.update_products_on_db_pinecone,
-                option={"products": products["products"]},
+                option=option,
             )
 
             print(f"Import products : Done, {user_id} - {identifier_name}")
