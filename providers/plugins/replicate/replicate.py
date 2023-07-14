@@ -629,14 +629,14 @@ class ReplicateProvider(BaseProvider):
     def get_purchase_history(self, user_id: str, purchased) -> list:
         # TODO : Implement a function fetching for each chat user_id their purchase history in the db.
         # self.db.get_purchase_history(user_id)
-        if str(user_id) in purchased:
+        if purchased is not None and str(user_id) in purchased:
             return purchased[str(user_id)]
         return []
 
     def fetch_user_info(self, user_id, purchased) -> dict:
         # TODO : Implement a function fetching for each chat user_id their purchase history in the db.
-        # self.db.get_purchase_history(user_id)
-        if str(user_id) in purchased:
+        # self.db.get_purchase_history(user_id)        
+        if purchased is not None and str(user_id) in purchased:
             return purchased[str(user_id)]
         return purchased
 
