@@ -5,7 +5,6 @@ import os
 import random
 import re
 import threading
-import time
 import unicodedata
 
 import imageio
@@ -116,7 +115,7 @@ class ReplicateProvider(BaseProvider):
         # lock threading
         count = 0
         while self.initializing == True and count < 4:
-            time.sleep(1)
+            await asyncio.sleep(1)
             count = count + 1
 
         if self.initialized == True:
