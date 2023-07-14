@@ -65,3 +65,25 @@ async def fetch_all_products_for_one(user_id, provider_name, identifier_name):
         )
     except Exception as e:
         return MessageErr(reason=str(e))
+
+
+@router.post("/stop_purchased_products_for_one")
+async def stop_purchased_products_for_one(user_id, provider_name, identifier_name):
+    try:
+        await products_pipeline.stop_purchased_products_task(
+            uid=user_id, provider_name=provider_name, identifier_name=identifier_name
+        )
+        return MessageOK(data={"message": "User stopped purchased-bot successfully"})
+    except Exception as e:
+        return MessageErr(reason=str(e))
+
+
+@router.post("/stop_all_products_for_one")
+async def stop_all_products_for_one(user_id, provider_name, identifier_name):
+    try:
+        await products_pipeline.stop_all_products_task(
+            uid=user_id, provider_name=provider_name, identifier_name=identifier_name
+        )
+        return MessageOK(data={"message": "User stopped all-product-bot successfully"})
+    except Exception as e:
+        return MessageErr(reason=str(e))

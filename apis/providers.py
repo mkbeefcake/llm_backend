@@ -68,7 +68,21 @@ async def unlink_Provider(
     curr_user: User = Depends(get_current_user),
 ):
     try:
+        await autobot.stop_auto_bot(
+            user=curr_user, provider_name=provider_name, identifier_name=identifier_name
+        )
         await bridge.disconnect(provider_name, identifier_name, request)
+
+        response = requests.post(
+            f"https://chat-automation-387710-purchased-yix5m2x4pq-uc.a.run.app/products/stop_purchased_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+        )
+        response_json = response.json()
+
+        response = requests.post(
+            f"https://chat-automation-387710-products-yix5m2x4pq-uc.a.run.app/products/stop_all_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+        )
+        response_json = response.json()
+
         return MessageOK(
             data=update_user(
                 user=UsersSchema(id=curr_user["uid"], email=curr_user["email"]),
