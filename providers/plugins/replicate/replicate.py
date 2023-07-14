@@ -5,6 +5,7 @@ import os
 import random
 import re
 import threading
+import time
 import unicodedata
 
 import imageio
@@ -113,8 +114,10 @@ class ReplicateProvider(BaseProvider):
 
     async def initialize(self, user_data: any):
         # lock threading
-        if self.initializing == True:
-            self.initialize_lock.wait()
+        count = 0
+        while self.initializing == True and count < 4:
+            time.sleep(1)
+            count = count + 1
 
         if self.initialized == True:
             return
