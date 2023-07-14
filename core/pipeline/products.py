@@ -144,7 +144,13 @@ class ProductPipeline(TaskManager):
     def stop_purchased_products_task(
         self, uid: any, provider_name: str, identifier_name: str
     ):
-        self.stop_task(self.purchased_task_list[uid][provider_name][identifier_name])
+        if (
+            self.status_of_purchased_products_task(uid, provider_name, identifier_name)
+            == True
+        ):
+            self.stop_task(
+                self.purchased_task_list[uid][provider_name][identifier_name]
+            )
         pass
 
     def status_of_purchased_products_task(
@@ -328,7 +334,17 @@ class ProductPipeline(TaskManager):
     def stop_all_products_task(
         self, uid: any, provider_name: str, identifier_name: str
     ):
-        self.stop_task(self.allproducts_task_list[uid][provider_name][identifier_name])
+        if (
+            self.status_of_all_products_task(
+                uid,
+                provider_name=provider_name,
+                identifier_name=identifier_name,
+            )
+            == True
+        ):
+            self.stop_task(
+                self.allproducts_task_list[uid][provider_name][identifier_name]
+            )
         pass
 
     def status_of_all_products_task(
