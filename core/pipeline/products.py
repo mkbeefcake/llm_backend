@@ -210,7 +210,7 @@ class ProductPipeline(TaskManager):
                 identifier_name=identifier_name,
                 user_data=user_content,
                 steper=ProductPipeline.update_products_on_db_pinecone,
-                option={"products": products},
+                option={"products": products["products"]},
             )
 
             print(f"Import products : Done, {user_id} - {identifier_name}")
