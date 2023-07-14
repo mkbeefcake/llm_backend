@@ -116,7 +116,7 @@ class ReplicateProvider(BaseProvider):
 
         if self.initialized == True:
             return self.initialized
-        
+
         try:
             self.initializing = True
             self.api = replica.select_api("replica")

@@ -65,10 +65,11 @@ class ProductPipeline(TaskManager):
                 == True
             ):
                 print(f"Purchase Product is already launched")
-                self.purchased_task_list[user_id][provider_name][
-                    identifier_name
-                ].cancel()
-                await asyncio.sleep(1)
+                return
+                # self.purchased_task_list[user_id][provider_name][
+                #     identifier_name
+                # ].cancel()
+                # await asyncio.sleep(1)
 
             if not user_id in self.purchased_task_list:
                 self.purchased_task_list[user_id] = {}
@@ -234,10 +235,11 @@ class ProductPipeline(TaskManager):
                 == True
             ):
                 print(f"Get All Product is already launched")
-                self.allproducts_task_list[user_id][provider_name][
-                    identifier_name
-                ].cancel()
-                await asyncio.sleep(1)
+                return
+                # self.allproducts_task_list[user_id][provider_name][
+                #     identifier_name
+                # ].cancel()
+                # await asyncio.sleep(1)
 
             if not user_id in self.allproducts_task_list:
                 self.allproducts_task_list[user_id] = {}
