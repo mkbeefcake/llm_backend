@@ -43,7 +43,7 @@ class BaseProvider(metaclass=BaseProviderMeta):
     def reply_to_message(self, access_token: str, to: str, message: str, option: any):
         raise NotImplementedError
 
-    def disconnect(self, request: Request):
+    async def disconnect(self, request: Request):
         raise NotImplementedError
 
     async def start_autobot(self, user_data: any, option: any = None):

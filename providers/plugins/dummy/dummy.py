@@ -59,7 +59,7 @@ class DummyProvider(BaseProvider):
             file=sys.stdout,
         )
 
-    def disconnect(self, request: Request):
+    async def disconnect(self, request: Request):
         print("[%s]: disconnect: %s" % (self.plugin_name), file=sys.stdout)
 
     async def start_autobot(self, user_data: any, option: any):

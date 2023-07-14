@@ -128,10 +128,12 @@ class Bridge:
         )
 
     # disconnect
-    def disconnect(self, provider_name: str, identifier_name: str, request: Request):
+    async def disconnect(
+        self, provider_name: str, identifier_name: str, request: Request
+    ):
         key = provider_name.lower()
         if identifier_name in self.system_provider_list[key]:
-            self.system_provider_list[key][identifier_name].disconnect(request)
+            await self.system_provider_list[key][identifier_name].disconnect(request)
 
         return
 

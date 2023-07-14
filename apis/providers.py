@@ -67,7 +67,7 @@ async def unlink_Provider(
     curr_user: User = Depends(get_current_user),
 ):
     try:
-        bridge.disconnect(provider_name, identifier_name, request)
+        await bridge.disconnect(provider_name, identifier_name, request)
         return MessageOK(
             data=update_user(
                 user=UsersSchema(id=curr_user["uid"], email=curr_user["email"]),

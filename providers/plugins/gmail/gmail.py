@@ -301,7 +301,7 @@ class GMailProvider(BaseProvider):
         )
         return {"message": "Email sent!"}
 
-    def disconnect(self, request: Request):
+    async def disconnect(self, request: Request):
         pass
 
     async def start_autobot(self, user_data: any, option: any):

@@ -102,12 +102,9 @@ class ReplicateProvider(BaseProvider):
             "login.html", {"request": request, "redirect_url": redirect_url}
         )
 
-    def disconnect(self, request: Request):
+    async def disconnect(self, request: Request):
         if self.api != None:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(self.api.close_pools())
-            loop.close()
+            await self.api.close_pools()
         pass
 
     async def initialize(self, user_data: any):
