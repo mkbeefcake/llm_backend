@@ -87,8 +87,7 @@ class ReplicateProvider(BaseProvider):
         self.api = None
         self.delta = 0
         self.product_limit_per_category = 0
-        self.steps = 3
-        self.initialize_lock = threading.Condition()
+        self.steps = 5
 
     def get_provider_info(self):
         return {
@@ -371,10 +370,10 @@ class ReplicateProvider(BaseProvider):
                 product = {
                     "id": id,
                     "label": aggregate_labels(response_json),
-                    "category": item["category"],
-                    "createdAt": item["created"],
-                    "type": item["type"],
-                    "full": item["full"],
+                    # "category": item["category"],
+                    # "createdAt": item["created"],
+                    # "type": item["type"],
+                    # "full": item["full"],
                 }
 
             elif type == "video":
@@ -425,10 +424,10 @@ class ReplicateProvider(BaseProvider):
                 product = {
                     "id": id,
                     "label": aggregate_labels(final_prediction),
-                    "category": item["category"],
-                    "createdAt": item["created"],
-                    "type": item["type"],
-                    "full": item["full"],
+                    # "category": item["category"],
+                    # "createdAt": item["created"],
+                    # "type": item["type"],
+                    # "full": item["full"],
                 }
 
             ReplicateProvider.product_caches[id] = product

@@ -177,7 +177,11 @@ class ProductPipeline(TaskManager):
                 key=identifier_name,
                 new_content=products_info["products"],
             )
+        except Exception as e:
+            BackLog.exception(instance=None, message=f"Exception occurred to DB...")
+            pass
 
+        try:
             # pass it to AI service : Pinecone service
             if provider_name == "replicateprovider":
                 pinecone_service.update_products(
@@ -188,9 +192,9 @@ class ProductPipeline(TaskManager):
                 )
             elif provider_name == "gmailprovider":
                 pass
-
         except Exception as e:
-            BackLog.exception(instance=None, message=f"Exception occurred...")
+            BackLog.exception(instance=None, message=f"Exception occurred to DB...")
+            pass
 
     async def _fetch_all_products_func(
         user_id: str, provider_name: str, identifier_name: str, user_data: str
