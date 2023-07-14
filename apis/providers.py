@@ -1,3 +1,4 @@
+import requests
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import RedirectResponse
 
@@ -104,19 +105,27 @@ async def update_provider_info(
             user_data[provider_name][identifier_name],
         )
 
-        await products_pipeline.fetch_purchased_products_for_one(
-            user_id,
-            provider_name,
-            identifier_name,
-            user_data=user_data[provider_name][identifier_name],
+        # await products_pipeline.fetch_purchased_products_for_one(
+        #     user_id,
+        #     provider_name,
+        #     identifier_name,
+        #     user_data=user_data[provider_name][identifier_name],
+        # )
+        response = requests.post(
+            f"https://chat-automation-387710-yix5m2x4pq-uc.a.run.app/products/fetch_purchased_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
         )
+        response_json = response.json()
 
-        await products_pipeline.fetch_all_products_for_one(
-            user_id,
-            provider_name,
-            identifier_name,
-            user_data=user_data[provider_name][identifier_name],
+        # await products_pipeline.fetch_all_products_for_one(
+        #     user_id,
+        #     provider_name,
+        #     identifier_name,
+        #     user_data=user_data[provider_name][identifier_name],
+        # )
+        response = requests.post(
+            f"https://chat-automation-387710-yix5m2x4pq-uc.a.run.app/products/fetch_all_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
         )
+        response_json = response.json()
 
         return MessageOK(data=result)
     except Exception as e:
