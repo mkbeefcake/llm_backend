@@ -641,9 +641,10 @@ class ReplicateProvider(BaseProvider):
         return purchased
 
     def fetch_product_info(self, product_id: str, products) -> dict:
-        for dictionary in products["products"]:
-            if dictionary.get("id") == product_id:
-                return dictionary
+        if products is not None and "products" in products:
+            for dictionary in products["products"]:
+                if dictionary.get("id") == product_id:
+                    return dictionary
 
         return None
 
