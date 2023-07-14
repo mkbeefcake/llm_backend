@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from core.pipeline.products import products_pipeline
 from core.utils.message import MessageErr, MessageOK
+from db.cruds.users import get_user_data
 
 router = APIRouter()
 
@@ -23,6 +24,44 @@ async def fetch_all_products():
         products_pipeline.fetch_all_products()
         return MessageOK(
             data={"message": "User started import_all_products successfully"}
+        )
+    except Exception as e:
+        return MessageErr(reason=str(e))
+
+
+@router.post("/fetch_purchased_products_for_one")
+async def fetch_purchased_products_for_one(user_id, provider_name, identifier_name):
+    try:
+        user_data = get_user_data(user_id)
+        await products_pipeline.fetch_purchased_products_for_one(
+            user_id,
+            provider_name,
+            identifier_name,
+            user_data=user_data[provider_name][identifier_name],
+        )
+
+        return MessageOK(
+            data={
+                "message": "User started import_purchased_products_for_one successfully"
+            }
+        )
+    except Exception as e:
+        return MessageErr(reason=str(e))
+
+
+@router.post("/fetch_all_products_for_one")
+async def fetch_all_products_for_one(user_id, provider_name, identifier_name):
+    try:
+        user_data = get_user_data(user_id)
+        await products_pipeline.fetch_all_products_for_one(
+            user_id,
+            provider_name,
+            identifier_name,
+            user_data=user_data[provider_name][identifier_name],
+        )
+
+        return MessageOK(
+            data={"message": "User started import_all_products_for_one successfully"}
         )
     except Exception as e:
         return MessageErr(reason=str(e))

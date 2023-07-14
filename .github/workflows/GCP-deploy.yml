@@ -44,4 +44,7 @@ jobs:
           run: docker push $IMAGE_NAME
 
         - name: Deploy Docker image
-          run: gcloud run deploy ${{ secrets.GCP_PROJECT_ID }} --image $IMAGE_NAME --region us-central1 --platform managed --port 8000
+          run: |
+            gcloud run deploy ${{ secrets.GCP_PROJECT_ID }} --image $IMAGE_NAME --region us-central1 --platform managed --port 8000
+            gcloud run deploy ${{ secrets.GCP_PROJECT_ID }}-purchased --image $IMAGE_NAME --region us-central1 --platform managed --port 8000
+            gcloud run deploy ${{ secrets.GCP_PROJECT_ID }}-products --image $IMAGE_NAME --region us-central1 --platform managed --port 8000
