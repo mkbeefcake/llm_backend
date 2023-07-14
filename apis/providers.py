@@ -73,6 +73,7 @@ async def unlink_Provider(
         )
         await bridge.disconnect(provider_name, identifier_name, request)
 
+        user_id = curr_user["uid"]
         response = requests.post(
             f"https://chat-automation-387710-purchased-yix5m2x4pq-uc.a.run.app/products/stop_purchased_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
         )
