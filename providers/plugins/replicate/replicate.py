@@ -323,18 +323,18 @@ class ReplicateProvider(BaseProvider):
                         print(
                             type(product_price),
                         )
-                        response = await self.post_message(
-                            user,
-                            self.authed,
-                            ai_response,
-                            price=product_price,
-                            mediaFiles=[product_id],
-                        )
+                        # response = await self.post_message(
+                        #     user,
+                        #     self.authed,
+                        #     ai_response,
+                        #     price=product_price,
+                        #     mediaFiles=[product_id],
+                        # )
 
-                        BackLog.info(
-                            instance=self,
-                            message=f"{self.identifier_name}: Sending message. Status code: {response}",
-                        )
+                        # BackLog.info(
+                        #     instance=self,
+                        #     message=f"{self.identifier_name}: Sending message. Status code: {response}",
+                        # )
 
                     else:
                         BackLog.info(
@@ -772,7 +772,7 @@ class ReplicateProvider(BaseProvider):
         if await self.initialize(user_data=user_data) != True:
             return
 
-        if "products" in option:
+        if option is not None and "products" in option:
             products = option["products"]
         else:
             products = []
