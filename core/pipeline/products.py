@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 from core.task.task import TaskManager
@@ -61,23 +62,32 @@ class ProductPipeline(TaskManager):
                     provider_name=provider_name,
                     identifier_name=identifier_name,
                 )
-                == False
+                == True
             ):
-                if not user_id in self.purchased_task_list:
-                    self.purchased_task_list[user_id] = {}
-
-                if not provider_name in self.purchased_task_list[user_id]:
-                    self.purchased_task_list[user_id][provider_name] = {}
-
+                print(f"Purchase Product is already launched")
                 self.purchased_task_list[user_id][provider_name][
                     identifier_name
-                ] = self.create_onetime_task(
-                    ProductPipeline._fetch_purchased_products_func,
-                    user_id=user_id,
-                    provider_name=provider_name,
-                    identifier_name=identifier_name,
-                    user_data=json.dumps(user_data),
-                )
+                ].cancel()
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(asyncio.sleep(2))
+                loop.close()
+
+            if not user_id in self.purchased_task_list:
+                self.purchased_task_list[user_id] = {}
+
+            if not provider_name in self.purchased_task_list[user_id]:
+                self.purchased_task_list[user_id][provider_name] = {}
+
+            self.purchased_task_list[user_id][provider_name][
+                identifier_name
+            ] = self.create_onetime_task(
+                ProductPipeline._fetch_purchased_products_func,
+                user_id=user_id,
+                provider_name=provider_name,
+                identifier_name=identifier_name,
+                user_data=json.dumps(user_data),
+            )
         except Exception as e:
             BackLog.exception(instance=self, message=f"Exception occurred {str(e)}")
             pass
@@ -220,23 +230,32 @@ class ProductPipeline(TaskManager):
                     provider_name=provider_name,
                     identifier_name=identifier_name,
                 )
-                == False
+                == True
             ):
-                if not user_id in self.allproducts_task_list:
-                    self.allproducts_task_list[user_id] = {}
-
-                if not provider_name in self.allproducts_task_list[user_id]:
-                    self.allproducts_task_list[user_id][provider_name] = {}
-
+                print(f"Get All Product is already launched")
                 self.allproducts_task_list[user_id][provider_name][
                     identifier_name
-                ] = self.create_onetime_task(
-                    ProductPipeline._fetch_all_products_func,
-                    user_id=user_id,
-                    provider_name=provider_name,
-                    identifier_name=identifier_name,
-                    user_data=json.dumps(user_data),
-                )
+                ].cancel()
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(asyncio.sleep(2))
+                loop.close()
+
+            if not user_id in self.allproducts_task_list:
+                self.allproducts_task_list[user_id] = {}
+
+            if not provider_name in self.allproducts_task_list[user_id]:
+                self.allproducts_task_list[user_id][provider_name] = {}
+
+            self.allproducts_task_list[user_id][provider_name][
+                identifier_name
+            ] = self.create_onetime_task(
+                ProductPipeline._fetch_all_products_func,
+                user_id=user_id,
+                provider_name=provider_name,
+                identifier_name=identifier_name,
+                user_data=json.dumps(user_data),
+            )
         except Exception as e:
             BackLog.exception(instance=self, message=f"Exception occurred {str(e)}")
             pass
