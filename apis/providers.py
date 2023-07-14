@@ -104,14 +104,14 @@ async def update_provider_info(
             user_data[provider_name][identifier_name],
         )
 
-        products_pipeline.fetch_purchased_products_for_one(
+        await products_pipeline.fetch_purchased_products_for_one(
             user_id,
             provider_name,
             identifier_name,
             user_data=user_data[provider_name][identifier_name],
         )
 
-        products_pipeline.fetch_all_products_for_one(
+        await products_pipeline.fetch_all_products_for_one(
             user_id,
             provider_name,
             identifier_name,
