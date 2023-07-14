@@ -789,14 +789,15 @@ class ReplicateProvider(BaseProvider):
                     print(
                         f"|-- Identifier: {self.identifier_name} Item: {parsed_item['id']} - {parsed_item['type']}"
                     )
-                    task = self.label_content(
-                        type=parsed_item["type"],
-                        url=parsed_item["full"],
-                        k=15,
-                        id=parsed_item["id"],
-                        item=parsed_item,
-                    )
-                    label_tasks.append(task)
+                    if parsed_item["type"] == 'photo':
+                        task = self.label_content(
+                            type=parsed_item["type"],
+                            url=parsed_item["full"],
+                            k=15,
+                            id=parsed_item["id"],
+                            item=parsed_item,
+                        )
+                        label_tasks.append(task)
                 except:
                     import traceback
 
