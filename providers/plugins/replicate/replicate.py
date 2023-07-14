@@ -138,7 +138,7 @@ class ReplicateProvider(BaseProvider):
         finally:
             self.initializing = False
 
-        pass
+        return self.initialized
 
     def finalize(self):
         if self.api:
@@ -155,7 +155,12 @@ class ReplicateProvider(BaseProvider):
         pass
 
     async def start_autobot(self, user_data: any, option: any):
-        await self.initialize(user_data=user_data)
+        if await self.initialize(user_data=user_data) != True:
+            BackLog.info(
+                instance=self,
+                message=f"{self.identifier_name}: Couldn't connect to replica service",
+            )
+            return
 
         # Select relevant chats
         chats = await self.select_chats(self.authed, self.rules)
@@ -689,7 +694,12 @@ class ReplicateProvider(BaseProvider):
             print(traceback.format_exc())
 
     async def get_purchased_products(self, user_data: any, option: any = None):
-        await self.initialize(user_data=user_data)
+        if await self.initialize(user_data=user_data) != True:
+            BackLog.info(
+                instance=self,
+                message=f"{self.identifier_name}: Couldn't connect to replica service",
+            )
+            return
 
         # Get last_message_ids from option
         if "last_message_ids" in option:
@@ -754,7 +764,12 @@ class ReplicateProvider(BaseProvider):
     async def get_all_products(
         self, user_data: any, option: any = None, steper: any = None
     ):
-        await self.initialize(user_data=user_data)
+        if await self.initialize(user_data=user_data) != True:
+            BackLog.info(
+                instance=self,
+                message=f"{self.identifier_name}: Couldn't connect to replica service",
+            )
+            return
 
         categories = await self.authed.get_content_categories()
 
