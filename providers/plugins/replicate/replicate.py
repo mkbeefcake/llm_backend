@@ -378,13 +378,13 @@ class ReplicateProvider(BaseProvider):
                 }
 
             elif type == "video":
+                print(
+                    f"|---- Identifier: {self.identifier_name} VideoItem: {id} Starting to read ......"
+                )
                 vidcap = imageio.get_reader(url, "ffmpeg")
 
                 # Get the total number of frames
                 total_frames = vidcap.count_frames()
-                print(
-                    f"|---- Identifier: {self.identifier_name} VideoItem: {id} - totalFrames: {total_frames}"
-                )
 
                 # Get the frame numbers we want to capture
                 frames_to_capture = np.linspace(0, total_frames - 1, 3, dtype=int)
@@ -411,6 +411,10 @@ class ReplicateProvider(BaseProvider):
                     )
 
                     prediction = response.json()
+
+                    print(
+                        f"|------ VideoItem: {id} - Frame/Total: {frame_number}/{total_frames} tagging Done!"
+                    )
                     predictions.append(prediction)
 
                 # Create a list of keys that are common in all predictions
