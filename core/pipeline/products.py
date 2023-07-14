@@ -209,7 +209,7 @@ class ProductPipeline(TaskManager):
                 steper=ProductPipeline.update_products_on_db_pinecone,
             )
 
-            print(f"Import products : Done, {user_id}")
+            print(f"Import products : Done, {user_id} - {identifier_name}")
 
         except Exception as e:
             BackLog.exception(instance=None, message=f"Exception occurred...")
