@@ -132,6 +132,14 @@ class ReplicateProvider(BaseProvider):
 
             self.initialized = True
 
+        except Exception as e:
+            BackLog.exception(
+                instance=self,
+                message=f"{self.identifier_name}: Failed authenticate() function.....",
+            )
+            self.initializing = False
+            pass
+
         finally:
             self.initializing = False
 
@@ -153,10 +161,6 @@ class ReplicateProvider(BaseProvider):
 
     async def start_autobot(self, user_data: any, option: any):
         if await self.initialize(user_data=user_data) != True:
-            BackLog.info(
-                instance=self,
-                message=f"{self.identifier_name}: Couldn't connect to replica service",
-            )
             return
 
         # Select relevant chats
@@ -692,10 +696,6 @@ class ReplicateProvider(BaseProvider):
 
     async def get_purchased_products(self, user_data: any, option: any = None):
         if await self.initialize(user_data=user_data) != True:
-            BackLog.info(
-                instance=self,
-                message=f"{self.identifier_name}: Couldn't connect to replica service",
-            )
             return
 
         # Get last_message_ids from option
@@ -762,10 +762,6 @@ class ReplicateProvider(BaseProvider):
         self, user_data: any, option: any = None, steper: any = None
     ):
         if await self.initialize(user_data=user_data) != True:
-            BackLog.info(
-                instance=self,
-                message=f"{self.identifier_name}: Couldn't connect to replica service",
-            )
             return
 
         categories = await self.authed.get_content_categories()
