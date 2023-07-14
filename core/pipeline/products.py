@@ -48,7 +48,7 @@ class ProductPipeline(TaskManager):
             BackLog.exception(instance=None, message=f"Exception occurred...")
         pass
 
-    def fetch_purchased_products_for_one(
+    async def fetch_purchased_products_for_one(
         self, user_id, provider_name, identifier_name, user_data
     ):
         print(f"****** Fetch Purchased Products for one *******")
@@ -68,10 +68,7 @@ class ProductPipeline(TaskManager):
                 self.purchased_task_list[user_id][provider_name][
                     identifier_name
                 ].cancel()
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                loop.run_until_complete(asyncio.sleep(2))
-                loop.close()
+                await asyncio.sleep(2)
 
             if not user_id in self.purchased_task_list:
                 self.purchased_task_list[user_id] = {}
@@ -215,7 +212,7 @@ class ProductPipeline(TaskManager):
 
         pass
 
-    def fetch_all_products_for_one(
+    async def fetch_all_products_for_one(
         self, user_id, provider_name, identifier_name, user_data
     ):
         print(f"****** Fetch All Products for one *******")
@@ -236,10 +233,7 @@ class ProductPipeline(TaskManager):
                 self.allproducts_task_list[user_id][provider_name][
                     identifier_name
                 ].cancel()
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                loop.run_until_complete(asyncio.sleep(2))
-                loop.close()
+                await asyncio.sleep(2)
 
             if not user_id in self.allproducts_task_list:
                 self.allproducts_task_list[user_id] = {}
