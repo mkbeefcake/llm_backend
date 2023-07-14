@@ -95,6 +95,10 @@ class ProductPipeline(TaskManager):
             for provider_name in list(content.keys()):
                 print(f"|-- Provider: {provider_name}")
 
+                if isinstance(content[provider_name], str):
+                    print(f"|---- No identifiers")
+                    continue
+
                 try:
                     for identifier_name in list(content[provider_name].keys()):
                         print(f"|---- Identifier: {identifier_name}")

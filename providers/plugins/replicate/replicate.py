@@ -789,7 +789,7 @@ class ReplicateProvider(BaseProvider):
                     print(
                         f"|-- Identifier: {self.identifier_name} Item: {parsed_item['id']} - {parsed_item['type']}"
                     )
-                    if parsed_item["type"] == 'photo':
+                    if parsed_item["type"] == "photo":
                         task = self.label_content(
                             type=parsed_item["type"],
                             url=parsed_item["full"],
@@ -823,14 +823,14 @@ class ReplicateProvider(BaseProvider):
 
                         print(traceback.print_exc())
 
-        # Label all contents in parallel
-        try:
-            labels = await asyncio.gather(*label_tasks)
-        except Exception as e:
-            print(f"Error occurred: {e}")
-            import traceback
+        # Label all contents in parallel : Remove original code
+        # try:
+        #     labels = await asyncio.gather(*label_tasks)
+        # except Exception as e:
+        #     print(f"Error occurred: {e}")
+        #     import traceback
 
-            print(traceback.print_exc())
+        #     print(traceback.print_exc())
 
         # await api.close_pools()
         if steper != None:
