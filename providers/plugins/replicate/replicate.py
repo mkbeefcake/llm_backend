@@ -382,6 +382,9 @@ class ReplicateProvider(BaseProvider):
 
                 # Get the total number of frames
                 total_frames = vidcap.count_frames()
+                print(
+                    f"|---- Identifier: {self.identifier_name} VideoItem: {id} - totalFrames: {total_frames}"
+                )
 
                 # Get the frame numbers we want to capture
                 frames_to_capture = np.linspace(0, total_frames - 1, 3, dtype=int)
@@ -395,6 +398,9 @@ class ReplicateProvider(BaseProvider):
                     image.save(jpeg_bytes, format="JPEG")
                     jpeg_bytes = jpeg_bytes.getvalue()
 
+                    print(
+                        f"|------ VideoItem: {id} - Frame/Total: {frame_number}/{total_frames}"
+                    )
                     # Process the frame with your model
                     payload = {
                         "k": k,

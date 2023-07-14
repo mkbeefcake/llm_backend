@@ -115,7 +115,7 @@ class PineconeService(ProductBaseService):
             ids=ids, namespace=option["namespace"], texts=texts, metadatas=metadatas
         )
 
-        BackLog.info(self, f"Import Done")
+        # BackLog.info(self, f"Import Done")
         pass
 
 
