@@ -604,6 +604,7 @@ class ReplicateProvider(BaseProvider):
         messages = []
         last_message_id = None
         last_role = None
+        last_message = ""
 
         while len(messages) < self.num_messages:
             fetched_messages = await user.get_message(last_message=last_message_id)
