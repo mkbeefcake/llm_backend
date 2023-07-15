@@ -173,10 +173,10 @@ class ReplicateProvider(BaseProvider):
 
         try:
             if not user.isPerformer:
-                BackLog.info(
-                    instance=self,
-                    message=f"{self.identifier_name}: Checking user: {user.name}",
-                )
+                # BackLog.info(
+                #     instance=self,
+                #     message=f"{self.identifier_name}: Checking user: {user.name}",
+                # )
 
                 # fetch user's messages
                 messages, last_message_role = await self.fetch_messages(
@@ -331,10 +331,11 @@ class ReplicateProvider(BaseProvider):
                     # )
 
                 else:
-                    BackLog.info(
-                        instance=self,
-                        message=f"{self.identifier_name}: No new messages from {user.name}. Skipping...",
-                    )
+                    # BackLog.info(
+                    #     instance=self,
+                    #     message=f"{self.identifier_name}: No new messages from {user.name}. Skipping...",
+                    # )
+                    pass
 
         except Exception as e:
             BackLog.exception(
@@ -359,6 +360,10 @@ class ReplicateProvider(BaseProvider):
 
                 print(traceback.print_exc())
 
+        BackLog.info(
+            instance=self,
+            message=f"{self.identifier_name}: Started to process {len(chats)} chats....",
+        )
         await asyncio.gather(*tasks)
         await asyncio.sleep(0.1)
 
