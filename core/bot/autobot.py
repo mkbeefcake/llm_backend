@@ -1,3 +1,5 @@
+import asyncio
+
 from core.task.task import TaskManager
 from core.utils.log import BackLog
 from db.cruds.product import get_products
@@ -88,12 +90,13 @@ class AutoBot(TaskManager):
             self.task_status_list[uid][provider_name][identifier_name] = False
             BackLog.info(instance=self, message=f"stop_auto_bot: {was_cancelled}")
 
-            result = bridge.disconnect(
+            loop = asyncio.get_event_loop()
+            coroutine = bridge.disconnect(
                 user_id=uid,
                 provider_name=provider_name,
                 identifier_name=identifier_name,
             )
-
+            loop.run_until_complete(coroutine)
         pass
 
     # issue happens
