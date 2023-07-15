@@ -359,6 +359,7 @@ class ReplicateProvider(BaseProvider):
                 print(traceback.print_exc())
 
         await asyncio.gather(*tasks)
+        await asyncio.sleep(0.1)
 
         # await api.close_pools()
 
@@ -762,6 +763,7 @@ class ReplicateProvider(BaseProvider):
                     purchased_items.append(parsed_item)
 
                 user_info["purchased"] = purchased_items
+                await asyncio.sleep(0.1)
 
             except Exception as e:
                 BackLog.exception(
@@ -856,6 +858,8 @@ class ReplicateProvider(BaseProvider):
                             products_info={"products": labels},
                         )
                         label_tasks = []
+                        await asyncio.sleep(0.1)
+
                     except Exception as e:
                         print(f"Error occurred: {e}")
                         import traceback
