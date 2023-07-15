@@ -77,7 +77,7 @@ class AutoBot(TaskManager):
 
         pass
 
-    def stop_auto_bot(self, user: any, provider_name: str, identifier_name: str):
+    async def stop_auto_bot(self, user: any, provider_name: str, identifier_name: str):
         uid = user["uid"]
 
         if (
@@ -90,13 +90,11 @@ class AutoBot(TaskManager):
             self.task_status_list[uid][provider_name][identifier_name] = False
             BackLog.info(instance=self, message=f"stop_auto_bot: {was_cancelled}")
 
-            loop = asyncio.get_event_loop()
-            coroutine = bridge.disconnect(
+            await bridge.disconnect(
                 user_id=uid,
                 provider_name=provider_name,
                 identifier_name=identifier_name,
             )
-            loop.run_until_complete(coroutine)
         pass
 
     # issue happens

@@ -35,7 +35,7 @@ async def stop_auto_bot(
     curr_user: User = Depends(get_current_user),
 ):
     try:
-        autobot.stop_auto_bot(
+        await autobot.stop_auto_bot(
             user=curr_user, provider_name=provider_name, identifier_name=identifier_name
         )
         return MessageOK(data={"message": "User stopped auto-bot successfully"})

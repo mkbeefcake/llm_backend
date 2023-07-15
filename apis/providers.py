@@ -68,7 +68,7 @@ async def unlink_Provider(
     curr_user: User = Depends(get_current_user),
 ):
     try:
-        autobot.stop_auto_bot(
+        await autobot.stop_auto_bot(
             user=curr_user, provider_name=provider_name, identifier_name=identifier_name
         )
         await bridge.disconnect(provider_name, identifier_name, request)
