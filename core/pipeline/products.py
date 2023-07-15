@@ -151,6 +151,11 @@ class ProductPipeline(TaskManager):
             self.stop_task(
                 self.purchased_task_list[uid][provider_name][identifier_name]
             )
+            result = bridge.disconnect(
+                user_id=uid,
+                provider_name=provider_name,
+                identifier_name=identifier_name,
+            )
         pass
 
     def status_of_purchased_products_task(
@@ -344,6 +349,11 @@ class ProductPipeline(TaskManager):
         ):
             self.stop_task(
                 self.allproducts_task_list[uid][provider_name][identifier_name]
+            )
+            result = bridge.disconnect(
+                user_id=uid,
+                provider_name=provider_name,
+                identifier_name=identifier_name,
             )
         pass
 
