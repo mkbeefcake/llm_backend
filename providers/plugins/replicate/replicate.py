@@ -9,12 +9,12 @@ import unicodedata
 
 import imageio
 import numpy as np
+import replica
 import requests
 from fastapi.templating import Jinja2Templates
 from PIL import Image
 from starlette.requests import Request
 
-import replica
 from core.utils.log import BackLog
 from products.pinecone import pinecone_service
 from providers.base import BaseProvider
@@ -588,9 +588,10 @@ class ReplicateProvider(BaseProvider):
 
                 messages.append(value)
 
-            last_message_id = fetched_messages["list"][-1]["id"]
             if not fetched_messages["list"]:
                 break
+
+            last_message_id = fetched_messages["list"][-1]["id"]
 
         last_message_role = messages[0]["role"]
 
