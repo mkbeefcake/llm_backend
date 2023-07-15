@@ -90,11 +90,6 @@ class AutoBot(TaskManager):
             self.task_status_list[uid][provider_name][identifier_name] = False
             BackLog.info(instance=self, message=f"stop_auto_bot: {was_cancelled}")
 
-            await bridge.disconnect(
-                user_id=uid,
-                provider_name=provider_name,
-                identifier_name=identifier_name,
-            )
         pass
 
     # issue happens

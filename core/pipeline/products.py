@@ -152,7 +152,6 @@ class ProductPipeline(TaskManager):
                 self.purchased_task_list[uid][provider_name][identifier_name]
             )
             result = bridge.disconnect(
-                user_id=uid,
                 provider_name=provider_name,
                 identifier_name=identifier_name,
             )
@@ -351,7 +350,6 @@ class ProductPipeline(TaskManager):
                 self.allproducts_task_list[uid][provider_name][identifier_name]
             )
             result = bridge.disconnect(
-                user_id=uid,
                 provider_name=provider_name,
                 identifier_name=identifier_name,
             )
