@@ -112,6 +112,7 @@ class ReplicateProvider(BaseProvider):
     async def disconnect(self, request: Request):
         if self.api != None and self.initialized == True:
             await self.api.close_pools()
+            self.initialized = False
         pass
 
     async def initialize(self, user_data: any):
