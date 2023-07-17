@@ -246,7 +246,7 @@ class ReplicateProvider(BaseProvider):
                         )
                         BackLog.info(
                             instance=self,
-                            message=f"{self.identifier_name}: User Purchased: {user_info}",
+                            message=f"{self.identifier_name}: User Purchased: {user_info is None}",
                         )
 
                         # fetch product info
@@ -331,6 +331,10 @@ class ReplicateProvider(BaseProvider):
                     #     message=f"{self.identifier_name}: Sending message. Status code: {response}",
                     # )
 
+                    BackLog.info(
+                        instance=self,
+                        message=f"{self.identifier_name}: Processed chat for {user.name} successfully",
+                    )
                 else:
                     # BackLog.info(
                     #     instance=self,
@@ -345,10 +349,6 @@ class ReplicateProvider(BaseProvider):
             )
 
         finally:
-            BackLog.info(
-                instance=self,
-                message=f"{self.identifier_name}: Processed chat for {chat['withUser']['id']}",
-            )
             del self.bot_tasks[chat["withUser"]["id"]]
 
     async def start_autobot(self, user_data: any, option: any):
@@ -378,7 +378,7 @@ class ReplicateProvider(BaseProvider):
 
         BackLog.info(
             instance=self,
-            message=f"{self.identifier_name}: Processing {len(self.bot_tasks)} chats with new {new_chats} chats....",
+            message=f"{self.identifier_name}: Detected {new_chats} new chats and current {len(self.bot_tasks)} chats processing....",
         )
 
         # await api.close_pools()
@@ -537,7 +537,7 @@ class ReplicateProvider(BaseProvider):
         )
 
         if interval > 0:
-            return await authed.get_chats(interval=interval, limit=30)
+            return await authed.get_chats(interval=interval, limit=10)
 
         if self.delta > 0:
             return await authed.get_chats(delta=self.delta)
