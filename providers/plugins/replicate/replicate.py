@@ -225,7 +225,7 @@ class ReplicateProvider(BaseProvider):
                         )
                         BackLog.info(
                             instance=self,
-                            message=f"{self.identifier_name}: Viewed history: {product_history}",
+                            message=f"{self.identifier_name}: Has purchased history: {product_history is not None}",
                         )
                         product_id = next(
                             (
@@ -246,7 +246,7 @@ class ReplicateProvider(BaseProvider):
                         )
                         BackLog.info(
                             instance=self,
-                            message=f"{self.identifier_name}: User Purchased: {user_info is None}",
+                            message=f"{self.identifier_name}: User has Purchased: {user_info is not None}",
                         )
 
                         # fetch product info
