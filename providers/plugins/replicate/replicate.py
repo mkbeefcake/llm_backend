@@ -95,6 +95,7 @@ class ReplicateProvider(BaseProvider):
         self.delta = 0
         self.product_limit_per_category = 0
         self.steps = 5
+        self.bot_tasks = {}
 
     def get_provider_info(self):
         return {
@@ -343,18 +344,33 @@ class ReplicateProvider(BaseProvider):
                 message=f"{self.identifier_name}: Exception occurred...",
             )
 
+        finally:
+            BackLog.info(
+                instance=self,
+                message=f"{self.identifier_name}: Processed chat for {chat['withUser']['id']}",
+            )
+            del self.bot_tasks[chat["withUser"]["id"]]
+
     async def start_autobot(self, user_data: any, option: any):
         if await self.initialize(user_data=user_data) != True:
             return
 
         # Select relevant chats
-        chats = await self.select_chats(self.authed, self.rules)
+        chats = await self.select_chats(self.authed, self.rules, interval=300)
 
-        tasks = []
+        new_chats = 0
         for chat in chats:
             try:
-                task = self.process_user_chat(chat, user_data, option)
-                tasks.append(task)
+                # check last messages from chat, if last message is from other, please go on
+                if (
+                    chat["lastMessage"]["fromUser"]["id"] == chat["withUser"]["id"]
+                    and not chat["withUser"]["id"] in self.bot_tasks
+                ):
+                    task = asyncio.create_task(
+                        self.process_user_chat(chat, user_data, option)
+                    )
+                    self.bot_tasks[chat["withUser"]["id"]] = task
+                    new_chats = new_chats + 1
             except:
                 import traceback
 
@@ -362,10 +378,8 @@ class ReplicateProvider(BaseProvider):
 
         BackLog.info(
             instance=self,
-            message=f"{self.identifier_name}: Started to process {len(chats)} chats....",
+            message=f"{self.identifier_name}: Processing {len(self.bot_tasks)} chats with new {new_chats} chats....",
         )
-        await asyncio.gather(*tasks)
-        await asyncio.sleep(0.1)
 
         # await api.close_pools()
 
@@ -473,7 +487,7 @@ class ReplicateProvider(BaseProvider):
             )
             pass
 
-    async def select_chats(self, authed, rules):
+    async def select_chats(self, authed, rules, interval: int = 0):
         """
         Select chats based on the 'chat_list' rule from the frontend.
         - If 'chat_list' rule does not exist, or if the specified chat list does not exist, all chats are selected.
@@ -517,11 +531,14 @@ class ReplicateProvider(BaseProvider):
                             identifier=f"&list_id={str(chat_lists[rules['chat_list']])}"
                         )
 
-        # If 'chat_list' rule does not exist, or if the specified chat list does not exist, select all chats
         BackLog.info(
             instance=self,
-            message=f"{self.identifier_name}: Fetching all chats, delta = {self.delta}",
+            message=f"{self.identifier_name}: Fetching all chats, delta = {self.delta}, interval = {interval}",
         )
+
+        if interval > 0:
+            return await authed.get_chats(interval=interval, limit=30)
+
         if self.delta > 0:
             return await authed.get_chats(delta=self.delta)
         else:
