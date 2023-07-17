@@ -237,7 +237,10 @@ class ProductPipeline(TaskManager):
             print(f"Import products : Done, {user_id} - {identifier_name}")
 
         except Exception as e:
-            BackLog.exception(instance=None, message=f"Exception occurred...")
+            BackLog.exception(
+                instance=None,
+                message=f"Exception occurred... {user_id} - {identifier_name}",
+            )
 
         pass
 

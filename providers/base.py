@@ -60,6 +60,11 @@ class BaseProvider(metaclass=BaseProviderMeta):
     ):
         raise NotImplementedError
 
+    async def scrapy_all_chats(
+        self, user_data: any, option: any = None, steper: any = None
+    ):
+        raise NotImplementedError
+
     def set_base_info(self, user_id: str, identifier_name: str):
         self.user_id = user_id
         self.identifier_name = identifier_name

@@ -356,7 +356,7 @@ class ReplicateProvider(BaseProvider):
             return
 
         # Select relevant chats
-        chats = await self.select_chats(self.authed, self.rules, interval=300)
+        chats = await self.select_chats(self.authed, self.rules, interval=300, limit=10)
 
         new_chats = 0
         for chat in chats:
@@ -487,7 +487,7 @@ class ReplicateProvider(BaseProvider):
             )
             pass
 
-    async def select_chats(self, authed, rules, interval: int = 0):
+    async def select_chats(self, authed, rules, interval: int = 0, limit: int = 100):
         """
         Select chats based on the 'chat_list' rule from the frontend.
         - If 'chat_list' rule does not exist, or if the specified chat list does not exist, all chats are selected.
@@ -502,19 +502,19 @@ class ReplicateProvider(BaseProvider):
             if rules["chat_list"] == "unread":
                 BackLog.info(
                     instance=self,
-                    message=f"{self.identifier_name}: Fetching unread chats, delta = {self.delta}, interval = {interval}",
+                    message=f"{self.identifier_name}: Fetching unread chats, delta = {self.delta}, interval = {interval}, limit = {limit}",
                 )
-                if self.delta > 0:
-                    return await authed.get_chats(
-                        identifier="&filter=unread",
-                        delta=self.delta,
-                        interval=interval,
-                        limit=10,
-                    )
-                else:
-                    return await authed.get_chats(
-                        identifier="&filter=unread", interval=interval, limit=10
-                    )
+                # if self.delta > 0:
+                #     return await authed.get_chats(
+                #         identifier="&filter=unread",
+                #         delta=self.delta,
+                #         interval=interval,
+                #         limit=limit,
+                #     )
+                # else:
+                return await authed.get_chats(
+                    identifier="&filter=unread", interval=interval, limit=limit
+                )
 
             else:
                 # Getting custom lists by their ID
@@ -524,31 +524,31 @@ class ReplicateProvider(BaseProvider):
                 if rules["chat_list"] in chat_lists:
                     BackLog.info(
                         instance=self,
-                        message=f"{self.identifier_name}: Selected chat: {rules['chat_list']}, delta = {self.delta}, interval = {interval}",
+                        message=f"{self.identifier_name}: Selected chat: {rules['chat_list']}, delta = {self.delta}, interval = {interval}, limit = {limit}",
                     )
-                    if self.delta > 0:
-                        return await authed.get_chats(
-                            identifier=f"&list_id={str(chat_lists[rules['chat_list']])}",
-                            delta=self.delta,
-                            interval=interval,
-                            limit=10,
-                        )
-                    else:
-                        return await authed.get_chats(
-                            identifier=f"&list_id={str(chat_lists[rules['chat_list']])}",
-                            interval=interval,
-                            limit=10,
-                        )
+                    # if self.delta > 0:
+                    #     return await authed.get_chats(
+                    #         identifier=f"&list_id={str(chat_lists[rules['chat_list']])}",
+                    #         delta=self.delta,
+                    #         interval=interval,
+                    #         limit=limit,
+                    #     )
+                    # else:
+                    return await authed.get_chats(
+                        identifier=f"&list_id={str(chat_lists[rules['chat_list']])}",
+                        interval=interval,
+                        limit=limit,
+                    )
 
         BackLog.info(
             instance=self,
-            message=f"{self.identifier_name}: Fetching all chats, delta = {self.delta}, interval = {interval}",
+            message=f"{self.identifier_name}: Fetching all chats, delta = {self.delta}, interval = {interval}, limit={limit}",
         )
 
-        if self.delta > 0:
-            return await authed.get_chats(delta=self.delta, limit=10)
-        else:
-            return await authed.get_chats(limit=10)
+        # if self.delta > 0:
+        #     return await authed.get_chats(delta=self.delta, limit=limit, interval=interval)
+        # else:
+        return await authed.get_chats(limit=limit, interval=interval)
 
     def load_credentials_from_userdata(self, user_data):
         auth_json = {}
@@ -747,6 +747,53 @@ class ReplicateProvider(BaseProvider):
 
             print(traceback.format_exc())
 
+    async def scrapy_all_chats(
+        self, user_data: any, option: any = None, steper: any = None
+    ):
+        if await self.initialize(user_data=user_data) != True:
+            return
+
+        # Select all chats
+        chats = await self.select_chats(self.authed, self.rules)
+
+        chat_histories = []
+        for chat in chats:
+            try:
+                user = await self.authed.get_user(chat["withUser"]["id"])
+                if not user.isPerformer:
+                    # fetch user's messages
+                    messages, last_message_role = await self.fetch_messages(
+                        user, self.authed
+                    )
+
+                    chat_history = {"id": chat["withUser"]["id"], "messages": messages}
+                    chat_histories.append(chat_history)
+
+                    if steper != None and len(chat_histories) >= 100:
+                        try:
+                            steper(
+                                user_id=self.user_id,
+                                provider_name=ReplicateProvider.__name__.lower(),
+                                identifier_name=self.identifier_name,
+                                chat_histories=chat_histories,
+                            )
+
+                        except Exception as e:
+                            print(f"Error occurred: {e}")
+
+                            import traceback
+
+                            print(traceback.print_exc())
+
+                        finally:
+                            chat_histories = []
+                            await asyncio.sleep(0.1)
+
+            except:
+                import traceback
+
+                print(traceback.print_exc())
+
     async def get_purchased_products(self, user_data: any, option: any = None):
         if await self.initialize(user_data=user_data) != True:
             return
@@ -888,14 +935,17 @@ class ReplicateProvider(BaseProvider):
                             identifier_name=self.identifier_name,
                             products_info={"products": labels},
                         )
-                        label_tasks = []
-                        await asyncio.sleep(0.1)
 
                     except Exception as e:
                         print(f"Error occurred: {e}")
+
                         import traceback
 
                         print(traceback.print_exc())
+
+                    finally:
+                        label_tasks = []
+                        await asyncio.sleep(0.1)
 
         # Label all contents in parallel : Remove original code
         # try:

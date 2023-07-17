@@ -1,5 +1,6 @@
 import json
 
+from core.utils.dict import remove_duplicates
 from db.firebase import db
 
 
@@ -50,13 +51,3 @@ def update_products(user_id: str, provider_name: str, key: str, new_content: any
         document_ref.update(original_data)
 
     return {"message": "Products data updated successfully"}
-
-
-def remove_duplicates(dicts):
-    unique_dicts = []
-    seen_ids = set()
-    for dictionary in dicts:
-        if dictionary["id"] not in seen_ids:
-            unique_dicts.append(dictionary)
-            seen_ids.add(dictionary["id"])
-    return unique_dicts

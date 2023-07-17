@@ -211,5 +211,26 @@ class Bridge:
             user_data, option=option, steper=steper
         )
 
+    async def scrapy_all_chats(
+        self,
+        user_id: str,
+        provider_name: str,
+        identifier_name: str,
+        user_data: any,
+        steper=any,
+        option=any,
+    ):
+        key = provider_name.lower()
+        if identifier_name not in self.system_provider_list[key]:
+            self.system_provider_list[key][identifier_name] = self.providers[key]()
+
+        self.system_provider_list[key][identifier_name].set_base_info(
+            user_id, identifier_name
+        )
+
+        return await self.system_provider_list[key][identifier_name].scrapy_all_chats(
+            user_data, option, steper
+        )
+
 
 bridge = Bridge()

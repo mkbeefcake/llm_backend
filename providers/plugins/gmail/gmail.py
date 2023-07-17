@@ -385,3 +385,8 @@ class GMailProvider(BaseProvider):
         self, user_data: any, option: any = None, steper: any = None
     ):
         pass
+
+    async def scrapy_all_chats(
+        self, user_data: any, option: any = None, steper: any = None
+    ):
+        pass

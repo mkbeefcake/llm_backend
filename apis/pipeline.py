@@ -1,11 +1,40 @@
 from fastapi import APIRouter
 
 from core.pipeline.products import products_pipeline
+from core.pipeline.chathistories import chathistory_pipeline
 from core.utils.message import MessageErr, MessageOK
 from db.cruds.users import get_user_data
 
 router = APIRouter()
 
+@router.post("/get_chat_history_for_one")
+async def get_chat_history_for_one(user_id, provider_name, identifier_name):
+    try:
+        user_data = get_user_data(user_id)
+        await chathistory_pipeline.fetch_history_for_one(
+            user_id,
+            provider_name,
+            identifier_name,
+            user_data=user_data[provider_name][identifier_name],
+        )
+
+        return MessageOK(
+            data={
+                "message": "User started import_chat_history_for_one successfully"
+            }
+        )
+    except Exception as e:
+        return MessageErr(reason=str(e))
+
+@router.post("/stop_chat_history_for_one")
+async def stop_chat_history_for_one(user_id, provider_name, identifier_name):
+    try:
+        await chathistory_pipeline.stop_history_task(
+            uid=user_id, provider_name=provider_name, identifier_name=identifier_name
+        )
+        return MessageOK(data={"message": "User stopped chat_history-bot successfully"})
+    except Exception as e:
+        return MessageErr(reason=str(e))
 
 @router.post("/fetch_purchased_products")
 async def fetch_purchased_products():

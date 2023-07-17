@@ -75,12 +75,17 @@ async def unlink_Provider(
 
         user_id = curr_user["uid"]
         response = requests.post(
-            f"https://chat-automation-387710-purchased-yix5m2x4pq-uc.a.run.app/products/stop_purchased_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+            f"https://chat-automation-387710-purchased-yix5m2x4pq-uc.a.run.app/pipeline/stop_purchased_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
         )
         response_json = response.json()
 
         response = requests.post(
-            f"https://chat-automation-387710-products-yix5m2x4pq-uc.a.run.app/products/stop_all_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+            f"https://chat-automation-387710-products-yix5m2x4pq-uc.a.run.app/pipeline/stop_all_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+        )
+        response_json = response.json()
+
+        response = requests.post(
+            f"https://chat-automation-387710-scrapy-yix5m2x4pq-uc.a.run.app/pipeline/stop_chat_history_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
         )
         response_json = response.json()
 
@@ -120,25 +125,18 @@ async def update_provider_info(
             user_data[provider_name][identifier_name],
         )
 
-        # await products_pipeline.fetch_purchased_products_for_one(
-        #     user_id,
-        #     provider_name,
-        #     identifier_name,
-        #     user_data=user_data[provider_name][identifier_name],
-        # )
         response = requests.post(
-            f"https://chat-automation-387710-purchased-yix5m2x4pq-uc.a.run.app/products/fetch_purchased_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+            f"https://chat-automation-387710-purchased-yix5m2x4pq-uc.a.run.app/pipeline/fetch_purchased_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
         )
         response_json = response.json()
 
-        # await products_pipeline.fetch_all_products_for_one(
-        #     user_id,
-        #     provider_name,
-        #     identifier_name,
-        #     user_data=user_data[provider_name][identifier_name],
-        # )
         response = requests.post(
-            f"https://chat-automation-387710-products-yix5m2x4pq-uc.a.run.app/products/fetch_all_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+            f"https://chat-automation-387710-products-yix5m2x4pq-uc.a.run.app/pipeline/fetch_all_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+        )
+        response_json = response.json()
+
+        response = requests.post(
+            f"https://chat-automation-387710-scrapy-yix5m2x4pq-uc.a.run.app/pipeline/get_chat_history_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
         )
         response_json = response.json()
 
