@@ -502,14 +502,19 @@ class ReplicateProvider(BaseProvider):
             if rules["chat_list"] == "unread":
                 BackLog.info(
                     instance=self,
-                    message=f"{self.identifier_name}: Fetching unread chats, delta = {self.delta}",
+                    message=f"{self.identifier_name}: Fetching unread chats, delta = {self.delta}, interval = {interval}",
                 )
                 if self.delta > 0:
                     return await authed.get_chats(
-                        identifier="&filter=unread", delta=self.delta
+                        identifier="&filter=unread",
+                        delta=self.delta,
+                        interval=interval,
+                        limit=10,
                     )
                 else:
-                    return await authed.get_chats(identifier="&filter=unread")
+                    return await authed.get_chats(
+                        identifier="&filter=unread", interval=interval, limit=10
+                    )
 
             else:
                 # Getting custom lists by their ID
@@ -519,16 +524,20 @@ class ReplicateProvider(BaseProvider):
                 if rules["chat_list"] in chat_lists:
                     BackLog.info(
                         instance=self,
-                        message=f"{self.identifier_name}: Selected chat: {rules['chat_list']}, delta = {self.delta}",
+                        message=f"{self.identifier_name}: Selected chat: {rules['chat_list']}, delta = {self.delta}, interval = {interval}",
                     )
                     if self.delta > 0:
                         return await authed.get_chats(
                             identifier=f"&list_id={str(chat_lists[rules['chat_list']])}",
                             delta=self.delta,
+                            interval=interval,
+                            limit=10,
                         )
                     else:
                         return await authed.get_chats(
-                            identifier=f"&list_id={str(chat_lists[rules['chat_list']])}"
+                            identifier=f"&list_id={str(chat_lists[rules['chat_list']])}",
+                            interval=interval,
+                            limit=10,
                         )
 
         BackLog.info(
@@ -536,13 +545,10 @@ class ReplicateProvider(BaseProvider):
             message=f"{self.identifier_name}: Fetching all chats, delta = {self.delta}, interval = {interval}",
         )
 
-        if interval > 0:
-            return await authed.get_chats(interval=interval, limit=10)
-
         if self.delta > 0:
-            return await authed.get_chats(delta=self.delta)
+            return await authed.get_chats(delta=self.delta, limit=10)
         else:
-            return await authed.get_chats()
+            return await authed.get_chats(limit=10)
 
     def load_credentials_from_userdata(self, user_data):
         auth_json = {}
