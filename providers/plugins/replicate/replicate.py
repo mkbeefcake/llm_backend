@@ -88,7 +88,7 @@ class ReplicateProvider(BaseProvider):
 
     def __init__(self) -> None:
         super().__init__()
-        self.num_messages = 5
+        self.num_messages = 10
         self.initialized = False
         self.initializing = False
         self.api = None
@@ -765,33 +765,43 @@ class ReplicateProvider(BaseProvider):
             try:
                 user = await self.authed.get_user(chat["withUser"]["id"])
                 if not user.isPerformer:
-                    # fetch user's messages
-                    messages, last_message_role = await self.fetch_messages(
-                        user, self.authed
-                    )
+                    data = await self.authed.get_subscriber_info(user.id)
+                    if data["totalSumm"] > 20:  # Filter by LTV
+                        BackLog.info(
+                            self,
+                            f"{self.identifier_name}: Get chat for {user.name}...",
+                        )
 
-                    chat_history = {"id": chat["withUser"]["id"], "messages": messages}
-                    chat_histories.append(chat_history)
+                        # fetch user's messages
+                        messages, last_message_role = await self.fetch_messages(
+                            user, self.authed
+                        )
 
-                    if steper != None and len(chat_histories) >= 20:
-                        try:
-                            steper(
-                                user_id=self.user_id,
-                                provider_name=ReplicateProvider.__name__.lower(),
-                                identifier_name=self.identifier_name,
-                                chat_histories=chat_histories,
-                            )
+                        chat_history = {
+                            "id": chat["withUser"]["id"],
+                            "messages": messages,
+                        }
+                        chat_histories.append(chat_history)
 
-                        except Exception as e:
-                            print(f"Error occurred: {e}")
+                        if steper != None and len(chat_histories) >= 20:
+                            try:
+                                steper(
+                                    user_id=self.user_id,
+                                    provider_name=ReplicateProvider.__name__.lower(),
+                                    identifier_name=self.identifier_name,
+                                    chat_histories=chat_histories,
+                                )
 
-                            import traceback
+                            except Exception as e:
+                                print(f"Error occurred: {e}")
 
-                            print(traceback.print_exc())
+                                import traceback
 
-                        finally:
-                            chat_histories = []
-                            await asyncio.sleep(0.1)
+                                print(traceback.print_exc())
+
+                            finally:
+                                chat_histories = []
+                                await asyncio.sleep(0.1)
 
             except:
                 import traceback
