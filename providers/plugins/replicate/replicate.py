@@ -608,6 +608,9 @@ class ReplicateProvider(BaseProvider):
         while len(messages) < self.num_messages:
             fetched_messages = await user.get_message(last_message=last_message_id)
 
+            if not fetched_messages["list"]:
+                break
+
             for message in fetched_messages["list"]:
                 if message["fromUser"]["id"] == user.id:
                     value = {"role": "user", "content": message["text"]}
@@ -615,9 +618,6 @@ class ReplicateProvider(BaseProvider):
                     value = {"role": "assistant", "content": message["text"]}
 
                 messages.append(value)
-
-            if not fetched_messages["list"]:
-                break
 
             last_message_id = fetched_messages["list"][-1]["id"]
 
@@ -635,6 +635,9 @@ class ReplicateProvider(BaseProvider):
         while len(messages) < 1000:
             fetched_messages = await user.get_message(last_message=last_message_id)
 
+            if not fetched_messages["list"]:
+                break
+
             for message in fetched_messages["list"]:
                 value = {
                     "fromUser": message["fromUser"]["id"],
@@ -646,9 +649,6 @@ class ReplicateProvider(BaseProvider):
                     "toUser": user.id,
                 }
                 messages.append(value)
-
-            if not fetched_messages["list"]:
-                break
 
             last_message_id = fetched_messages["list"][-1]["id"]
 
@@ -811,15 +811,14 @@ class ReplicateProvider(BaseProvider):
 
                         messages = await asyncio.gather(*tasks)
                         tasks = []
-                        chat_histories.extend(messages)
 
-                        if steper != None and len(chat_histories) >= 100:
+                        if steper != None:
                             try:
                                 steper(
                                     user_id=self.user_id,
                                     provider_name=ReplicateProvider.__name__.lower(),
                                     identifier_name=self.identifier_name,
-                                    chat_histories=chat_histories,
+                                    chat_histories=messages,
                                 )
 
                             except Exception as e:
