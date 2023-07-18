@@ -804,7 +804,7 @@ class ReplicateProvider(BaseProvider):
                         # fetch user's messages
                         messages = await self.scrap_messages(user, self.authed)
 
-                        chat_histories.append(messages)
+                        chat_histories.extend(messages)
 
                         if steper != None and len(chat_histories) >= 100:
                             try:
