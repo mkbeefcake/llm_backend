@@ -755,6 +755,10 @@ class ReplicateProvider(BaseProvider):
 
         # Select all chats
         chats = await self.select_chats(self.authed, self.rules)
+        BackLog.info(
+            self,
+            f"{self.identifier_name}: Total chats: {len(chats)}...",
+        )
 
         chat_histories = []
         for chat in chats:
@@ -769,7 +773,7 @@ class ReplicateProvider(BaseProvider):
                     chat_history = {"id": chat["withUser"]["id"], "messages": messages}
                     chat_histories.append(chat_history)
 
-                    if steper != None and len(chat_histories) >= 100:
+                    if steper != None and len(chat_histories) >= 20:
                         try:
                             steper(
                                 user_id=self.user_id,

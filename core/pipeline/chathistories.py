@@ -122,6 +122,8 @@ class ChatHistoryPipeline(TaskManager):
             )
 
         except Exception as e:
+            BackLog.exception(instance=None, message=f"Exception occurred to DB...")
             pass
+
 
 chathistory_pipeline = ChatHistoryPipeline()

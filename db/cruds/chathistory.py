@@ -39,14 +39,16 @@ def update_chat_histories(user_id: str, provider_name: str, key: str, new_conten
     if new_content == None or new_content == "":
         pass
     else:
-        if original_data:
-            original_data += new_content
+        if "chats" in original_data:
+            original_data["chats"] += new_content
         else:
-            original_data = new_content
+            original_data["chats"] = new_content
 
-        original_data = sorted(original_data, key=lambda x: x["id"], reverse=True)
+        original_data["chats"] = sorted(
+            original_data["chats"], key=lambda x: x["id"], reverse=True
+        )
 
-        original_data = remove_duplicates(original_data)
+        original_data["chats"] = remove_duplicates(original_data["chats"])
         document_ref.update(original_data)
 
     return {"message": "Chat history data updated successfully"}
