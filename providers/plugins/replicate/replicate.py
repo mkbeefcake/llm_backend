@@ -632,7 +632,7 @@ class ReplicateProvider(BaseProvider):
         messages = []
         last_message_id = None
 
-        while len(messages) < self.num_messages:
+        while len(messages) < 1000:
             fetched_messages = await user.get_message(last_message=last_message_id)
 
             for message in fetched_messages["list"]:
@@ -790,6 +790,7 @@ class ReplicateProvider(BaseProvider):
         )
 
         chat_histories = []
+        tasks = []
         for chat in chats:
             try:
                 user = await self.authed.get_user(chat["withUser"]["id"])
@@ -802,8 +803,14 @@ class ReplicateProvider(BaseProvider):
                         )
 
                         # fetch user's messages
-                        messages = await self.scrap_messages(user, self.authed)
+                        task = self.scrap_messages(user, self.authed)
+                        tasks.append(task)
 
+                        if len(tasks) < 10:
+                            continue
+
+                        messages = await asyncio.gather(*tasks)
+                        tasks = []
                         chat_histories.extend(messages)
 
                         if steper != None and len(chat_histories) >= 100:
