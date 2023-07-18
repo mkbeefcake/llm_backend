@@ -628,6 +628,35 @@ class ReplicateProvider(BaseProvider):
 
         return messages, last_message_role
 
+    async def scrap_messages(self, user, authed):
+        messages = []
+        last_message_id = None
+
+        while len(messages) < self.num_messages:
+            fetched_messages = await user.get_message(last_message=last_message_id)
+
+            for message in fetched_messages["list"]:
+                value = {
+                    "fromUser": message["fromUser"]["id"],
+                    "text": message["text"],
+                    "price": message["price"],
+                    "isOpened": message["isOpened"],
+                    "mediaCount": message["mediaCount"],
+                    "createdAt": message["createdAt"],
+                    "toUser": user.id,
+                }
+                messages.append(value)
+
+            if not fetched_messages["list"]:
+                break
+
+            last_message_id = fetched_messages["list"][-1]["id"]
+
+        # Put message in right order
+        messages = messages[::-1]
+
+        return messages
+
     async def format_text_gen_messages(self, messages, user):
         messages = []
         last_message_id = None
@@ -773,17 +802,11 @@ class ReplicateProvider(BaseProvider):
                         )
 
                         # fetch user's messages
-                        messages, last_message_role = await self.fetch_messages(
-                            user, self.authed
-                        )
+                        messages = await self.scrap_messages(user, self.authed)
 
-                        chat_history = {
-                            "id": chat["withUser"]["id"],
-                            "messages": messages,
-                        }
-                        chat_histories.append(chat_history)
+                        chat_histories.append(messages)
 
-                        if steper != None and len(chat_histories) >= 20:
+                        if steper != None and len(chat_histories) >= 100:
                             try:
                                 steper(
                                     user_id=self.user_id,

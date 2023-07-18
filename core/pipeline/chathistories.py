@@ -110,7 +110,7 @@ class ChatHistoryPipeline(TaskManager):
     ):
         BackLog.info(
             instance=None,
-            message=f"{identifier_name}: Saving {len(chat_histories)} user's history on db....",
+            message=f"{identifier_name}: Saving {len(chat_histories)} chats history on db....",
         )
 
         try:
