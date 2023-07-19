@@ -811,6 +811,9 @@ class ReplicateProvider(BaseProvider):
 
                         messages = await asyncio.gather(*tasks)
                         tasks = []
+                        chat_histories = [
+                            element for one in messages for element in one
+                        ]
 
                         if steper != None:
                             try:
@@ -818,7 +821,7 @@ class ReplicateProvider(BaseProvider):
                                     user_id=self.user_id,
                                     provider_name=ReplicateProvider.__name__.lower(),
                                     identifier_name=self.identifier_name,
-                                    chat_histories=messages,
+                                    chat_histories=chat_histories,
                                 )
 
                             except Exception as e:
