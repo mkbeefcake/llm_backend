@@ -8,7 +8,15 @@ from db.cruds.users import get_user_data
 router = APIRouter()
 
 
-@router.post("/get_chat_history_for_one")
+@router.post(
+    "/get_chat_history_for_one",
+    summary="Get chat history for the account",
+    description="This endpoint is used to get chat history for the account which specified by provider and identifier name.<br>"
+    "It tries to get last 1000 messages for all users between the account.<br><br>"
+    "<i>user_id</i> : indicates the end-user's id in the database<br>"
+    "<i>provider_name</i> : indicates the provider name such as 'gmailprovider' or 'replicateprovider'<br>"
+    "<i>identifier_name</i> : indicates the account name",
+)
 async def get_chat_history_for_one(user_id, provider_name, identifier_name):
     try:
         user_data = get_user_data(user_id)
@@ -26,7 +34,14 @@ async def get_chat_history_for_one(user_id, provider_name, identifier_name):
         return MessageErr(reason=str(e))
 
 
-@router.post("/stop_chat_history_for_one")
+@router.post(
+    "/stop_chat_history_for_one",
+    summary="Stop the chat history thread for the account.",
+    description="This endpoint is used to stop chat history thread for the account.<br><br>"
+    "<i>user_id</i> : indicates the end-user's id in the database<br>"
+    "<i>provider_name</i> : indicates the provider name such as 'gmailprovider' or 'replicateprovider'<br>"
+    "<i>identifier_name</i> : indicates the account name",
+)
 async def stop_chat_history_for_one(user_id, provider_name, identifier_name):
     try:
         await chathistory_pipeline.stop_history_task(
@@ -37,7 +52,11 @@ async def stop_chat_history_for_one(user_id, provider_name, identifier_name):
         return MessageErr(reason=str(e))
 
 
-@router.post("/fetch_purchased_products")
+@router.post(
+    "/fetch_purchased_products",
+    summary="Get all purchased products list for all accounts",
+    description="This endpoint is used to get all purchased products list for all accounts in the system",
+)
 async def fetch_purchased_products():
     try:
         products_pipeline.fetch_purchased_products()
@@ -48,7 +67,11 @@ async def fetch_purchased_products():
         return MessageErr(reason=str(e))
 
 
-@router.post("/fetch_all_products")
+@router.post(
+    "/fetch_all_products",
+    summary="Get all products for all accounts",
+    description="This endpoint is used to get all products list for all accounts in the system",
+)
 async def fetch_all_products():
     try:
         products_pipeline.fetch_all_products()
@@ -59,7 +82,14 @@ async def fetch_all_products():
         return MessageErr(reason=str(e))
 
 
-@router.post("/fetch_purchased_products_for_one")
+@router.post(
+    "/fetch_purchased_products_for_one",
+    summary="Get all purchased products for one account",
+    description="This endpoint is used to get all purchased products for one account which specified by provider and identifier name.<br><br>"
+    "<i>user_id</i> : indicates the end-user's id in the database<br>"
+    "<i>provider_name</i> : indicates the provider name such as 'gmailprovider' or 'replicateprovider'<br>"
+    "<i>identifier_name</i> : indicates the account name",
+)
 async def fetch_purchased_products_for_one(user_id, provider_name, identifier_name):
     try:
         user_data = get_user_data(user_id)
@@ -79,7 +109,14 @@ async def fetch_purchased_products_for_one(user_id, provider_name, identifier_na
         return MessageErr(reason=str(e))
 
 
-@router.post("/fetch_all_products_for_one")
+@router.post(
+    "/fetch_all_products_for_one",
+    summary="Get all products for one account",
+    description="This endpoint is used to get all products for one account which specified by provider and identifier name.<br><br>"
+    "<i>user_id</i> : indicates the end-user's id in the database<br>"
+    "<i>provider_name</i> : indicates the provider name such as 'gmailprovider' or 'replicateprovider'<br>"
+    "<i>identifier_name</i> : indicates the account name",
+)
 async def fetch_all_products_for_one(user_id, provider_name, identifier_name):
     try:
         user_data = get_user_data(user_id)
@@ -97,7 +134,14 @@ async def fetch_all_products_for_one(user_id, provider_name, identifier_name):
         return MessageErr(reason=str(e))
 
 
-@router.post("/stop_purchased_products_for_one")
+@router.post(
+    "/stop_purchased_products_for_one",
+    summary="Stop purchased products thread for one account",
+    description="This endpoint is used to stop the thread fetching purchased products for one account which specified by provider and identifier name.<br><br>"
+    "<i>user_id</i> : indicates the end-user's id in the database<br>"
+    "<i>provider_name</i> : indicates the provider name such as 'gmailprovider' or 'replicateprovider'<br>"
+    "<i>identifier_name</i> : indicates the account name",
+)
 async def stop_purchased_products_for_one(user_id, provider_name, identifier_name):
     try:
         await products_pipeline.stop_purchased_products_task(
@@ -108,7 +152,14 @@ async def stop_purchased_products_for_one(user_id, provider_name, identifier_nam
         return MessageErr(reason=str(e))
 
 
-@router.post("/stop_all_products_for_one")
+@router.post(
+    "/stop_all_products_for_one",
+    summary="Stop products thread for one account",
+    description="This endpoint is used to stop the thred fetching all products for one account which specified by provider and identifier name.<br><br>"
+    "<i>user_id</i> : indicates the end-user's id in the database<br>"
+    "<i>provider_name</i> : indicates the provider name such as 'gmailprovider' or 'replicateprovider'<br>"
+    "<i>identifier_name</i> : indicates the account name",
+)
 async def stop_all_products_for_one(user_id, provider_name, identifier_name):
     try:
         await products_pipeline.stop_all_products_task(

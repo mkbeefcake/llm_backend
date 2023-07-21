@@ -14,7 +14,12 @@ from .users import User, get_current_user
 router = APIRouter()
 
 
-@router.get("/get_my_providers")
+@router.get(
+    "/get_my_providers",
+    summary="Get the provider information for end-user",
+    description="This endpoint gets all provider associated information for end-user.<br>"
+    "This will return the registered accounts for the end-user, those AI bot's status, system support provider information",
+)
 async def get_my_providers(curr_user: User = Depends(get_current_user)):
     try:
         user_id = curr_user["uid"]
@@ -32,7 +37,11 @@ async def get_my_providers(curr_user: User = Depends(get_current_user)):
         return MessageErr(reason=str(e))
 
 
-@router.get("/get_providers")
+@router.get(
+    "/get_providers",
+    summary="Get the system support provider information",
+    description="This endpoint will return all provider information registered in the system",
+)
 async def get_providers(curr_user: User = Depends(get_current_user)):
     try:
         return MessageOK(data=bridge.get_all_providers())
@@ -40,7 +49,12 @@ async def get_providers(curr_user: User = Depends(get_current_user)):
         return MessageErr(reason=str(e))
 
 
-@router.get("/google_auth")
+@router.get(
+    "/google_auth",
+    summary="The endpoint for Google authentication",
+    description="This endpoint is registered on the Google Cloud platform.<br>"
+    "When new Gmail provider account is authenticated, this endpoint is called by Google cloud platform with authenticate code",
+)
 async def google_auth(request: Request):
     try:
         return await bridge.get_access_token("gmailprovider", request)
@@ -48,7 +62,13 @@ async def google_auth(request: Request):
         return MessageErr(reason=str(e))
 
 
-@router.get("/link_provider")
+@router.get(
+    "/link_provider",
+    summary="Link the account for specific provider",
+    description="This endpoint is used to link the account which supported by provider.<br><br>"
+    "<i>provider_name</i> : indicates the provider such as 'gmailprovider' or 'replicateprovider'<br>"
+    "<i>redirect_url</i> : indicates the url which returns with <i>access_token</i> and <i>refresh_token</i><br>",
+)
 async def link_Provider(
     provider_name: str = "gmailprovider",
     redirect_url: str = "http://localhost:3000/callback/oauth",
@@ -60,7 +80,13 @@ async def link_Provider(
         return MessageErr(reason=str(e))
 
 
-@router.get("/unlink_provider")
+@router.get(
+    "/unlink_provider",
+    summary="Unlink the account for specific provider",
+    description="This endpoint is used to unlink the account which specified by provider and identifier name.<br><br>"
+    "<i>provider_name</i> : indicates the provider such as 'gmailprovider' or 'replicateprovider' <br>"
+    "<i>identifier_name</i> : indicates the account name<br>",
+)
 async def unlink_Provider(
     provider_name: str = "gmailprovider",
     identifier_name: str = "john doe",
@@ -101,7 +127,14 @@ async def unlink_Provider(
         return MessageErr(reason=str(e))
 
 
-@router.post("/update_provider_info")
+@router.post(
+    "/update_provider_info",
+    summary="Update the account's information",
+    description="This endpoint is used to update information for specific account.<br><br>"
+    "<i>provider_name</i> : indicates the provider such as 'gmailprovider' or 'replicateprovider' <br>"
+    "<i>identifier_name</i> : indicates the account name<br>"
+    "<i>social_info</i> : indicates the account information, JSON-parseable string",
+)
 async def update_provider_info(
     provider_name: str = "gmailprovider",
     identifier_name: str = "john doe",

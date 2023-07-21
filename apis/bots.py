@@ -9,7 +9,11 @@ from .users import User, get_current_user
 router = APIRouter()
 
 
-@router.post("/start_auto_bot")
+@router.post(
+    "/start_auto_bot",
+    summary="Start AI bot",
+    description="Start automatic AI chat bot for the account which specified by provider and identifer name",
+)
 async def start_auto_bot(
     provider_name: str = "gmailprovider",
     identifier_name: str = "john doe",
@@ -28,7 +32,11 @@ async def start_auto_bot(
         return MessageErr(reason=str(e))
 
 
-@router.post("/stop_auto_bot")
+@router.post(
+    "/stop_auto_bot",
+    summary="Stop AI bot",
+    description="Stop AI chat bot for the account which specified by provider and identifier name",
+)
 async def stop_auto_bot(
     provider_name: str = "gmailprovider",
     identifier_name: str = "john doe",
@@ -43,7 +51,11 @@ async def stop_auto_bot(
         return MessageErr(reason=str(e))
 
 
-@router.post("/status_auto_bot")
+@router.post(
+    "/status_auto_bot",
+    summary="Status AI bot",
+    description="Get the current automatic AI chat bot's status. if running, returns TRUE, or False",
+)
 async def status_auto_bot(
     provider_name: str = "gmailprovider",
     identifier_name: str = "john doe",

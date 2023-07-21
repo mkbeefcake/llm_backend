@@ -24,8 +24,25 @@ def add_middleware(app):
     )
 
 
+description = f"""
+<i>{settings.PROJECT_NAME}</i> API helps you understand the system and makes you easier to consume the service.
+<i>{settings.PROJECT_NAME}</i> system will automate the communication by using AI models.<br>
+This connects with GMail, Replica providers and will add more 3rd party providers in future.<br>
+
+Here are some terms to make you understand the system.<br><br>
+<i>provider</i> : the service which the system supports for communication by using AI models.<br>
+<i>end-user</i> : the user which signs in the system.<br>
+<i>account</i>  : the end-user can have multiple accounts which provided by provider system.<br>
+<i>user</i>     : the user which the account communicates on the provider system.<br>
+"""
+
+
 def application_start():
-    app = FastAPI(title=settings.PROJECT_NAME, version=settings.PROJECT_VERSION)
+    app = FastAPI(
+        title=settings.PROJECT_NAME,
+        description=description,
+        version=settings.PROJECT_VERSION,
+    )
     include_router(app)
     add_middleware(app)
     return app
@@ -36,15 +53,6 @@ app = application_start()
 
 @app.get("/probe")
 async def probe():
-    return {"message": "ok"}
-
-
-@app.get("/testpoint")
-async def probe():
-    pinecone_service.match_product(
-        "hair",
-        option={"namespace": "replicateprovider_eN9ZdxgMdse3lFIYByBS90fN78S2_Stefi"},
-    )
     return {"message": "ok"}
 
 

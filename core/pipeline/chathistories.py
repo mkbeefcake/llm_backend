@@ -2,7 +2,7 @@ import json
 
 from core.task.task import TaskManager
 from core.utils.log import BackLog
-from db.cloudsql import update_chathistories_on_sqldb
+# from db.cloudsql import update_chathistories_on_sqldb
 from db.cruds.chathistory import update_chat_histories
 from providers.bridge import bridge
 
