@@ -16,6 +16,7 @@ from PIL import Image
 from starlette.requests import Request
 
 from core.utils.log import BackLog
+from core.utils.timestamp import get_current_timestamp
 from products.pinecone import pinecone_service
 from providers.base import BaseProvider
 from services.service import replica_service, textgen_service
@@ -628,34 +629,51 @@ class ReplicateProvider(BaseProvider):
 
         return messages, last_message_role
 
-    async def scrap_messages(self, user, authed):
-        messages = []
-        last_message_id = None
+    async def scrap_messages(self, authed, chat, semaphore):
+        try:
+            async with semaphore:
+                user = await self.authed.get_user(chat["withUser"]["id"])
+                if not user.isPerformer:
+                    data = await self.authed.get_subscriber_info(user.id)
+                    if data["totalSumm"] > 20:  # Filter by LTV
+                        BackLog.info(
+                            self,
+                            f"{self.identifier_name}: Get chat for {user.name}...",
+                        )
 
-        while len(messages) < 1000:
-            fetched_messages = await user.get_message(last_message=last_message_id)
+                        # fetch user's messages
+                        messages = []
+                        last_message_id = None
 
-            if not fetched_messages["list"]:
-                break
+                        while len(messages) < 1000:
+                            fetched_messages = await user.get_message(
+                                last_message=last_message_id
+                            )
 
-            for message in fetched_messages["list"]:
-                value = {
-                    "fromUser": message["fromUser"]["id"],
-                    "text": message["text"],
-                    "price": message["price"],
-                    "isOpened": message["isOpened"],
-                    "mediaCount": message["mediaCount"],
-                    "createdAt": message["createdAt"],
-                    "toUser": user.id,
-                }
-                messages.append(value)
+                            if not fetched_messages["list"]:
+                                break
 
-            last_message_id = fetched_messages["list"][-1]["id"]
+                            for message in fetched_messages["list"]:
+                                value = {
+                                    "fromUser": message["fromUser"]["id"],
+                                    "text": message["text"],
+                                    "price": message["price"],
+                                    "isOpened": message["isOpened"],
+                                    "mediaCount": message["mediaCount"],
+                                    "createdAt": message["createdAt"],
+                                    "toUser": user.id,
+                                }
+                                messages.append(value)
 
-        # Put message in right order
-        messages = messages[::-1]
+                            last_message_id = fetched_messages["list"][-1]["id"]
 
-        return messages
+                        # Put message in right order
+                        messages = messages[::-1]
+                        return messages
+        except:
+            import traceback
+
+            print(traceback.print_exc())
 
     async def format_text_gen_messages(self, messages, user):
         messages = []
@@ -791,54 +809,44 @@ class ReplicateProvider(BaseProvider):
 
         chat_histories = []
         tasks = []
+
+        start_timestamp = get_current_timestamp()
+        BackLog.info(
+            instance=self, message=f"Running Scraping task...{start_timestamp}"
+        )
+
+        semaphore = asyncio.Semaphore(30)
         for chat in chats:
+            tasks = [
+                asyncio.create_task(self.scrap_messages(self.authed, chat, semaphore))
+            ]
+
+        messages = await asyncio.wait(*tasks)
+        end_timestamp = get_current_timestamp()
+        BackLog.info(instance=self, message=f"Ended Scraping task...{end_timestamp}")
+
+        tasks = []
+        chat_histories = [element for one in messages for element in one]
+
+        if steper != None:
             try:
-                user = await self.authed.get_user(chat["withUser"]["id"])
-                if not user.isPerformer:
-                    data = await self.authed.get_subscriber_info(user.id)
-                    if data["totalSumm"] > 20:  # Filter by LTV
-                        BackLog.info(
-                            self,
-                            f"{self.identifier_name}: Get chat for {user.name}...",
-                        )
+                steper(
+                    user_id=self.user_id,
+                    provider_name=ReplicateProvider.__name__.lower(),
+                    identifier_name=self.identifier_name,
+                    chat_histories=chat_histories,
+                )
 
-                        # fetch user's messages
-                        task = self.scrap_messages(user, self.authed)
-                        tasks.append(task)
+            except Exception as e:
+                print(f"Error occurred: {e}")
 
-                        if len(tasks) < 10:
-                            continue
-
-                        messages = await asyncio.gather(*tasks)
-                        tasks = []
-                        chat_histories = [
-                            element for one in messages for element in one
-                        ]
-
-                        if steper != None:
-                            try:
-                                steper(
-                                    user_id=self.user_id,
-                                    provider_name=ReplicateProvider.__name__.lower(),
-                                    identifier_name=self.identifier_name,
-                                    chat_histories=chat_histories,
-                                )
-
-                            except Exception as e:
-                                print(f"Error occurred: {e}")
-
-                                import traceback
-
-                                print(traceback.print_exc())
-
-                            finally:
-                                chat_histories = []
-                                await asyncio.sleep(0.1)
-
-            except:
                 import traceback
 
                 print(traceback.print_exc())
+
+            finally:
+                chat_histories = []
+                await asyncio.sleep(0.1)
 
     async def get_purchased_products(self, user_data: any, option: any = None):
         if await self.initialize(user_data=user_data) != True:
