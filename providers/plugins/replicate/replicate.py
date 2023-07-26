@@ -15,7 +15,7 @@ from PIL import Image
 from starlette.requests import Request
 
 import replica
-from core.utils.http import http_get_bytes, http_post_for_json
+from core.utils.http import http_get_bytes, http_post_file
 from core.utils.log import BackLog
 from core.utils.timestamp import get_current_timestamp
 from products.pinecone import pinecone_service
@@ -394,13 +394,13 @@ class ReplicateProvider(BaseProvider):
                 endpoint = PRODUCT_REPLICA_ENDPOINT
 
                 if type == "photo":
-                    resource = await http_get_bytes(url)
+                    file_content = await http_get_bytes(url)
                     payload = {
-                        "k": k,
+                        "k": str(k),
                         "type": type,
                     }
-                    response_json = await http_post_for_json(
-                        endpoint, files={"file": resource}, data=payload
+                    response_json = await http_post_file(
+                        endpoint, bytes=file_content, params=payload
                     )
                     product = {
                         "id": id,
