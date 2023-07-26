@@ -197,7 +197,6 @@ class Bridge:
         provider_name: str,
         identifier_name: str,
         user_data: any,
-        steper=any,
         option=any,
     ):
         key = provider_name.lower()
@@ -208,7 +207,7 @@ class Bridge:
             user_id, identifier_name
         )
         return await self.system_provider_list[key][identifier_name].get_all_products(
-            user_data, option=option, steper=steper
+            user_data, option=option
         )
 
     async def scrapy_all_chats(
@@ -217,7 +216,6 @@ class Bridge:
         provider_name: str,
         identifier_name: str,
         user_data: any,
-        steper=any,
         option=any,
     ):
         key = provider_name.lower()
@@ -229,7 +227,7 @@ class Bridge:
         )
 
         return await self.system_provider_list[key][identifier_name].scrapy_all_chats(
-            user_data, option, steper
+            user_data, option
         )
 
 

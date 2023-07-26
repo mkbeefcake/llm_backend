@@ -225,13 +225,16 @@ class ProductPipeline(TaskManager):
             else:
                 option = None
 
-            await bridge.get_all_products(
+            results = await bridge.get_all_products(
                 user_id=user_id,
                 provider_name=provider_name,
                 identifier_name=identifier_name,
                 user_data=user_content,
-                steper=ProductPipeline.update_products_on_db_pinecone,
                 option=option,
+            )
+
+            ProductPipeline.update_products_on_db_pinecone(
+                user_id, provider_name, identifier_name, products_info=results
             )
 
             print(f"Import products : Done, {user_id} - {identifier_name}")

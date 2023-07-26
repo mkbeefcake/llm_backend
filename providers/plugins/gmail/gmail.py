@@ -381,12 +381,8 @@ class GMailProvider(BaseProvider):
     async def get_purchased_products(self, user_data: any, option: any = None):
         pass
 
-    async def get_all_products(
-        self, user_data: any, option: any = None, steper: any = None
-    ):
+    async def get_all_products(self, user_data: any, option: any = None):
         pass
 
-    async def scrapy_all_chats(
-        self, user_data: any, option: any = None, steper: any = None
-    ):
+    async def scrapy_all_chats(self, user_data: any, option: any = None):
         pass

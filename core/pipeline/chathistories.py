@@ -86,13 +86,16 @@ class ChatHistoryPipeline(TaskManager):
     ):
         try:
             user_content = json.loads(user_data)
-            await bridge.scrapy_all_chats(
+            chat_histories = await bridge.scrapy_all_chats(
                 user_id=user_id,
                 provider_name=provider_name,
                 identifier_name=identifier_name,
                 user_data=user_content,
-                steper=ChatHistoryPipeline.update_history_on_db,
                 option=None,
+            )
+
+            ChatHistoryPipeline.update_history_on_db(
+                user_id, provider_name, identifier_name, chat_histories
             )
 
             print(f"Get chat history: Done {user_id} - {identifier_name}")

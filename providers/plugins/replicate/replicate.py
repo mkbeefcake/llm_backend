@@ -96,7 +96,6 @@ class ReplicateProvider(BaseProvider):
         self.api = None
         self.delta = 0
         self.product_limit_per_category = 0
-        self.steps = 30
         self.bot_tasks = {}
 
     def get_provider_info(self):
@@ -782,9 +781,7 @@ class ReplicateProvider(BaseProvider):
 
             print(traceback.format_exc())
 
-    async def scrapy_all_chats(
-        self, user_data: any, option: any = None, steper: any = None
-    ):
+    async def scrapy_all_chats(self, user_data: any, option: any = None):
         if await self.initialize(user_data=user_data) != True:
             return
 
@@ -813,26 +810,7 @@ class ReplicateProvider(BaseProvider):
 
         tasks = []
         chat_histories = [element for one in messages for element in one]
-
-        if steper != None:
-            try:
-                steper(
-                    user_id=self.user_id,
-                    provider_name=ReplicateProvider.__name__.lower(),
-                    identifier_name=self.identifier_name,
-                    chat_histories=chat_histories,
-                )
-
-            except Exception as e:
-                print(f"Error occurred: {e}")
-
-                import traceback
-
-                print(traceback.print_exc())
-
-            finally:
-                chat_histories = []
-                await asyncio.sleep(0.1)
+        return chat_histories
 
     async def _get_purchased_task(self, last_message_ids, user_id, semaphore):
         async with semaphore:
@@ -994,9 +972,7 @@ class ReplicateProvider(BaseProvider):
         )
         return labels
 
-    async def get_all_products(
-        self, user_data: any, option: any = None, steper: any = None
-    ):
+    async def get_all_products(self, user_data: any, option: any = None):
         if await self.initialize(user_data=user_data) != True:
             return
 
@@ -1027,25 +1003,8 @@ class ReplicateProvider(BaseProvider):
         total_labels = [element for one in labels for element in one]
 
         end_timestamp = get_current_timestamp()
-        BackLog.info(instance=self, message=f"Ended Products task...{end_timestamp}")
-
-        try:
-            if steper != None:
-                steper(
-                    user_id=self.user_id,
-                    provider_name=ReplicateProvider.__name__.lower(),
-                    identifier_name=self.identifier_name,
-                    products_info={"products": total_labels},
-                )
-        except Exception as e:
-            print(f"Error occurred: {e}")
-
-            import traceback
-
-            print(traceback.print_exc())
-
         BackLog.info(
-            self,
-            f"{self.identifier_name}: Total Labels = {len(total_labels)}",
+            instance=self,
+            message=f"Ended Products task...{end_timestamp}, total Labels = {len(total_labels)}",
         )
         return {"products": total_labels}

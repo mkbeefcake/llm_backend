@@ -55,14 +55,10 @@ class BaseProvider(metaclass=BaseProviderMeta):
     async def get_purchased_products(self, user_data: any, option: any = None):
         raise NotImplementedError
 
-    async def get_all_products(
-        self, user_data: any, option: any = None, steper: any = None
-    ):
+    async def get_all_products(self, user_data: any, option: any = None):
         raise NotImplementedError
 
-    async def scrapy_all_chats(
-        self, user_data: any, option: any = None, steper: any = None
-    ):
+    async def scrapy_all_chats(self, user_data: any, option: any = None):
         raise NotImplementedError
 
     def set_base_info(self, user_id: str, identifier_name: str):
