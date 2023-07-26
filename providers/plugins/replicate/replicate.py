@@ -394,12 +394,12 @@ class ReplicateProvider(BaseProvider):
                 endpoint = PRODUCT_REPLICA_ENDPOINT
 
                 if type == "photo":
-                    resource = http_get(url)
+                    resource = await http_get(url)
                     payload = {
                         "k": k,
                         "type": type,
                     }
-                    response_json = http_post_for_json(
+                    response_json = await http_post_for_json(
                         endpoint, files={"file": resource.content}, data=payload
                     )
                     product = {
