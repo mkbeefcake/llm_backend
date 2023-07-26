@@ -957,7 +957,7 @@ class ReplicateProvider(BaseProvider):
                 category["id"], offset, limit=self.product_limit_per_category
             )
 
-            semaphore1 = asyncio.Semaphore(30)
+            semaphore1 = asyncio.Semaphore(10)
             for item in content:
                 if find_element_by_id(products, item["id"]) != None:
                     print(
@@ -992,12 +992,15 @@ class ReplicateProvider(BaseProvider):
                                 )
                             )
                         )
+
+                    if len(tasks) >= 10:
+                        middle_results = await asyncio.gather(*tasks)
+                        labels.extend(middle_results)
+                        tasks = []
                 except:
                     import traceback
 
                     print(traceback.print_exc())
-
-            labels = await asyncio.gather(*tasks)
 
         BackLog.info(
             self,
