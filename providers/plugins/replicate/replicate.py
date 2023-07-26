@@ -9,12 +9,13 @@ import unicodedata
 
 import imageio
 import numpy as np
-import replica
 import requests
 from fastapi.templating import Jinja2Templates
 from PIL import Image
 from starlette.requests import Request
 
+import replica
+from core.utils.http import http_get, http_post_for_json
 from core.utils.log import BackLog
 from core.utils.timestamp import get_current_timestamp
 from products.pinecone import pinecone_service
@@ -384,20 +385,6 @@ class ReplicateProvider(BaseProvider):
 
         # await api.close_pools()
 
-    # async def label_content_new(self, type, url, k, id, item):
-    #     endpoint = PRODUCT_REPLICA_ENDPOINT_NEW
-    #     endpoint = endpoint + f"?type={type}&url={url}&k={k}"
-    #     response = requests.post(endpoint)
-    #     response_json = response.json()
-    #     return {
-    #         "id": id,
-    #         "label": aggregate_labels(response_json),
-    #         "category": item["category"],
-    #         "createdAt": item["created"],
-    #         "type": item["type"],
-    #         "full": item["full"],
-    #     }
-
     async def label_content(self, type, url, k, id, item, semaphore):
         async with semaphore:
             try:
@@ -407,15 +394,14 @@ class ReplicateProvider(BaseProvider):
                 endpoint = PRODUCT_REPLICA_ENDPOINT
 
                 if type == "photo":
-                    resource = requests.get(url)
+                    resource = http_get(url)
                     payload = {
                         "k": k,
                         "type": type,
                     }
-                    response = requests.post(
+                    response_json = http_post_for_json(
                         endpoint, files={"file": resource.content}, data=payload
                     )
-                    response_json = response.json()
                     product = {
                         "id": id,
                         "label": aggregate_labels(response_json),
