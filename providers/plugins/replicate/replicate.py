@@ -849,49 +849,50 @@ class ReplicateProvider(BaseProvider):
                 chat_histories = []
                 await asyncio.sleep(0.1)
 
-    async def _get_purchased_task(self, last_message_ids, user_id):
-        # get last_message_id in firebase db
-        if (
-            str(user_id) in last_message_ids
-            and "last_message_id" in last_message_ids[str(user_id)]
-        ):
-            last_message_id = last_message_ids[str(user_id)]["last_message_id"]
-        else:
-            last_message_id = "0"
+    async def _get_purchased_task(self, last_message_ids, user_id, semaphore):
+        async with semaphore:
+            # get last_message_id in firebase db
+            if (
+                str(user_id) in last_message_ids
+                and "last_message_id" in last_message_ids[str(user_id)]
+            ):
+                last_message_id = last_message_ids[str(user_id)]["last_message_id"]
+            else:
+                last_message_id = "0"
 
-        user_info = {}
-        try:
-            statistics = await self.authed.get_subscriber_info(user_id)
-            user_info["statistics"] = statistics
+            user_info = {}
+            try:
+                statistics = await self.authed.get_subscriber_info(user_id)
+                user_info["statistics"] = statistics
 
-            purchases = await self.authed.get_subscriber_gallery(
-                user_id, None, to_specific_id=last_message_id, limit=40
+                purchases = await self.authed.get_subscriber_gallery(
+                    user_id, None, to_specific_id=last_message_id, limit=40
+                )
+
+                purchased_items = []
+                for item in purchases:
+                    parsed_item = {
+                        "message_id": item["message_id"],
+                        "price": item["price"],
+                        "medias": [item for item in item["media"]],
+                        "created": item["createdAt"],
+                        "timestamp": item["createdAt"],
+                    }
+                    purchased_items.append(parsed_item)
+
+                user_info["purchased"] = purchased_items
+
+            except Exception as e:
+                BackLog.exception(
+                    instance=self,
+                    message=f"{self.identifier_name}: Exception occurred...",
+                )
+                pass
+
+            BackLog.info(
+                self,
+                f"{self.identifier_name}: Loaded purchased products for {str(user_id)}, {len(user_info['purchased'])}",
             )
-
-            purchased_items = []
-            for item in purchases:
-                parsed_item = {
-                    "message_id": item["message_id"],
-                    "price": item["price"],
-                    "medias": [item for item in item["media"]],
-                    "created": item["createdAt"],
-                    "timestamp": item["createdAt"],
-                }
-                purchased_items.append(parsed_item)
-
-            user_info["purchased"] = purchased_items
-
-        except Exception as e:
-            BackLog.exception(
-                instance=self,
-                message=f"{self.identifier_name}: Exception occurred...",
-            )
-            pass
-
-        BackLog.info(
-            self,
-            f"{self.identifier_name}: Loaded purchased products for {str(user_id)}, {len(user_info['purchased'])}",
-        )
         return (str(user_id), user_info)
 
     async def get_purchased_products(self, user_data: any, option: any = None):
@@ -913,13 +914,16 @@ class ReplicateProvider(BaseProvider):
 
         start_timestamp = get_current_timestamp()
         BackLog.info(
-            instance=self, message=f"Running Purchased task...{start_timestamp}"
+            instance=self,
+            message=f"Running Purchased task...{start_timestamp}, {len(user_id_list)} users",
         )
         semaphore = asyncio.Semaphore(30)
 
         for user_id in user_id_list:
             tasks = [
-                asyncio.create_task(self._get_purchased_task(last_message_ids, user_id))
+                asyncio.create_task(
+                    self._get_purchased_task(last_message_ids, user_id, semaphore)
+                )
             ]
 
         results = await asyncio.gather(*tasks)
