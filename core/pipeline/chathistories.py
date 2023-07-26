@@ -119,7 +119,7 @@ class ChatHistoryPipeline(TaskManager):
             update_chat_histories(
                 user_id=user_id,
                 provider_name=provider_name,
-                identifier_name=identifier_name,
+                key=identifier_name,
                 new_content=chat_histories,
             )
 

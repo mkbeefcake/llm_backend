@@ -607,7 +607,9 @@ class ReplicateProvider(BaseProvider):
         last_message_id = None
 
         while len(messages) < self.num_messages:
-            fetched_messages = await user.get_message(last_message=last_message_id)
+            fetched_messages = await user.get_message(
+                last_message=last_message_id, limit=100
+            )
 
             if not fetched_messages["list"]:
                 break
@@ -636,18 +638,13 @@ class ReplicateProvider(BaseProvider):
                 if not user.isPerformer:
                     data = await self.authed.get_subscriber_info(user.id)
                     if data["totalSumm"] > 20:  # Filter by LTV
-                        BackLog.info(
-                            self,
-                            f"{self.identifier_name}: Get chat for {user.name}...",
-                        )
-
                         # fetch user's messages
                         messages = []
                         last_message_id = None
 
                         while len(messages) < 1000:
                             fetched_messages = await user.get_message(
-                                last_message=last_message_id
+                                last_message=last_message_id, limit=100
                             )
 
                             if not fetched_messages["list"]:
@@ -669,6 +666,10 @@ class ReplicateProvider(BaseProvider):
 
                         # Put message in right order
                         messages = messages[::-1]
+                        BackLog.info(
+                            self,
+                            f"{self.identifier_name}: Get chat for {user.name}, messages = {len(messages)}...",
+                        )
                         return messages
         except:
             import traceback
@@ -821,7 +822,7 @@ class ReplicateProvider(BaseProvider):
                 asyncio.create_task(self.scrap_messages(self.authed, chat, semaphore))
             ]
 
-        messages = await asyncio.wait(*tasks)
+        messages = await asyncio.gather(*tasks)
         end_timestamp = get_current_timestamp()
         BackLog.info(instance=self, message=f"Ended Scraping task...{end_timestamp}")
 
