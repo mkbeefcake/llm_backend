@@ -851,6 +851,11 @@ class ReplicateProvider(BaseProvider):
 
     async def _get_purchased_task(self, last_message_ids, user_id, semaphore):
         async with semaphore:
+            BackLog.info(
+                self,
+                f"{self.identifier_name}: Started purchased products for {str(user_id)}....",
+            )
+
             # get last_message_id in firebase db
             if (
                 str(user_id) in last_message_ids
@@ -893,6 +898,7 @@ class ReplicateProvider(BaseProvider):
                 self,
                 f"{self.identifier_name}: Loaded purchased products for {str(user_id)}, {len(user_info['purchased'])}",
             )
+
         return (str(user_id), user_info)
 
     async def get_purchased_products(self, user_data: any, option: any = None):
