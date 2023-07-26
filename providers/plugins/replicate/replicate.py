@@ -968,6 +968,7 @@ class ReplicateProvider(BaseProvider):
                     "created": item["createdAt"],
                     "full": item["full"],
                 }
+                full_content.append(parsed_item)
 
                 # Add a task to label this content
                 try:
