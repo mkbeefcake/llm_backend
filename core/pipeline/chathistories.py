@@ -2,7 +2,6 @@ import json
 
 from core.task.task import TaskManager
 from core.utils.log import BackLog
-# from db.cloudsql import update_chathistories_on_sqldb
 from db.cruds.chathistory import update_chat_histories
 from providers.bridge import bridge
 
@@ -115,7 +114,6 @@ class ChatHistoryPipeline(TaskManager):
         )
 
         try:
-            # update_chathistories_on_sqldb
             update_chat_histories(
                 user_id=user_id,
                 provider_name=provider_name,
