@@ -95,7 +95,7 @@ class ReplicateProvider(BaseProvider):
         self.api = None
         self.delta = 0
         self.product_limit_per_category = 0
-        self.steps = 20
+        self.steps = 30
         self.bot_tasks = {}
 
     def get_provider_info(self):
@@ -631,7 +631,7 @@ class ReplicateProvider(BaseProvider):
 
         return messages, last_message_role
 
-    async def scrap_messages(self, authed, chat, semaphore):
+    async def scrap_messages(self, chat, semaphore):
         try:
             async with semaphore:
                 user = await self.authed.get_user(chat["withUser"]["id"])
@@ -818,9 +818,7 @@ class ReplicateProvider(BaseProvider):
 
         semaphore = asyncio.Semaphore(30)
         for chat in chats:
-            tasks = [
-                asyncio.create_task(self.scrap_messages(self.authed, chat, semaphore))
-            ]
+            tasks.append(asyncio.create_task(self.scrap_messages(chat, semaphore)))
 
         messages = await asyncio.gather(*tasks)
         end_timestamp = get_current_timestamp()
@@ -911,26 +909,30 @@ class ReplicateProvider(BaseProvider):
         else:
             last_message_ids = None
 
-        print("Starting product scraping...")
+        # Select all chats
         chats = await self.select_chats(self.authed, self.rules)
-        tasks = []
+        BackLog.info(
+            self,
+            f"{self.identifier_name}: Total chats: {len(chats)}...",
+        )
 
         user_id_list = [item["withUser"]["id"] for item in chats]
         all_users_info = {}
+        tasks = []
 
         start_timestamp = get_current_timestamp()
         BackLog.info(
             instance=self,
             message=f"Running Purchased task...{start_timestamp}, {len(user_id_list)} users",
         )
-        semaphore = asyncio.Semaphore(30)
 
+        semaphore = asyncio.Semaphore(30)
         for user_id in user_id_list:
-            tasks = [
+            tasks.append(
                 asyncio.create_task(
                     self._get_purchased_task(last_message_ids, user_id, semaphore)
                 )
-            ]
+            )
 
         results = await asyncio.gather(*tasks)
         end_timestamp = get_current_timestamp()
@@ -942,32 +944,15 @@ class ReplicateProvider(BaseProvider):
         # await api.close_pools()
         return all_users_info
 
-    async def get_all_products(
-        self, user_data: any, option: any = None, steper: any = None
-    ):
-        if await self.initialize(user_data=user_data) != True:
-            return
-
-        if option is not None and "products" in option:
-            products = option["products"]
-        else:
-            products = []
-
-        categories = await self.authed.get_content_categories()
-
-        full_content = []
-        label_tasks = []  # This list will store the tasks for labeling the content
-        for category in categories:
+    async def _get_all_products(self, category, products, semaphore):
+        async with semaphore:
+            full_content = []
+            labels = []
             offset = 0  # Create an offset variable
 
-            if self.product_limit_per_category > 0:
-                content = await self.authed.get_content(
-                    category["id"], offset, limit=self.product_limit_per_category
-                )
-            else:
-                content = await self.authed.get_content(
-                    category["id"], offset, limit=self.product_limit_per_category
-                )
+            content = await self.authed.get_content(
+                category["id"], offset, limit=self.product_limit_per_category
+            )
 
             for item in content:
                 if find_element_by_id(products, item["id"]) != None:
@@ -984,79 +969,84 @@ class ReplicateProvider(BaseProvider):
                     "full": item["full"],
                 }
 
-                full_content.append(parsed_item)
-
                 # Add a task to label this content
                 try:
                     print(
                         f"|-- Identifier: {self.identifier_name} Item: {parsed_item['id']} - {parsed_item['type']}"
                     )
                     if parsed_item["type"] == "photo":
-                        task = self.label_content(
-                            type=parsed_item["type"],
-                            url=parsed_item["full"],
-                            k=15,
-                            id=parsed_item["id"],
-                            item=parsed_item,
+                        labels.append(
+                            await self.label_content(
+                                type=parsed_item["type"],
+                                url=parsed_item["full"],
+                                k=15,
+                                id=parsed_item["id"],
+                                item=parsed_item,
+                            )
                         )
-                        label_tasks.append(task)
                 except:
                     import traceback
 
                     print(traceback.print_exc())
 
-                if steper != None and len(label_tasks) >= self.steps:
-                    try:
-                        BackLog.info(
-                            self,
-                            f"{self.identifier_name}: Waiting to get {len(label_tasks)} products' embedding....",
-                        )
-                        labels = await asyncio.gather(*label_tasks)
-                        steper(
-                            user_id=self.user_id,
-                            provider_name=ReplicateProvider.__name__.lower(),
-                            identifier_name=self.identifier_name,
-                            products_info={"products": labels},
-                        )
-
-                    except Exception as e:
-                        print(f"Error occurred: {e}")
-
-                        import traceback
-
-                        print(traceback.print_exc())
-
-                    finally:
-                        label_tasks = []
-                        await asyncio.sleep(0.1)
-
-        # Label all contents in parallel : Remove original code
-        # try:
-        #     labels = await asyncio.gather(*label_tasks)
-        # except Exception as e:
-        #     print(f"Error occurred: {e}")
-        #     import traceback
-
-        #     print(traceback.print_exc())
-
-        # await api.close_pools()
-        if steper != None:
-            try:
-                labels = await asyncio.gather(*label_tasks)
-                steper(
-                    user_id=self.user_id,
-                    provider_name=ReplicateProvider.__name__.lower(),
-                    identifier_name=self.identifier_name,
-                    products_info={"products": labels},
-                )
-            except Exception as e:
-                print(f"Error occurred: {e}")
-                import traceback
-
-                print(traceback.print_exc())
-
         BackLog.info(
             self,
             f"{self.identifier_name}: Products: {len(full_content)}, Labels = {len(labels)}",
         )
-        return {"products": labels}
+        return labels
+
+    async def get_all_products(
+        self, user_data: any, option: any = None, steper: any = None
+    ):
+        if await self.initialize(user_data=user_data) != True:
+            return
+
+        if option is not None and "products" in option:
+            products = option["products"]
+        else:
+            products = []
+
+        categories = await self.authed.get_content_categories()
+
+        labels = []
+        label_tasks = []  # This list will store the tasks for labeling the content
+
+        start_timestamp = get_current_timestamp()
+        BackLog.info(
+            instance=self, message=f"Running Products task...{start_timestamp}"
+        )
+
+        semaphore = asyncio.Semaphore(30)
+        for category in categories:
+            label_tasks.append(
+                asyncio.create_task(
+                    self._get_all_products(category, products, semaphore)
+                )
+            )
+
+        labels = await asyncio.gather(*label_tasks)
+        total_labels = [element for one in labels for element in one]
+
+        end_timestamp = get_current_timestamp()
+        BackLog.info(instance=self, message=f"Ended Products task...{end_timestamp}")
+
+        try:
+            if steper != None:
+                steper(
+                    user_id=self.user_id,
+                    provider_name=ReplicateProvider.__name__.lower(),
+                    identifier_name=self.identifier_name,
+                    products_info={"products": total_labels},
+                )
+        except Exception as e:
+            print(f"Error occurred: {e}")
+
+            import traceback
+
+            print(traceback.print_exc())
+
+        BackLog.info(
+            self,
+            f"{self.identifier_name}: Total Labels = {len(total_labels)}",
+        )
+        return {"products": total_labels}
