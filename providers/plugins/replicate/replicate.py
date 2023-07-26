@@ -95,7 +95,7 @@ class ReplicateProvider(BaseProvider):
         self.api = None
         self.delta = 0
         self.product_limit_per_category = 0
-        self.steps = 5
+        self.steps = 20
         self.bot_tasks = {}
 
     def get_provider_info(self):
@@ -849,6 +849,51 @@ class ReplicateProvider(BaseProvider):
                 chat_histories = []
                 await asyncio.sleep(0.1)
 
+    async def _get_purchased_task(self, last_message_ids, user_id):
+        # get last_message_id in firebase db
+        if (
+            str(user_id) in last_message_ids
+            and "last_message_id" in last_message_ids[str(user_id)]
+        ):
+            last_message_id = last_message_ids[str(user_id)]["last_message_id"]
+        else:
+            last_message_id = "0"
+
+        user_info = {}
+        try:
+            statistics = await self.authed.get_subscriber_info(user_id)
+            user_info["statistics"] = statistics
+
+            purchases = await self.authed.get_subscriber_gallery(
+                user_id, None, to_specific_id=last_message_id, limit=40
+            )
+
+            purchased_items = []
+            for item in purchases:
+                parsed_item = {
+                    "message_id": item["message_id"],
+                    "price": item["price"],
+                    "medias": [item for item in item["media"]],
+                    "created": item["createdAt"],
+                    "timestamp": item["createdAt"],
+                }
+                purchased_items.append(parsed_item)
+
+            user_info["purchased"] = purchased_items
+
+        except Exception as e:
+            BackLog.exception(
+                instance=self,
+                message=f"{self.identifier_name}: Exception occurred...",
+            )
+            pass
+
+        BackLog.info(
+            self,
+            f"{self.identifier_name}: Loaded purchased products for {str(user_id)}, {len(user_info['purchased'])}",
+        )
+        return (str(user_id), user_info)
+
     async def get_purchased_products(self, user_data: any, option: any = None):
         if await self.initialize(user_data=user_data) != True:
             return
@@ -861,55 +906,28 @@ class ReplicateProvider(BaseProvider):
 
         print("Starting product scraping...")
         chats = await self.select_chats(self.authed, self.rules)
+        tasks = []
 
         user_id_list = [item["withUser"]["id"] for item in chats]
         all_users_info = {}
 
+        start_timestamp = get_current_timestamp()
+        BackLog.info(
+            instance=self, message=f"Running Purchased task...{start_timestamp}"
+        )
+        semaphore = asyncio.Semaphore(30)
+
         for user_id in user_id_list:
-            # get last_message_id in firebase db
-            if (
-                str(user_id) in last_message_ids
-                and "last_message_id" in last_message_ids[str(user_id)]
-            ):
-                last_message_id = last_message_ids[str(user_id)]["last_message_id"]
-            else:
-                last_message_id = "0"
+            tasks = [
+                asyncio.create_task(self._get_purchased_task(last_message_ids, user_id))
+            ]
 
-            user_info = {}
-            try:
-                statistics = await self.authed.get_subscriber_info(user_id)
-                user_info["statistics"] = statistics
+        results = await asyncio.gather(*tasks)
+        end_timestamp = get_current_timestamp()
+        BackLog.info(instance=self, message=f"Ended Purchased task...{end_timestamp}")
 
-                purchases = await self.authed.get_subscriber_gallery(
-                    user_id, None, to_specific_id=last_message_id, limit=40
-                )
-
-                purchased_items = []
-                for item in purchases:
-                    parsed_item = {
-                        "message_id": item["message_id"],
-                        "price": item["price"],
-                        "medias": [item for item in item["media"]],
-                        "created": item["createdAt"],
-                        "timestamp": item["createdAt"],
-                    }
-                    purchased_items.append(parsed_item)
-
-                user_info["purchased"] = purchased_items
-                await asyncio.sleep(0.1)
-
-            except Exception as e:
-                BackLog.exception(
-                    instance=self,
-                    message=f"{self.identifier_name}: Exception occurred...",
-                )
-                pass
-
-            BackLog.info(
-                self,
-                f"{self.identifier_name}: Loaded purchased products for {str(user_id)}, {len(user_info['purchased'])}",
-            )
-            all_users_info[str(user_id)] = user_info
+        tasks = []
+        all_users_info = {key: value for key, value in results}
 
         # await api.close_pools()
         return all_users_info
