@@ -12,6 +12,9 @@ jobs:
         runs-on: ubuntu-latest
         env:
           IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_APP_NAME }}
+          IMAGE_PRODUCT_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_APP_NAME }}_Product
+          IMAGE_PURCHASED_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_APP_NAME }}_Purchased
+          IMAGE_CHATHISTORY_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_APP_NAME }}_Scrapy
           RUNPOD_API_KEY: ${{ secrets.RUNPOD_API_KEY }}
           HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
         steps:
@@ -38,7 +41,10 @@ jobs:
         - name: Build Docker image
           run: |
             source .env
-            docker build --build-arg SECRET_KEY=$SECRET_KEY --build-arg OPENAI_API_KEY=$OPENAI_API_KEY --build-arg BANANA_MODEL_KEY=$BANANA_MODEL_KEY --build-arg RUNPOD_API_KEY=$RUNPOD_API_KEY --build-arg HUGGINGFACE_API_KEY=$HUGGINGFACE_API_KEY . -t $IMAGE_NAME
+            docker build --build-arg SECRET_KEY=$SECRET_KEY --build-arg OPENAI_API_KEY=$OPENAI_API_KEY --build-arg BANANA_MODEL_KEY=$BANANA_MODEL_KEY --build-arg RUNPOD_API_KEY=$RUNPOD_API_KEY --build-arg HUGGINGFACE_API_KEY=$HUGGINGFACE_API_KEY --build-arg BACKEND_TYPE=MAIN . -t $IMAGE_NAME
+            docker build --build-arg SECRET_KEY=$SECRET_KEY --build-arg OPENAI_API_KEY=$OPENAI_API_KEY --build-arg BANANA_MODEL_KEY=$BANANA_MODEL_KEY --build-arg RUNPOD_API_KEY=$RUNPOD_API_KEY --build-arg HUGGINGFACE_API_KEY=$HUGGINGFACE_API_KEY --build-arg BACKEND_TYPE=PRODUCT . -t $IMAGE_PRODUCT_NAME
+            docker build --build-arg SECRET_KEY=$SECRET_KEY --build-arg OPENAI_API_KEY=$OPENAI_API_KEY --build-arg BANANA_MODEL_KEY=$BANANA_MODEL_KEY --build-arg RUNPOD_API_KEY=$RUNPOD_API_KEY --build-arg HUGGINGFACE_API_KEY=$HUGGINGFACE_API_KEY --build-arg BACKEND_TYPE=PURCHASED . -t $IMAGE_PURCHASED_NAME
+            docker build --build-arg SECRET_KEY=$SECRET_KEY --build-arg OPENAI_API_KEY=$OPENAI_API_KEY --build-arg BANANA_MODEL_KEY=$BANANA_MODEL_KEY --build-arg RUNPOD_API_KEY=$RUNPOD_API_KEY --build-arg HUGGINGFACE_API_KEY=$HUGGINGFACE_API_KEY --build-arg BACKEND_TYPE=CHATHISTORY . -t $IMAGE_CHATHISTORY_NAME
 
         - name: Push Docker image         
           run: docker push $IMAGE_NAME
@@ -46,6 +52,6 @@ jobs:
         - name: Deploy Docker image
           run: |
             gcloud run deploy ${{ secrets.GCP_PROJECT_ID }} --image $IMAGE_NAME --region us-central1 --platform managed --port 8000
-            gcloud run deploy ${{ secrets.GCP_PROJECT_ID }}-purchased --image $IMAGE_NAME --region us-central1 --platform managed --port 8000
-            gcloud run deploy ${{ secrets.GCP_PROJECT_ID }}-products --image $IMAGE_NAME --region us-central1 --platform managed --port 8000
-            gcloud run deploy ${{ secrets.GCP_PROJECT_ID }}-scrapy --image $IMAGE_NAME --region us-central1 --platform managed --port 8000
+            gcloud run deploy ${{ secrets.GCP_PROJECT_ID }}-purchased --image $IMAGE_PURCHASED_NAME --region us-central1 --platform managed --port 8000
+            gcloud run deploy ${{ secrets.GCP_PROJECT_ID }}-products --image $IMAGE_PRODUCT_NAME --region us-central1 --platform managed --port 8000
+            gcloud run deploy ${{ secrets.GCP_PROJECT_ID }}-scrapy --image $IMAGE_CHATHISTORY_NAME --region us-central1 --platform managed --port 8000
