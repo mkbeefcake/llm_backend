@@ -1029,7 +1029,7 @@ class ReplicateProvider(BaseProvider):
             instance=self, message=f"Running Products task...{start_timestamp}"
         )
 
-        semaphore = asyncio.Semaphore(30)
+        semaphore = asyncio.Semaphore(10)
         for category in categories:
             label_tasks.append(
                 asyncio.create_task(
