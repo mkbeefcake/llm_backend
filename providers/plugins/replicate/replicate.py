@@ -398,95 +398,96 @@ class ReplicateProvider(BaseProvider):
     #         "full": item["full"],
     #     }
 
-    async def label_content(self, type, url, k, id, item):
-        try:
-            if id in ReplicateProvider.product_caches:
-                return ReplicateProvider.product_caches[id]
+    async def label_content(self, type, url, k, id, item, semaphore):
+        async with semaphore:
+            try:
+                if id in ReplicateProvider.product_caches:
+                    return ReplicateProvider.product_caches[id]
 
-            endpoint = PRODUCT_REPLICA_ENDPOINT
+                endpoint = PRODUCT_REPLICA_ENDPOINT
 
-            if type == "photo":
-                resource = requests.get(url)
-                payload = {
-                    "k": k,
-                    "type": type,
-                }
-                response = requests.post(
-                    endpoint, files={"file": resource.content}, data=payload
-                )
-                response_json = response.json()
-                product = {
-                    "id": id,
-                    "label": aggregate_labels(response_json),
-                    # "category": item["category"],
-                    # "createdAt": item["created"],
-                    # "type": item["type"],
-                    # "full": item["full"],
-                }
-
-            elif type == "video":
-                print(
-                    f"|---- Identifier: {self.identifier_name} VideoItem: {id} Starting to read ......"
-                )
-                vidcap = imageio.get_reader(url, "ffmpeg")
-
-                # Get the total number of frames
-                total_frames = vidcap.count_frames()
-
-                # Get the frame numbers we want to capture
-                frames_to_capture = np.linspace(0, total_frames - 1, 3, dtype=int)
-
-                predictions = []
-                for frame_number in frames_to_capture:
-                    # Get the specific frame
-                    frame = vidcap.get_data(frame_number)
-                    image = Image.fromarray(frame)
-                    jpeg_bytes = io.BytesIO()
-                    image.save(jpeg_bytes, format="JPEG")
-                    jpeg_bytes = jpeg_bytes.getvalue()
-
-                    print(
-                        f"|------ VideoItem: {id} - Frame/Total: {frame_number}/{total_frames}"
-                    )
-                    # Process the frame with your model
+                if type == "photo":
+                    resource = requests.get(url)
                     payload = {
                         "k": k,
-                        "type": "photo",
+                        "type": type,
                     }
                     response = requests.post(
-                        endpoint, files={"file": jpeg_bytes}, data=payload
+                        endpoint, files={"file": resource.content}, data=payload
                     )
+                    response_json = response.json()
+                    product = {
+                        "id": id,
+                        "label": aggregate_labels(response_json),
+                        # "category": item["category"],
+                        # "createdAt": item["created"],
+                        # "type": item["type"],
+                        # "full": item["full"],
+                    }
 
-                    prediction = response.json()
-
+                elif type == "video":
                     print(
-                        f"|------ VideoItem: {id} - Frame/Total: {frame_number}/{total_frames} tagging Done!"
+                        f"|---- Identifier: {self.identifier_name} VideoItem: {id} Starting to read ......"
                     )
-                    predictions.append(prediction)
+                    vidcap = imageio.get_reader(url, "ffmpeg")
 
-                # Create a list of keys that are common in all predictions
-                final_prediction = {}
-                for d in predictions:
-                    final_prediction.update(d)
+                    # Get the total number of frames
+                    total_frames = vidcap.count_frames()
 
-                product = {
-                    "id": id,
-                    "label": aggregate_labels(final_prediction),
-                    # "category": item["category"],
-                    # "createdAt": item["created"],
-                    # "type": item["type"],
-                    # "full": item["full"],
-                }
+                    # Get the frame numbers we want to capture
+                    frames_to_capture = np.linspace(0, total_frames - 1, 3, dtype=int)
 
-            ReplicateProvider.product_caches[id] = product
-            return product
+                    predictions = []
+                    for frame_number in frames_to_capture:
+                        # Get the specific frame
+                        frame = vidcap.get_data(frame_number)
+                        image = Image.fromarray(frame)
+                        jpeg_bytes = io.BytesIO()
+                        image.save(jpeg_bytes, format="JPEG")
+                        jpeg_bytes = jpeg_bytes.getvalue()
 
-        except Exception as e:
-            BackLog.exception(
-                instance=None,
-                message=f"Failed to call replica tagging service: url {url}",
-            )
-            pass
+                        print(
+                            f"|------ VideoItem: {id} - Frame/Total: {frame_number}/{total_frames}"
+                        )
+                        # Process the frame with your model
+                        payload = {
+                            "k": k,
+                            "type": "photo",
+                        }
+                        response = requests.post(
+                            endpoint, files={"file": jpeg_bytes}, data=payload
+                        )
+
+                        prediction = response.json()
+
+                        print(
+                            f"|------ VideoItem: {id} - Frame/Total: {frame_number}/{total_frames} tagging Done!"
+                        )
+                        predictions.append(prediction)
+
+                    # Create a list of keys that are common in all predictions
+                    final_prediction = {}
+                    for d in predictions:
+                        final_prediction.update(d)
+
+                    product = {
+                        "id": id,
+                        "label": aggregate_labels(final_prediction),
+                        # "category": item["category"],
+                        # "createdAt": item["created"],
+                        # "type": item["type"],
+                        # "full": item["full"],
+                    }
+
+                ReplicateProvider.product_caches[id] = product
+                return product
+
+            except Exception as e:
+                BackLog.exception(
+                    instance=None,
+                    message=f"Failed to call replica tagging service: url {url}",
+                )
+                pass
 
     async def select_chats(self, authed, rules, interval: int = 0, limit: int = 100):
         """
@@ -948,12 +949,15 @@ class ReplicateProvider(BaseProvider):
         async with semaphore:
             full_content = []
             labels = []
+            tasks = []
+
             offset = 0  # Create an offset variable
 
             content = await self.authed.get_content(
                 category["id"], offset, limit=self.product_limit_per_category
             )
 
+            semaphore1 = asyncio.Semaphore(30)
             for item in content:
                 if find_element_by_id(products, item["id"]) != None:
                     print(
@@ -976,19 +980,24 @@ class ReplicateProvider(BaseProvider):
                         f"|-- Identifier: {self.identifier_name} Item: {parsed_item['id']} - {parsed_item['type']}"
                     )
                     if parsed_item["type"] == "photo":
-                        labels.append(
-                            await self.label_content(
-                                type=parsed_item["type"],
-                                url=parsed_item["full"],
-                                k=15,
-                                id=parsed_item["id"],
-                                item=parsed_item,
+                        tasks.append(
+                            asyncio.create_task(
+                                self.label_content(
+                                    type=parsed_item["type"],
+                                    url=parsed_item["full"],
+                                    k=15,
+                                    id=parsed_item["id"],
+                                    item=parsed_item,
+                                    semaphore=semaphore1,
+                                )
                             )
                         )
                 except:
                     import traceback
 
                     print(traceback.print_exc())
+
+            labels = await asyncio.gather(*tasks)
 
         BackLog.info(
             self,
