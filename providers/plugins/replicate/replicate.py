@@ -620,8 +620,8 @@ class ReplicateProvider(BaseProvider):
         return messages, last_message_role
 
     async def scrap_messages(self, chat, semaphore):
-        try:
-            async with semaphore:
+        async with semaphore:
+            try:
                 user = await self.authed.get_user(chat["withUser"]["id"])
                 if not user.isPerformer:
                     data = await self.authed.get_subscriber_info(user.id)
@@ -659,10 +659,11 @@ class ReplicateProvider(BaseProvider):
                             f"{self.identifier_name}: Get chat for {user.name}, messages = {len(messages)}...",
                         )
                         return messages
-        except:
-            import traceback
+            except:
+                import traceback
 
-            print(traceback.print_exc())
+                print(traceback.print_exc())
+                return []
 
     async def format_text_gen_messages(self, messages, user):
         messages = []
