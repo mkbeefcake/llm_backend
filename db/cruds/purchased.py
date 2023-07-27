@@ -17,7 +17,7 @@ def get_last_message_ids(user_id: str, provider_name: str, key: str):
         if "purchased" in purchased[chatuser_id] and len(
             purchased[chatuser_id]["purchased"]
         ):
-            if "message_id" in purchased[chatuser_id]["purchased"]:
+            if "message_id" in purchased[chatuser_id]["purchased"][0]:
                 last_message_ids[chatuser_id] = purchased[chatuser_id]["purchased"][0][
                     "message_id"
                 ]
