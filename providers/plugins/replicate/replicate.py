@@ -659,6 +659,7 @@ class ReplicateProvider(BaseProvider):
                             f"{self.identifier_name}: Get chat for {user.name}, messages = {len(messages)}...",
                         )
                         return messages
+                return []
             except:
                 import traceback
 
