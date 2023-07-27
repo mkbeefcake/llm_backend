@@ -15,8 +15,8 @@ def test_login_failure(client):
     response = client.post(
         "/users/token", data={"username": "test@gmail.com", "password": "testtest1"}
     )
-    assert response.status_code == 200
-    assert "error" in response.json()
+    assert response.status_code == 401
+    assert "User unauthorized" in response.json()["detail"]
 
 
 def get_access_token(client):
@@ -33,30 +33,34 @@ def test_me(client):
         headers={"accept": "application/json", "Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 200
-    assert "email" in response.json()
+    assert "email" in response.json()["data"]
 
 
-def test_get_ai_response(client):
+def test_get_my_providers(client):
     token = get_access_token(client=client)
-    response = client.post(
-        "/services/get_ai_response?message=Hi%20there",
+    response = client.get(
+        "/providers/get_my_providers",
         headers={"accept": "application/json", "Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 200
-    assert "message" in response.json()
+    assert "my_providers" in response.json()["data"]
 
 
-# def test_signup_success(client):
-#     response = client.post(
-#         "/users/signup", data={"email": "test1@gmail.com", "password": "testtest1"}
-#     )
-#     assert response.status_code == 200
-#     assert "message" in response.json()
+def test_get_providers(client):
+    token = get_access_token(client=client)
+    response = client.get(
+        "/providers/get_providers",
+        headers={"accept": "application/json", "Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    assert len(response.json()["data"]) > 0
 
 
-# def test_signup_failure(client):
-#     response = client.post(
-#         "/users/signup", data={"email": "test1@gmail.com", "password": "testtest1"}
-#     )
-#     assert response.status_code == 200
-#     assert "error" in response.json()
+def test_update_provider_info(client):
+    token = get_access_token(client=client)
+    response = client.get(
+        "/providers//update_provider_info?provider_name=gmailprovider&identifier_name=john",
+        headers={"accept": "application/json", "Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    assert "err" in response.json()["data"]

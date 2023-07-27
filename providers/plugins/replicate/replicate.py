@@ -659,7 +659,12 @@ class ReplicateProvider(BaseProvider):
                             f"{self.identifier_name}: Get chat for {user.name}, messages = {len(messages)}...",
                         )
                         return messages
-                return []
+                else:
+                    BackLog.info(
+                        self,
+                        f"{self.identifier_name}: Skip {user.name}...",
+                    )
+                    return []
             except:
                 import traceback
 
