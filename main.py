@@ -6,6 +6,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from apis.route import api_router
 from core.config import settings
+from db.firebase import save_json_to_storage
 from products.pinecone import pinecone_service
 
 
@@ -53,6 +54,14 @@ app = application_start()
 
 @app.get("/probe")
 async def probe():
+    return {"message": "ok"}
+
+
+
+
+@app.get("/test")
+async def probe():
+    save_json_to_storage({"message": "ok"}, "hello/there.json")
     return {"message": "ok"}
 
 

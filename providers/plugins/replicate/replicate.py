@@ -404,8 +404,9 @@ class ReplicateProvider(BaseProvider):
                     product = {
                         "id": id,
                         "label": aggregate_labels(response_json),
-                        # "category": item["category"],
-                        # "createdAt": item["created"],
+                        "category": item["category"],
+                        "categoryId": item["categoryId"],
+                        "createdAt": item["created"],
                         # "type": item["type"],
                         # "full": item["full"],
                     }
@@ -458,8 +459,9 @@ class ReplicateProvider(BaseProvider):
                     product = {
                         "id": id,
                         "label": aggregate_labels(final_prediction),
-                        # "category": item["category"],
-                        # "createdAt": item["created"],
+                        "category": item["category"],
+                        "categoryId": item["categoryId"],
+                        "createdAt": item["created"],
                         # "type": item["type"],
                         # "full": item["full"],
                     }
@@ -930,6 +932,7 @@ class ReplicateProvider(BaseProvider):
                     continue
 
                 parsed_item = {
+                    "categoryId": category["id"],
                     "category": category["name"],
                     "id": item["id"],
                     "type": item["type"],
