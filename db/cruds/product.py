@@ -29,6 +29,9 @@ def get_last_product_ids(user_id: str, provider_name: str, key: str):
 def get_products(user_id: str, provider_name: str, key: str):
     filename = f"{user_id}/{provider_name}/{key}/products.json"
     products = load_json_from_storage(filename)
+    if products is None:
+        return []
+
     return products
 
 

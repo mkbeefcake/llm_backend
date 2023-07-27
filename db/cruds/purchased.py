@@ -28,6 +28,9 @@ def get_last_message_ids(user_id: str, provider_name: str, key: str):
 def get_purchased(user_id: str, provider_name: str, key: str):
     filename = f"{user_id}/{provider_name}/{key}/purchased.json"
     purchased = load_json_from_storage(filename)
+    if purchased is None:
+        return {}
+
     return purchased
 
 

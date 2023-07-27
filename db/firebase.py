@@ -49,7 +49,7 @@ def load_json_from_storage(file_name):
 
     except Exception as e:
         print(f"Failed to load {file_name}")
-        return {}
+        return None
 
 
 def save_json_to_storage(json_data, file_name):

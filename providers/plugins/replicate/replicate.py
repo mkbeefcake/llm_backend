@@ -9,12 +9,12 @@ import unicodedata
 
 import imageio
 import numpy as np
-import replica
 import requests
 from fastapi.templating import Jinja2Templates
 from PIL import Image
 from starlette.requests import Request
 
+import replica
 from core.utils.http import http_get_bytes, http_post_file
 from core.utils.log import BackLog
 from core.utils.timestamp import get_current_timestamp
@@ -474,7 +474,7 @@ class ReplicateProvider(BaseProvider):
                     instance=None,
                     message=f"Failed to call replica tagging service: url {url}",
                 )
-                pass
+                return None
 
     async def select_chats(self, authed, rules, interval: int = 0, limit: int = 100):
         """
@@ -802,7 +802,7 @@ class ReplicateProvider(BaseProvider):
             instance=self, message=f"Running Scraping task...{start_timestamp}"
         )
 
-        semaphore = asyncio.Semaphore(30)
+        semaphore = asyncio.Semaphore(60)
         for chat in chats:
             tasks.append(asyncio.create_task(self.scrap_messages(chat, semaphore)))
 
@@ -849,19 +849,18 @@ class ReplicateProvider(BaseProvider):
 
                 user_info["purchased"] = purchased_items
 
+                BackLog.info(
+                    self,
+                    f"{self.identifier_name}: Loaded purchased products for {str(user_id)}, {len(user_info['purchased'])}",
+                )
+                return (str(user_id), user_info)
+
             except Exception as e:
                 BackLog.exception(
                     instance=self,
                     message=f"{self.identifier_name}: Exception occurred...",
                 )
-                pass
-
-            BackLog.info(
-                self,
-                f"{self.identifier_name}: Loaded purchased products for {str(user_id)}, {len(user_info['purchased'])}",
-            )
-
-        return (str(user_id), user_info)
+                return (str(user_id), None)
 
     async def get_purchased_products(self, user_data: any, option: any = None):
         if await self.initialize(user_data=user_data) != True:
@@ -886,7 +885,7 @@ class ReplicateProvider(BaseProvider):
             message=f"Running Purchased task...{start_timestamp}, {len(user_id_list)} users",
         )
 
-        semaphore = asyncio.Semaphore(30)
+        semaphore = asyncio.Semaphore(50)
         for user_id in user_id_list:
             tasks.append(
                 asyncio.create_task(
@@ -899,7 +898,9 @@ class ReplicateProvider(BaseProvider):
         BackLog.info(instance=self, message=f"Ended Purchased task...{end_timestamp}")
 
         tasks = []
-        all_users_info = {key: value for key, value in results}
+        for key, value in results:
+            if value is not None:
+                all_users_info[key] = value
 
         # await api.close_pools()
         return all_users_info
@@ -956,12 +957,18 @@ class ReplicateProvider(BaseProvider):
 
                     if len(tasks) >= 10:
                         middle_results = await asyncio.gather(*tasks)
-                        labels.extend(middle_results)
+                        results = []
+                        for element in middle_results:
+                            if element is not None:
+                                results.append(element)
+
+                        labels.extend(results)
                         tasks = []
                 except:
                     import traceback
 
                     print(traceback.print_exc())
+                    pass
 
         BackLog.info(
             self,
