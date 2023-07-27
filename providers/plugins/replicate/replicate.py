@@ -824,9 +824,8 @@ class ReplicateProvider(BaseProvider):
             # get last_message_id in firebase db
             if (
                 str(user_id) in last_message_ids
-                and "last_message_id" in last_message_ids[str(user_id)]
             ):
-                last_message_id = last_message_ids[str(user_id)]["last_message_id"]
+                last_message_id = last_message_ids[str(user_id)]
             else:
                 last_message_id = "0"
 
@@ -870,11 +869,7 @@ class ReplicateProvider(BaseProvider):
         if await self.initialize(user_data=user_data) != True:
             return
 
-        # Get last_message_ids from option
-        if "last_message_ids" in option:
-            last_message_ids = option["last_message_ids"]
-        else:
-            last_message_ids = None
+        last_message_ids = option["last_message_ids"]
 
         # Select all chats
         chats = await self.select_chats(self.authed, self.rules)
@@ -911,7 +906,7 @@ class ReplicateProvider(BaseProvider):
         # await api.close_pools()
         return all_users_info
 
-    async def _get_all_products(self, category, products, semaphore):
+    async def _get_all_products(self, category, last_products_ids, semaphore):
         async with semaphore:
             full_content = []
             labels = []
@@ -919,18 +914,17 @@ class ReplicateProvider(BaseProvider):
 
             offset = 0  # Create an offset variable
 
+            last_product_id = 0
+            if category["id"] in last_products_ids:
+                last_product_id = int(last_products_ids[category['id']])
+
             content = await self.authed.get_content(
-                category["id"], offset, limit=self.product_limit_per_category
+                category["id"], offset, limit=self.product_limit_per_category, 
+                last_product_id=last_product_id
             )
 
             semaphore1 = asyncio.Semaphore(10)
             for item in content:
-                if find_element_by_id(products, item["id"]) != None:
-                    print(
-                        f"|-- Identifier: {self.identifier_name} Item: {item['id']} already existed"
-                    )
-                    continue
-
                 parsed_item = {
                     "categoryId": category["id"],
                     "category": category["name"],
@@ -979,10 +973,7 @@ class ReplicateProvider(BaseProvider):
         if await self.initialize(user_data=user_data) != True:
             return
 
-        if option is not None and "products" in option:
-            products = option["products"]
-        else:
-            products = []
+        last_products_ids = option["last_products_ids"]
 
         categories = await self.authed.get_content_categories()
 
@@ -998,7 +989,7 @@ class ReplicateProvider(BaseProvider):
         for category in categories:
             label_tasks.append(
                 asyncio.create_task(
-                    self._get_all_products(category, products, semaphore)
+                    self._get_all_products(category, last_products_ids, semaphore)
                 )
             )
 
