@@ -218,16 +218,16 @@ class ProductPipeline(TaskManager):
     ):
         try:
             user_content = json.loads(user_data)
-            last_products_ids = get_last_product_ids(user_id, provider_name, key=identifier_name)
+            last_products_ids = get_last_product_ids(
+                user_id, provider_name, key=identifier_name
+            )
 
             results = await bridge.get_all_products(
                 user_id=user_id,
                 provider_name=provider_name,
                 identifier_name=identifier_name,
                 user_data=user_content,
-                option={
-                    "last_products_ids" : last_products_ids
-                },
+                option={"last_products_ids": last_products_ids},
             )
 
             ProductPipeline.update_products_on_db_pinecone(

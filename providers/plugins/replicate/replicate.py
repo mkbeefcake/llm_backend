@@ -9,12 +9,12 @@ import unicodedata
 
 import imageio
 import numpy as np
+import replica
 import requests
 from fastapi.templating import Jinja2Templates
 from PIL import Image
 from starlette.requests import Request
 
-import replica
 from core.utils.http import http_get_bytes, http_post_file
 from core.utils.log import BackLog
 from core.utils.timestamp import get_current_timestamp
@@ -822,9 +822,7 @@ class ReplicateProvider(BaseProvider):
             )
 
             # get last_message_id in firebase db
-            if (
-                str(user_id) in last_message_ids
-            ):
+            if str(user_id) in last_message_ids:
                 last_message_id = last_message_ids[str(user_id)]
             else:
                 last_message_id = "0"
@@ -916,11 +914,13 @@ class ReplicateProvider(BaseProvider):
 
             last_product_id = 0
             if category["id"] in last_products_ids:
-                last_product_id = int(last_products_ids[category['id']])
+                last_product_id = int(last_products_ids[category["id"]])
 
             content = await self.authed.get_content(
-                category["id"], offset, limit=self.product_limit_per_category, 
-                last_product_id=last_product_id
+                category["id"],
+                offset,
+                limit=self.product_limit_per_category,
+                last_product_id=last_product_id,
             )
 
             semaphore1 = asyncio.Semaphore(10)
