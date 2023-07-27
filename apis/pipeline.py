@@ -25,7 +25,7 @@ if BACKEND_TYPE is None or BACKEND_TYPE == "CHATHISTORY":
     async def get_chat_history_for_one(user_id, provider_name, identifier_name):
         try:
             user_data = get_user_data(user_id)
-            await chathistory_pipeline.fetch_history_for_one(
+            chathistory_pipeline.fetch_history_for_one(
                 user_id,
                 provider_name,
                 identifier_name,
