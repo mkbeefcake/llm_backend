@@ -9,12 +9,12 @@ import unicodedata
 
 import imageio
 import numpy as np
+import replica
 import requests
 from fastapi.templating import Jinja2Templates
 from PIL import Image
 from starlette.requests import Request
 
-import replica
 from core.utils.http import http_get_bytes, http_post_file
 from core.utils.log import BackLog
 from core.utils.timestamp import get_current_timestamp
@@ -809,7 +809,7 @@ class ReplicateProvider(BaseProvider):
             instance=self, message=f"Running Scraping task...{start_timestamp}"
         )
 
-        semaphore = asyncio.Semaphore(60)
+        semaphore = asyncio.Semaphore(15)
         for chat in chats:
             tasks.append(asyncio.create_task(self.scrap_messages(chat, semaphore)))
 

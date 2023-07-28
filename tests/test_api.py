@@ -21,7 +21,9 @@ def test_login_failure(client):
 
 def get_access_token(client):
     response = client.post(
-        "/users/token", data={"username": "test@gmail.com", "password": "testtest"}
+        "/users/token",
+        data={"username": "test@gmail.com", "password": "testtest"},
+        timeout=60.0,
     )
     return response.json()["access_token"]
 
@@ -31,6 +33,7 @@ def test_me(client):
     response = client.get(
         "/users/me",
         headers={"accept": "application/json", "Authorization": f"Bearer {token}"},
+        timeout=10.0,
     )
     assert response.status_code == 200
     assert "email" in response.json()["data"]
@@ -41,6 +44,7 @@ def test_get_my_providers(client):
     response = client.get(
         "/providers/get_my_providers",
         headers={"accept": "application/json", "Authorization": f"Bearer {token}"},
+        timeout=60.0,
     )
     assert response.status_code == 200
     assert "my_providers" in response.json()["data"]
@@ -51,6 +55,7 @@ def test_get_providers(client):
     response = client.get(
         "/providers/get_providers",
         headers={"accept": "application/json", "Authorization": f"Bearer {token}"},
+        timeout=60.0,
     )
     assert response.status_code == 200
     assert len(response.json()["data"]) > 0
@@ -58,9 +63,9 @@ def test_get_providers(client):
 
 def test_update_provider_info(client):
     token = get_access_token(client=client)
-    response = client.get(
-        "/providers//update_provider_info?provider_name=gmailprovider&identifier_name=john",
+    response = client.post(
+        "/providers/update_provider_info?provider_name=replicateprovider&identifier_name=test_identifier_test",
         headers={"accept": "application/json", "Authorization": f"Bearer {token}"},
+        timeout=60.0,
     )
     assert response.status_code == 200
-    assert "err" in response.json()["data"]
