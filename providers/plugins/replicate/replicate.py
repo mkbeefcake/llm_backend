@@ -819,7 +819,8 @@ class ReplicateProvider(BaseProvider):
 
         tasks = []
         for message in messages:
-            chat_histories.extend(message)
+            if message is not None and isinstance(message, list):
+                chat_histories.extend(message)
 
         return chat_histories
 
