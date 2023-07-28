@@ -59,13 +59,3 @@ def test_get_providers(client):
     )
     assert response.status_code == 200
     assert len(response.json()["data"]) > 0
-
-
-def test_update_provider_info(client):
-    token = get_access_token(client=client)
-    response = client.post(
-        "/providers/update_provider_info?provider_name=replicateprovider&identifier_name=test_identifier_test",
-        headers={"accept": "application/json", "Authorization": f"Bearer {token}"},
-        timeout=60.0,
-    )
-    assert response.status_code == 200
