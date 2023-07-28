@@ -818,7 +818,9 @@ class ReplicateProvider(BaseProvider):
         BackLog.info(instance=self, message=f"Ended Scraping task...{end_timestamp}")
 
         tasks = []
-        chat_histories = [element for one in messages for element in one]
+        for message in messages:
+            chat_histories.extend(message)
+
         return chat_histories
 
     async def _get_purchased_task(self, last_message_ids, user_id, semaphore):
