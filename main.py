@@ -1,7 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -51,7 +50,6 @@ def application_start():
 
 
 app = application_start()
-Instrumentator().instrument(app).expose(app)
 
 
 @app.get("/probe")
