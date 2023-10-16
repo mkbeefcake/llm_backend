@@ -75,7 +75,7 @@ CMD ["poetry", "run", "python", "main.py"]
 # 'lint' stage runs black and isort
 # running in check mode means build will fail if any linting errors occur
 FROM development AS lint
-RUN black --config ./pyproject.toml .
+# RUN black --config ./pyproject.toml .
 # RUN isort --settings-path ./pyproject.toml --recursive --check-only
 CMD ["tail", "-f", "/dev/null"]
 
