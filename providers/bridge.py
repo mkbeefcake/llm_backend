@@ -28,7 +28,11 @@ class Bridge:
         # load provider instances
         provider_info = []
         for key in self.shared_provider_list:
-            if key == "dummyprovider" or key == "baseprovider":
+            if (
+                key == "dummyprovider"
+                or key == "baseprovider"
+                or key == "nangoprovider"
+            ):
                 continue
 
             provider = self.shared_provider_list[key]
