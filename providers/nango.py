@@ -18,6 +18,7 @@ class NangoProvider(BaseProvider):
             "[%s]: link_provider: %s | %s" % (self.plugin_name, redirect_url, request),
             file=sys.stdout,
         )
+        return {"msg": "Nango Provider's response"}
 
     async def get_access_token(self, request: Request) -> str:
         print(
