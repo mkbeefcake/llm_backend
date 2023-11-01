@@ -64,6 +64,7 @@ class GMailProvider(BaseProvider):
             "short_name": "Gmail",
             "provider_description": "GMail Provider",
             "provider_icon_url": "/gmail.svg",
+            "provider_type": "base",
         }
 
     async def link_provider(self, redirect_url: str, request: Request):

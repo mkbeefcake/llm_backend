@@ -43,6 +43,7 @@ class Bridge:
     async def link_provider(
         self, provider_name: str, redirect_url: str, request: Request
     ):
+        print(f"[bridge]: link_provider: {provider_name}, {redirect_url}")
         provider = self.shared_provider_list[provider_name.lower()]
         if not provider:
             raise NotImplementedError

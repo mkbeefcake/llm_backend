@@ -104,6 +104,7 @@ class ReplicateProvider(BaseProvider):
             "short_name": "Replicate",
             "provider_description": "Replica Provider",
             "provider_icon_url": "/replicate.svg",
+            "provider_type": "base"
         }
 
     async def link_provider(self, redirect_url: str, request: Request):

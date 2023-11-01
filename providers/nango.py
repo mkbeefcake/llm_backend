@@ -3,22 +3,23 @@ import sys
 from starlette.requests import Request
 
 from providers.base import BaseProvider
+from fastapi.templating import Jinja2Templates
 
-
+templates = Jinja2Templates(directory="templates/nango")
 class NangoProvider(BaseProvider):
     def get_provider_info(self):
         return {
             "provider": NangoProvider.__name__.lower(),
             "provider_description": "Nango Provider",
             "provider_icon_url": "",
+            "provider_type": "nango"
         }
 
     async def link_provider(self, redirect_url: str, request: Request):
-        print(
-            "[%s]: link_provider: %s | %s" % (self.plugin_name, redirect_url, request),
-            file=sys.stdout,
+        return templates.TemplateResponse(
+            "login.html", {"request": request, "redirect_url": redirect_url}
         )
-        return {"msg": "Nango Provider's response"}
+
 
     async def get_access_token(self, request: Request) -> str:
         print(

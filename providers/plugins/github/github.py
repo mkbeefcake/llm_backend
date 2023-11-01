@@ -9,12 +9,16 @@ class GithubProvider(NangoProvider):
     def get_provider_info(self):
         return {
             "provider": GithubProvider.__name__.lower(),
+            "short_name": "Github",
             "provider_description": "Github Provider",
             "provider_icon_url": "/github.svg",
+            "provider_type": "nango",
+            "provider_unique_key": "demo-github-integration"
         }
 
     async def link_provider(self, redirect_url: str, request: Request):
-        return super().link_provider(redirect_url, request)
+        print(f'GitHub: link_provider: {redirect_url}')
+        return await super().link_provider(redirect_url, request)
 
     async def get_access_token(self, request: Request) -> str:
         return super().get_access_token(request)

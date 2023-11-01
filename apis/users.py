@@ -19,6 +19,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         user = decode_access_token(token)
         return user
     except Exception as e:
+        print(f"get_current_user: Exception : {e}")
         raise HTTPException(status_code=401, detail="User unauthorized")
 
 
