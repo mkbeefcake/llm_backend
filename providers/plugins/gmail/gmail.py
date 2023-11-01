@@ -308,10 +308,7 @@ class GMailProvider(NangoProvider):
     async def start_autobot(self, user_data: any, option: any):
         try:
             if self.access_token is None:
-                self.access_token = user_data["access_token"]
-
-            if self.refresh_token is None:
-                self.refresh_token = user_data["refresh_token"]
+                self.update_provider_info(user_data=user_data)
 
             if self.sync_time == -1:
                 last_message = self.get_last_message(
