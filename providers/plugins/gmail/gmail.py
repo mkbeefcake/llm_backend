@@ -1,6 +1,7 @@
 import base64
 import json
 import sys
+import requests as req
 from email.mime.text import MIMEText
 from pathlib import Path
 from urllib.parse import urlencode
@@ -17,8 +18,9 @@ from starlette.requests import Request
 
 from core.utils.log import BackLog
 from core.utils.timestamp import get_current_timestamp
-from providers.base import BaseProvider
+from providers.nango import NangoProvider
 from services.service import openai_service
+
 
 REDIRECT_URL = "redirect_url"
 SCOPES = [
@@ -52,11 +54,12 @@ oauth.register(
 )
 
 
-class GMailProvider(BaseProvider):
+class GMailProvider(NangoProvider):
     def __init__(self):
         self.sync_time = -1
         self.access_token = None
         self.refresh_token = None
+        self.user_data = None
 
     def get_provider_info(self):
         return {
@@ -64,17 +67,34 @@ class GMailProvider(BaseProvider):
             "short_name": "Gmail",
             "provider_description": "GMail Provider",
             "provider_icon_url": "/gmail.svg",
-            "provider_type": "base",
+            "provider_type": "nango",
+            "provider_unique_key": "google-mail"
         }
 
     async def link_provider(self, redirect_url: str, request: Request):
-        request.session.clear()
-        request.session[REDIRECT_URL] = redirect_url
+        pass
 
-        redirect_uri = request.url_for("google_auth")
-        return await oauth.google.authorize_redirect(
-            request, str(redirect_uri).replace("http:", "https:"), access_type="offline"
-        )
+    def update_provider_info(self, user_data: any, option: any = None):
+        print(f"user_data: {user_data}")
+        url = f'https://api.nango.dev/connection/{user_data.connectionId}'
+
+        headers = {f"Authorization": "Bearer fe21a641-ea29-45ac-8d9e-0295cea675a2"}
+        response = requests.request("GET", url, headers=headers)
+        print(response.text)
+        
+        self.user_data = user_data
+        self.access_token = response.text.credentials.access_token
+        self.refresh_token = response.text.credentials.refresh_token
+        pass
+
+    async def disconnect(self, request: Request):
+        if self.user_data is not None:
+            url = f'https://api.nango.dev/connection/{self.user_data.connectionId}'
+            headers = {f"Authorization": "Bearer fe21a641-ea29-45ac-8d9e-0295cea675a2"}
+            response = requests.request("DELETE", url, headers=headers)
+            print(response.text)
+
+        pass
 
     async def get_access_token(self, request: Request):
         token = await oauth.google.authorize_access_token(request)
@@ -302,9 +322,6 @@ class GMailProvider(BaseProvider):
         )
         return {"message": "Email sent!"}
 
-    async def disconnect(self, request: Request):
-        pass
-
     async def start_autobot(self, user_data: any, option: any):
         try:
             if self.access_token is None:
@@ -375,9 +392,6 @@ class GMailProvider(BaseProvider):
             pass
 
         pass
-
-    def update_provider_info(self, user_data: any, option: any = None):
-        raise NotImplementedError
 
     async def get_purchased_products(self, user_data: any, option: any = None):
         pass

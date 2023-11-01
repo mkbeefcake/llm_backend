@@ -49,17 +49,17 @@ async def get_providers(curr_user: User = Depends(get_current_user)):
         return MessageErr(reason=str(e))
 
 
-@router.get(
-    "/google_auth",
-    summary="The endpoint for Google authentication",
-    description="This endpoint is registered on the Google Cloud platform.<br>"
-    "When new Gmail provider account is authenticated, this endpoint is called by Google cloud platform with authenticate code",
-)
-async def google_auth(request: Request):
-    try:
-        return await bridge.get_access_token("gmailprovider", request)
-    except Exception as e:
-        return MessageErr(reason=str(e))
+# @router.get(
+#     "/google_auth",
+#     summary="The endpoint for Google authentication",
+#     description="This endpoint is registered on the Google Cloud platform.<br>"
+#     "When new Gmail provider account is authenticated, this endpoint is called by Google cloud platform with authenticate code",
+# )
+# async def google_auth(request: Request):
+#     try:
+#         return await bridge.get_access_token("gmailprovider", request)
+#     except Exception as e:
+#         return MessageErr(reason=str(e))
 
 
 @router.get(
@@ -70,7 +70,7 @@ async def google_auth(request: Request):
     "<i>redirect_url</i> : indicates the url which returns with <i>access_token</i> and <i>refresh_token</i><br>",
 )
 async def link_Provider(
-    provider_name: str = "gmailprovider",
+    provider_name: str = "replicateprovider",
     redirect_url: str = "http://localhost:3000/callback/oauth",
     request: Request = None,
 ):
@@ -100,20 +100,21 @@ async def unlink_Provider(
         await bridge.disconnect(provider_name, identifier_name, request)
 
         user_id = curr_user["uid"]
-        response = requests.post(
-            f"https://chat-automation-387710-purchased-yix5m2x4pq-uc.a.run.app/pipeline/stop_purchased_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
-        )
-        response_json = response.json()
+        
+        # response = requests.post(
+        #     f"https://chat-automation-387710-purchased-yix5m2x4pq-uc.a.run.app/pipeline/stop_purchased_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+        # )
+        # response_json = response.json()
 
-        response = requests.post(
-            f"https://chat-automation-387710-products-yix5m2x4pq-uc.a.run.app/pipeline/stop_all_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
-        )
-        response_json = response.json()
+        # response = requests.post(
+        #     f"https://chat-automation-387710-products-yix5m2x4pq-uc.a.run.app/pipeline/stop_all_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+        # )
+        # response_json = response.json()
 
-        response = requests.post(
-            f"https://chat-automation-387710-scrapy-yix5m2x4pq-uc.a.run.app/pipeline/stop_chat_history_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
-        )
-        response_json = response.json()
+        # response = requests.post(
+        #     f"https://chat-automation-387710-scrapy-yix5m2x4pq-uc.a.run.app/pipeline/stop_chat_history_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+        # )
+        # response_json = response.json()
 
         return MessageOK(
             data=update_user(
@@ -125,7 +126,6 @@ async def unlink_Provider(
         )
     except Exception as e:
         return MessageErr(reason=str(e))
-
 
 @router.post(
     "/update_provider_info",
@@ -158,20 +158,20 @@ async def update_provider_info(
             user_data[provider_name][identifier_name],
         )
 
-        response = requests.post(
-            f"https://chat-automation-387710-purchased-yix5m2x4pq-uc.a.run.app/pipeline/fetch_purchased_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
-        )
-        response_json = response.json()
+        # response = requests.post(
+        #     f"https://chat-automation-387710-purchased-yix5m2x4pq-uc.a.run.app/pipeline/fetch_purchased_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+        # )
+        # response_json = response.json()
 
-        response = requests.post(
-            f"https://chat-automation-387710-products-yix5m2x4pq-uc.a.run.app/pipeline/fetch_all_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
-        )
-        response_json = response.json()
+        # response = requests.post(
+        #     f"https://chat-automation-387710-products-yix5m2x4pq-uc.a.run.app/pipeline/fetch_all_products_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+        # )
+        # response_json = response.json()
 
-        response = requests.post(
-            f"https://chat-automation-387710-scrapy-yix5m2x4pq-uc.a.run.app/pipeline/get_chat_history_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
-        )
-        response_json = response.json()
+        # response = requests.post(
+        #     f"https://chat-automation-387710-scrapy-yix5m2x4pq-uc.a.run.app/pipeline/get_chat_history_for_one?user_id={user_id}&provider_name={provider_name}&identifier_name={identifier_name}"
+        # )
+        # response_json = response.json()
 
         return MessageOK(data=result)
     except Exception as e:

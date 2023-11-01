@@ -44,40 +44,41 @@ RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=${POETRY_HOME} pyt
 # and install only runtime deps using poetry
 WORKDIR $PYSETUP_PATH
 COPY ./poetry.lock ./pyproject.toml ./
-RUN poetry install --only main  # respects
+RUN poetry install
+# RUN poetry install --only main  # respects
 
 # 'development' stage installs all dev deps and can be used to develop code.
 # For example using docker-compose to mount local volume under /app
-FROM python-base as development
-ENV FASTAPI_ENV=development
+# FROM python-base as development
+# ENV FASTAPI_ENV=development
 
-# Copying poetry and venv into image
-COPY --from=builder-base $POETRY_HOME $POETRY_HOME
-COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
+# # Copying poetry and venv into image
+# COPY --from=builder-base $POETRY_HOME $POETRY_HOME
+# COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
 
-# venv already has runtime deps installed we get a quicker install
-WORKDIR $PYSETUP_PATH
-RUN poetry install
+# # venv already has runtime deps installed we get a quicker install
+# WORKDIR $PYSETUP_PATH
+# RUN poetry install
 
-# Create App directory
-RUN mkdir /app
-WORKDIR /app
-COPY . .
-COPY ./docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
-RUN poetry config virtualenvs.create false
-RUN poetry install
+# # Create App directory
+# RUN mkdir /app
+# WORKDIR /app
+# COPY . .
+# COPY ./docker-entrypoint.sh /docker-entrypoint.sh
+# RUN chmod +x /docker-entrypoint.sh
+# RUN poetry config virtualenvs.create false
+# RUN poetry install
 
-EXPOSE 8000
-ENTRYPOINT /docker-entrypoint.sh $0 $@
-CMD ["poetry", "run", "python", "main.py"]
+# EXPOSE 8000
+# ENTRYPOINT /docker-entrypoint.sh $0 $@
+# CMD ["poetry", "run", "python", "main.py"]
 
-# 'lint' stage runs black and isort
-# running in check mode means build will fail if any linting errors occur
-FROM development AS lint
-# RUN black --config ./pyproject.toml .
-# RUN isort --settings-path ./pyproject.toml --recursive --check-only
-CMD ["tail", "-f", "/dev/null"]
+# # 'lint' stage runs black and isort
+# # running in check mode means build will fail if any linting errors occur
+# FROM development AS lint
+# # RUN black --config ./pyproject.toml .
+# # RUN isort --settings-path ./pyproject.toml --recursive --check-only
+# CMD ["tail", "-f", "/dev/null"]
 
 # 'test' stage runs our unit tests with pytest and
 # coverage.  Build will fail if test coverage is under 95%
