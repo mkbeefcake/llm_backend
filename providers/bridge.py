@@ -50,14 +50,6 @@ class Bridge:
 
         return await provider.link_provider(redirect_url, request)
 
-    # get access token
-    async def get_access_token(self, provider_name: str, request: Request):
-        provider = self.shared_provider_list[provider_name.lower()]
-        if not provider:
-            raise NotImplementedError
-
-        return await provider.get_access_token(request)
-
     # get access token from refresh_token
     async def get_access_token_from_refresh_token(
         self, provider_name: str, refresh_token: str

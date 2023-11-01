@@ -48,20 +48,6 @@ async def get_providers(curr_user: User = Depends(get_current_user)):
     except Exception as e:
         return MessageErr(reason=str(e))
 
-
-# @router.get(
-#     "/google_auth",
-#     summary="The endpoint for Google authentication",
-#     description="This endpoint is registered on the Google Cloud platform.<br>"
-#     "When new Gmail provider account is authenticated, this endpoint is called by Google cloud platform with authenticate code",
-# )
-# async def google_auth(request: Request):
-#     try:
-#         return await bridge.get_access_token("gmailprovider", request)
-#     except Exception as e:
-#         return MessageErr(reason=str(e))
-
-
 @router.get(
     "/link_provider",
     summary="Link the account for specific provider",

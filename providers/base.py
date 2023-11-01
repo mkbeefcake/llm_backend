@@ -25,9 +25,6 @@ class BaseProvider(metaclass=BaseProviderMeta):
     async def link_provider(self, redirect_url: str, request: Request):
         raise NotImplementedError
 
-    async def get_access_token(self, request: Request) -> str:
-        raise NotImplementedError
-
     async def get_access_token_from_refresh_token(self, refresh_token: str) -> str:
         raise NotImplementedError
 

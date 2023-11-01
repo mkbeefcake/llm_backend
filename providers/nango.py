@@ -1,70 +1,32 @@
-import sys
-
-from starlette.requests import Request
+import os
+import requests
+import json
 
 from providers.base import BaseProvider
-from fastapi.templating import Jinja2Templates
 
-templates = Jinja2Templates(directory="templates/nango")
+NANGO_SECRET_KEY = os.getenv("NANGO_SECRET_KEY")
+
 class NangoProvider(BaseProvider):
-    def get_provider_info(self):
-        return {
-            "provider": NangoProvider.__name__.lower(),
-            "provider_description": "Nango Provider",
-            "provider_icon_url": "",
-            "provider_type": "nango"
-        }
 
-    async def link_provider(self, redirect_url: str, request: Request):
-        return templates.TemplateResponse(
-            "login.html", {"request": request, "redirect_url": redirect_url}
-        )
+    def get_credential_tokens(self, connection_id, provider_config_key):
 
+        url = f'https://api.nango.dev/connection/{connection_id}'
 
-    async def get_access_token(self, request: Request) -> str:
-        print(
-            "[%s]: get_access_token: %s | %s" % (self.plugin_name, request),
-            file=sys.stdout,
-        )
+        headers = {"Authorization": f"Bearer {NANGO_SECRET_KEY}"}
+        query = {"provider_config_key": provider_config_key, "refresh_token": "true"}
+        response = requests.request("GET", url, headers=headers, params=query)
+        
+        if response.ok:
+            result = json.loads(response.text)
+            return {
+                "access_token": result["credentials"]["access_token"], 
+                "refresh_token": result["credentials"]["refresh_token"]
+            }
+        
+        return {}
 
-    async def get_access_token_from_refresh_token(self, refresh_token: str) -> str:
-        print(
-            "[%s]: get_access_token_from_refresh_token: %s | %s"
-            % (self.plugin_name, refresh_token),
-            file=sys.stdout,
-        )
-
-    def get_last_message(self, access_token: str, option: any):
-        print(
-            "[%s]: get_last_message: %s " % (self.plugin_name, access_token),
-            file=sys.stdout,
-        )
-
-    def get_full_messages(self, access_token: str, of_what: str, option: any):
-        print(
-            "[%s]: get_full_messages: %s %s"
-            % (self.plugin_name, access_token, of_what),
-            file=sys.stdout,
-        )
-
-    def get_messages(self, access_token: str, from_when: str, count: int, option: any):
-        print(
-            "[%s]: get_messages: %s %s %d"
-            % (self.plugin_name, access_token, from_when, count),
-            file=sys.stdout,
-        )
-
-    def reply_to_message(self, access_token: str, to: str, message: str, option: any):
-        print(
-            "[%s]: reply_to_message: %s %s %s"
-            % (self.plugin_name, access_token, to, message),
-            file=sys.stdout,
-        )
-
-    async def disconnect(self, request: Request):
-        print("[%s]: disconnect: %s" % (self.plugin_name), file=sys.stdout)
-
-    async def start_autobot(self, user_data: any, option: any):
-        print("[%s]: start_autobot: %s" % (self.plugin_name), file=sys.stdout)
-
-    pass
+    def delete_connection(self, connection_id, provider_config_key):
+        url = f'https://api.nango.dev/connection/{connection_id}'
+        headers = {"Authorization": f"Bearer {NANGO_SECRET_KEY}"}
+        query = {"provider_config_key": provider_config_key}
+        response = requests.request("DELETE", url, headers=headers, params=query)

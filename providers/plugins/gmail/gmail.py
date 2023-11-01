@@ -1,9 +1,7 @@
-import os
 from pathlib import Path
 import base64
 import json
 import sys
-import requests as req
 from email.mime.text import MIMEText
 from pathlib import Path
 from urllib.parse import urlencode
@@ -55,7 +53,6 @@ oauth.register(
     },
 )
 
-NANGO_SECRET_KEY = os.getenv("NANGO_SECRET_KEY")
 
 class GMailProvider(NangoProvider):
     def __init__(self):
@@ -79,53 +76,32 @@ class GMailProvider(NangoProvider):
 
     def update_provider_info(self, user_data: any, option: any = None):
         print(f"user_data: {user_data}")
-        url = f'https://api.nango.dev/connection/{user_data["connectionId"]}'
-
-        headers = {"Authorization": f"Bearer {NANGO_SECRET_KEY}"}
-        query = {"provider_config_key": user_data["providerConfigKey"], "refresh_token": "true"}
-        response = req.request("GET", url, headers=headers, params=query)
-        print(response.text)
+        tokens = self.get_credential_tokens(connection_id=user_data["connectionId"], provider_config_key=user_data["providerConfigKey"])
         
-        if response.ok:
-            result = json.loads(response.text)
-            self.user_data = user_data
-            self.access_token = result["credentials"]["access_token"]
-            self.refresh_token = result["credentials"]["refresh_token"]
+        self.user_data = user_data
+        self.access_token = tokens["access_token"]
+        self.refresh_token = tokens["refresh_token"]
         pass
 
     async def disconnect(self, request: Request):
         if self.user_data is not None:
-            url = f'https://api.nango.dev/connection/{self.user_data["connectionId"]}'
-            headers = {"Authorization": f"Bearer {NANGO_SECRET_KEY}"}
-            query = {"provider_config_key": self.user_data["providerConfigKey"]}
-            response = req.request("DELETE", url, headers=headers, params=query)
-            print(response.text)
+            self.delete_connection(connection_id=self.user_data["connectionId"], provider_config_key=self.user_data["providerConfigKey"])
 
         pass
 
-    async def get_access_token(self, request: Request):
-        token = await oauth.google.authorize_access_token(request)
-        response_tokens = {
-            "access_token": token["access_token"],
-            "refresh_token": token["refresh_token"],
-        }
-        response = RedirectResponse(
-            url=request.session[REDIRECT_URL]
-            + "?provider=gmailprovider&"
-            + urlencode(response_tokens)
-        )
-        return response
-
     async def get_access_token_from_refresh_token(self, refresh_token: str) -> str:
-        creds = Credentials.from_authorized_user_info(
-            info={
-                "client_id": oauth2_credentials["web"]["client_id"],
-                "client_secret": oauth2_credentials["web"]["client_secret"],
-                "refresh_token": refresh_token,
-            }
-        )
-        creds.refresh(requests.Request())
-        return creds.token
+        if self.user_data:
+            url = f'https://api.nango.dev/connection/{self.user_data["connectionId"]}'
+
+            headers = {"Authorization": f"Bearer {NANGO_SECRET_KEY}"}
+            query = {"provider_config_key": self.user_data["providerConfigKey"], "refresh_token": "true"}
+            response = req.request("GET", url, headers=headers, params=query)
+            
+            if response.ok:
+                result = json.loads(response.text)
+                return result["credentials"]["access_token"]
+
+        return ""
 
     def get_gmail_service(self, access_token: str):
         creds = Credentials(

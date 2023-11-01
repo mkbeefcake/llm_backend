@@ -19,12 +19,6 @@ class DummyProvider(BaseProvider):
             file=sys.stdout,
         )
 
-    async def get_access_token(self, request: Request) -> str:
-        print(
-            "[%s]: get_access_token: %s | %s" % (self.plugin_name, request),
-            file=sys.stdout,
-        )
-
     async def get_access_token_from_refresh_token(self, refresh_token: str) -> str:
         print(
             "[%s]: get_access_token_from_refresh_token: %s | %s"
