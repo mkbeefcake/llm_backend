@@ -2,6 +2,8 @@ from pathlib import Path
 import base64
 import json
 import sys
+import requests as req
+
 from email.mime.text import MIMEText
 from pathlib import Path
 from urllib.parse import urlencode
@@ -18,7 +20,7 @@ from starlette.requests import Request
 
 from core.utils.log import BackLog
 from core.utils.timestamp import get_current_timestamp
-from providers.nango import NangoProvider
+from providers.nango import NangoProvider, NANGO_SECRET_KEY
 from services.service import openai_service
 
 

@@ -136,3 +136,8 @@ this function will get the status of current bot
 
 
 
+4. Google ads
+4.1 Test Environment
+https://developers.google.com/google-ads/api/docs/best-practices/test-accounts
+From this, to create test manager accounts
+
