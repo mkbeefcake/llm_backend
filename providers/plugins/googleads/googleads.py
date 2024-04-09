@@ -114,7 +114,7 @@ class GoogleAdsProvider(NangoProvider):
             token_uri="https://oauth2.googleapis.com/token",
             scopes=SCOPES
         )
-        client = GoogleAdsClient(credentials, developer_token=GOOGLEADS_DEVELOPER_TOKEN)
+        client = GoogleAdsClient(credentials, developer_token=GOOGLEADS_DEVELOPER_TOKEN, version='v16')
         
         # Get GoogleAdsService and CustomerService
         googleads_service = client.get_service("GoogleAdsService")
@@ -207,24 +207,32 @@ class GoogleAdsProvider(NangoProvider):
                         googleads_service, root_customer_client, customer_ids_to_child_accounts, 0
                     )
 
-                    # get all campaigns associated with customer
-                    campaign_query = """
-                        SELECT campaign.id, campaign.name, campaign.status
-                        FROM campaign
-                    """
-                    resp = googleads_service.search(customer_id=str(customer_id), query=campaign_query)
+                    for customer in customer_ids_to_child_accounts[root_customer_client.id]:
+                        try:
+                            # get all campaigns associated with customer
+                            query = """
+                                SELECT
+                                campaign.id,
+                                campaign.name
+                                FROM campaign
+                                ORDER BY campaign.id
+                            """
+                            client.login_customer_id = str(root_customer_client.id)
+                            google_ads = client.get_service("GoogleAdsService")
+                            response = google_ads.search(customer_id=str(customer.id), query=query)
 
-                    # Process the response to get campaign data
-                    for row in resp:
-                        campaign_id = row.campaign.id.value
-                        campaign_name = row.campaign.name.value
-                        campaign_status = row.campaign.status.name
-
-                        print(f"Campaign ID: {campaign_id}, Name: {campaign_name}, Status: {campaign_status}")
+                            for row in response:
+                                print(
+                                    f"Campaign with ID {row.campaign.id} and name "
+                                    f'"{row.campaign.name}" was found.'
+                                )
+                        except Exception as e:
+                            print(f"Iterating customer: {e}")
+                            continue
 
 
             except Exception as e:
-                # print(f"Looks like production account: {e}")
+                print(f"Looks like production account: {e}")
                 continue
 
         pass
